@@ -1,0 +1,347 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Ponte Viga — Infraestructura EC2
+  Crea todo lo necesario: EC2 (Ubuntu 24.04) + Nginx + Node.js + PM2
+  + Bucket S3 para deployments + SSM Document para actualizaciones.
+  Los archivos de la app se suben al bucket S3 y el SSM Document
+  los jala al servidor sin necesidad de SSH manual.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────
+Parameters:
+
+  AppName:
+    Type: String
+    Default: ponte-viga
+    Description: Prefijo para nombrar todos los recursos
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+    Description: Ambiente de despliegue
+
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: >
+      Nombre del Key Pair existente en tu cuenta AWS.
+      Si creaste viga-key.pem, el nombre es "viga-key".
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t3.small, t3.medium]
+    Description: Tipo de instancia (~$10/mes para t3.micro)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RESOURCES
+# ─────────────────────────────────────────────────────────────────────────────
+Resources:
+
+  # ──────────────────────────────────────────────────────────────
+  # 1. S3 BUCKET — almacena los archivos de la app para despliegue
+  #    La instancia EC2 los descarga desde aquí (sin SSH)
+  # ──────────────────────────────────────────────────────────────
+  DeploymentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AppName}-deploy-${Environment}-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Project
+          Value: !Ref AppName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ──────────────────────────────────────────────────────────────
+  # 2. IAM ROLE — permisos que tiene la instancia EC2
+  #    - Leer del bucket S3 de deploy
+  #    - Usar SSM (para que funcione el SSM Send Command)
+  # ──────────────────────────────────────────────────────────────
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AppName}-ec2-role-${Environment}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        # Permite que SSM Agent se conecte a la instancia (necesario para SSM Run Command)
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: !Sub "${AppName}-s3-deploy-read-${Environment}"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt DeploymentBucket.Arn
+                  - !Sub "${DeploymentBucket.Arn}/*"
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub "${AppName}-ec2-profile-${Environment}"
+      Roles:
+        - !Ref EC2InstanceRole
+
+  # ──────────────────────────────────────────────────────────────
+  # 3. SECURITY GROUP — puertos abiertos en el firewall
+  # ──────────────────────────────────────────────────────────────
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${AppName}-sg-${Environment}"
+      GroupDescription: !Sub "Ponte Viga ${Environment}: SSH + HTTP + HTTPS"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+          Description: SSH
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: "HTTP (Nginx / Lets Encrypt)"
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS
+      Tags:
+        - Key: Project
+          Value: !Ref AppName
+        - Key: Name
+          Value: !Sub "${AppName}-sg-${Environment}"
+
+  # ──────────────────────────────────────────────────────────────
+  # 4. ELASTIC IP — IP fija que no cambia aunque reinicies el EC2
+  # ──────────────────────────────────────────────────────────────
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Project
+          Value: !Ref AppName
+        - Key: Name
+          Value: !Sub "${AppName}-eip-${Environment}"
+
+  # ──────────────────────────────────────────────────────────────
+  # 5. EC2 INSTANCE — Ubuntu 24.04 LTS
+  #
+  #    UserData: corre UNA VEZ al primer arranque.
+  #    Instala Node.js, PM2, Nginx y los configura.
+  #    Los archivos de la app se despliegan DESPUÉS con el SSM Document.
+  # ──────────────────────────────────────────────────────────────
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      # AMI de Ubuntu 24.04 LTS — AWS SSM mantiene este parámetro actualizado
+      # por región. No necesitas buscar el AMI ID manualmente.
+      ImageId: "{{resolve:ssm:/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id}}"
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPairName
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SecurityGroupIds:
+        - !GetAtt EC2SecurityGroup.GroupId
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 10    # GB — suficiente para la app + logs
+            VolumeType: gp3
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AppName}-server-${Environment}"
+        - Key: Project
+          Value: !Ref AppName
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          # ================================================================
+          # Ponte Viga — Bootstrap de infraestructura
+          # Este script corre SOLO EN EL PRIMER ARRANQUE de la instancia.
+          # Instala Node.js 20, PM2, Nginx y los configura.
+          # Los archivos de la app se despliegan con el SSM Document.
+          # ================================================================
+          set -euxo pipefail
+          LOG=/var/log/ponte-viga-setup.log
+          exec > >(tee -a "$LOG") 2>&1
+          echo "=== Bootstrap inicio $(date) ==="
+
+          # ── 1. Actualizar el sistema ───────────────────────────────────
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -y
+          apt-get upgrade -y
+
+          # ── 2. Instalar Node.js 20 LTS ────────────────────────────────
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y nodejs
+          node --version
+          npm --version
+
+          # ── 3. Instalar PM2 (gestor de procesos) ─────────────────────
+          npm install -g pm2
+          pm2 --version
+
+          # ── 4. Instalar Nginx ─────────────────────────────────────────
+          apt-get install -y nginx
+          systemctl enable nginx
+
+          # ── 5. Crear directorio de la app ─────────────────────────────
+          mkdir -p /home/ubuntu/ponte-viga/data
+          chown -R ubuntu:ubuntu /home/ubuntu/ponte-viga
+
+          # ── 6. Configurar Nginx como proxy inverso ────────────────────
+          cat > /etc/nginx/sites-available/ponte-viga << 'NGINX_CONF'
+          server {
+              listen 80 default_server;
+              listen [::]:80 default_server;
+              server_name _;
+
+              location / {
+                  proxy_pass http://localhost:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_cache_bypass $http_upgrade;
+                  client_max_body_size 20M;
+              }
+          }
+          NGINX_CONF
+
+          ln -sf /etc/nginx/sites-available/ponte-viga /etc/nginx/sites-enabled/ponte-viga
+          rm -f /etc/nginx/sites-enabled/default
+          nginx -t
+          systemctl restart nginx
+
+          # ── 7. Configurar PM2 para arrancar al reiniciar ───────────────
+          # Esto crea el servicio systemd para que PM2 (y la app) sobrevivan
+          # reinicios de la instancia sin necesidad de entrar por SSH.
+          env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+          systemctl enable pm2-ubuntu
+
+          # ── 8. Instalar SSM Agent (ya viene en Ubuntu 24.04 pero por si acaso) ──
+          snap install amazon-ssm-agent --classic 2>/dev/null || true
+          systemctl enable amazon-ssm-agent
+          systemctl start amazon-ssm-agent
+
+          echo "=== Bootstrap completo $(date) ==="
+          PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || echo "desconocida")
+          echo "=== IP pública: $PUBLIC_IP ==="
+          echo "=== SIGUIENTE PASO: sube los archivos al bucket S3 y ejecuta el SSM Document ==="
+
+  # Asociar la IP fija a la instancia
+  EIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      EIP: !Ref ElasticIP
+      InstanceId: !Ref EC2Instance
+
+  # ──────────────────────────────────────────────────────────────
+  # 6. SSM DOCUMENT — despliega o actualiza la app
+  #
+  #    Se ejecuta con: aws ssm send-command ...
+  #    No requiere SSH. Funciona mientras la instancia esté corriendo.
+  #    Úsalo para: primer deploy y cada actualización de la app.
+  # ──────────────────────────────────────────────────────────────
+  DeploySSMDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Name: !Sub "${AppName}-deploy-${Environment}"
+      DocumentType: Command
+      DocumentFormat: YAML
+      Content:
+        schemaVersion: "2.2"
+        description: "Descarga archivos de la app desde S3 y reinicia PM2"
+        parameters:
+          BucketName:
+            type: String
+            default: !Sub "${AppName}-deploy-${Environment}-${AWS::AccountId}"
+            description: "Nombre del bucket S3 con los archivos de la app"
+          AwsRegion:
+            type: String
+            default: !Ref AWS::Region
+            description: "Región de AWS"
+        mainSteps:
+          - action: aws:runShellScript
+            name: deployPonteViga
+            inputs:
+              workingDirectory: /home/ubuntu/ponte-viga
+              runCommand:
+                - echo "=== Deploy inicio $(date) ==="
+                - "aws s3 cp s3://{{ BucketName }}/app/index.html     /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/server.js      /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/sw.js          /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/package.json   /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/ec2-config.json /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - chown -R ubuntu:ubuntu /home/ubuntu/ponte-viga
+                - cd /home/ubuntu/ponte-viga && sudo -u ubuntu npm install --omit=dev
+                - >-
+                  sudo -u ubuntu pm2 describe ponte-viga > /dev/null 2>&1
+                  && sudo -u ubuntu pm2 restart ponte-viga
+                  || sudo -u ubuntu pm2 start server.js --name ponte-viga
+                - sudo -u ubuntu pm2 save
+                - echo "=== Deploy completo $(date) ==="
+                - "echo App disponible en http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OUTPUTS
+# ─────────────────────────────────────────────────────────────────────────────
+Outputs:
+
+  PublicIP:
+    Description: IP pública fija de la instancia (no cambia)
+    Value: !Ref ElasticIP
+    Export:
+      Name: !Sub "${AppName}-ec2-ip-${Environment}"
+
+  AppURL:
+    Description: URL de la app (HTTP)
+    Value: !Sub "http://${ElasticIP}"
+
+  InstanceId:
+    Description: ID de la instancia EC2 (necesario para SSM Send Command)
+    Value: !Ref EC2Instance
+    Export:
+      Name: !Sub "${AppName}-ec2-id-${Environment}"
+
+  DeploymentBucketName:
+    Description: Nombre del bucket S3 — sube los archivos aquí
+    Value: !Ref DeploymentBucket
+    Export:
+      Name: !Sub "${AppName}-deploy-bucket-${Environment}"
+
+  SSHCommand:
+    Description: Comando para conectarte por SSH (solo para diagnóstico)
+    Value: !Sub "ssh -i ${KeyPairName}.pem ubuntu@${ElasticIP}"
+
+  SSMDocumentName:
+    Description: Nombre del SSM Document para desplegar la app
+    Value: !Sub "${AppName}-deploy-${Environment}"
+
+  DeployInstructions:
+    Description: Pasos para desplegar la app después de crear el stack
+    Value: !Sub >-
+      1) node build.js
+      2) aws s3 sync . s3://${DeploymentBucket}/app/ --exclude "node_modules/*" --exclude "data/*" --exclude ".react-cache/*" --include "index.html" --include "server.js" --include "sw.js" --include "package.json" --include "ec2-config.json"
+      3) aws ssm send-command --instance-ids ${EC2Instance} --document-name ${AppName}-deploy-${Environment} --comment "Deploy" --region ${AWS::Region}

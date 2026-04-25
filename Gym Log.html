@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pongámonos Vigas · iPhone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/app.css">
+<style>
+  html, body { height: 100%; margin: 0; background: #0A0A0B; }
+  body { display: flex; align-items: center; justify-content: center; overflow: hidden; min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1A1210 0%, #080808 60%, #000 100%);
+  }
+  #stage {
+    transform-origin: center center;
+    transition: transform 0.2s ease;
+  }
+  .phone-wrap { position: relative; }
+  .phone-inner {
+    position: absolute;
+    inset: 0;
+    border-radius: 48px;
+    overflow: hidden;
+    background: #0A0A0B;
+  }
+  /* Deshabilita el scroll del iframe auto del IOSDevice para que use el nuestro */
+  .ios-device-override > div > div { overflow: visible !important; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="root" class="phone-wrap"></div>
+</div>
+
+<script>
+  // Tweaks defaults
+  window.__TWEAKS__ = /*EDITMODE-BEGIN*/{
+    "accent": "#ec6032",
+    "accent2": "#C93416",
+    "fontSize": 15
+  }/*EDITMODE-END*/;
+
+  // Auto-scale iPhone to viewport
+  function scaleStage() {
+    const stage = document.getElementById('stage');
+    if (!stage) return;
+    const W = 430, H = 932;
+    const padding = 24;
+    const sw = (window.innerWidth - padding*2) / W;
+    const sh = (window.innerHeight - padding*2) / H;
+    const s = Math.min(1, sw, sh);
+    stage.style.transform = `scale(${s})`;
+  }
+  window.addEventListener('resize', scaleStage);
+  window.addEventListener('load', scaleStage);
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- data / store -->
+<script src="data/routine.js"></script>
+<script src="data/seed-history.js"></script>
+<script src="data/store.js"></script>
+
+<!-- device frame -->
+<script type="text/babel" src="components/ios-frame.jsx"></script>
+
+<!-- screens -->
+<script type="text/babel" src="screens/today.jsx"></script>
+<script type="text/babel" src="screens/calendar.jsx"></script>
+<script type="text/babel" src="screens/history.jsx"></script>
+<script type="text/babel" src="screens/measures.jsx"></script>
+<script type="text/babel" src="screens/modals.jsx"></script>
+
+<!-- main app -->
+<script type="text/babel" src="app.jsx"></script>
+
+<script type="text/babel">
+  // Montaje: envuelve la app dentro del IOSDevice con chrome nativo
+  const Root = () => {
+    return (
+      <div className="ios-device-override">
+        <IOSDevice width={430} height={932} dark={true}>
+          <div style={{
+            position:'absolute', inset:0, paddingTop: 54,
+            display:'flex', flexDirection:'column',
+            background: 'var(--bg)',
+          }}>
+            <GymApp />
+          </div>
+        </IOSDevice>
+      </div>
+    );
+  };
+
+  // Espera a que todos los scripts carguen
+  function tryMount() {
+    if (!window.GymApp || !window.IOSDevice || !window.TodayScreen) {
+      return setTimeout(tryMount, 40);
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+    setTimeout(() => { if (window.scaleStage) window.scaleStage(); }, 100);
+  }
+  tryMount();
+</script>
+
+</body>
+</html>
