@@ -1,5 +1,10 @@
 // App shell: navegación por tabs, modales, hoy/calendario/semana/historial/medidas
-const { useState, useEffect, useMemo } = React;
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+const getGreeting = () => {
+  const h = new Date().getHours();
+  return h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches';
+};
 
 const App = ({ onSwitchProfile }) => {
   // Tweaks
@@ -21,35 +26,58 @@ const App = ({ onSwitchProfile }) => {
     document.body.style.fontSize = tweaks.fontSize + 'px';
   }, [tweaks]);
 
-  const updateTweak = (patch) => {
+  const updateTweak = useCallback((patch) => {
     setTweaks(prev => ({ ...prev, ...patch }));
     window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*');
-  };
+  }, []);
 
   const [tab, setTab] = useState(() => localStorage.getItem('gym_tab') || 'today');
   useEffect(() => { localStorage.setItem('gym_tab', tab); }, [tab]);
+
+  const [scrolled, setScrolled] = useState(false);
+  const scrollRef = useRef(null);
+  const greeting = useMemo(getGreeting, []);
 
   const [moodOpen, setMoodOpen] = useState(false);
   const [exerciseDetail, setExerciseDetail] = useState(null);
   const [dayDetail, setDayDetail] = useState(null);
   const [refresh, setRefresh] = useState(0);
-  const bump = () => setRefresh(r => r + 1);
+  const [swapOpen, setSwapOpen] = useState(false);
+  const [completionData, setCompletionData] = useState(null);
 
   const today = new Date();
   const dow = today.getDay();
+
+  // Recarga cuando cambia el día (setInterval cada 60s + visibilitychange)
+  const mountedDayRef = useRef(window.GymStore.iso(today));
+  useEffect(() => {
+    const check = () => {
+      if (window.GymStore.iso(new Date()) !== mountedDayRef.current) {
+        window.location.reload();
+      }
+    };
+    const id = setInterval(check, 60000);
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', check);
+    };
+  }, []);
+
   const [routineVer, setRoutineVer] = useState(0);
   const routine = useMemo(() => window.GymStore.getRoutineFor(dow), [routineVer]);
 
   const [editingRoutine, setEditingRoutine] = useState(false);
   const [editingDow, setEditingDow] = useState(dow);
 
-  const openRoutineEditor = (d) => {
+  const openRoutineEditor = useCallback((d) => {
     setEditingDow(d !== undefined ? d : dow);
     setEditingRoutine(true);
-  };
+  }, [dow]);
 
   const streak = useMemo(() => window.GymStore.computeStreak(), [refresh]);
   const todayIso = window.GymStore.iso(today);
+  const todaySession = useMemo(() => window.GymStore.getSession(todayIso), [refresh]);
 
   const profileInfo = useMemo(() => {
     const name = window.GymStore.getActiveProfile();
@@ -61,53 +89,131 @@ const App = ({ onSwitchProfile }) => {
     return (a && a.date === todayIso) ? a : null;
   });
 
-  const startWorkout = (mood) => {
+  const startWorkout = useCallback((mood) => {
+    // Peso inteligente: usar máximo histórico por ejercicio como punto de partida
+    const pb = {};
+    Object.values(window.GymStore.getAllSessions())
+      .filter(s => s.date < todayIso)
+      .forEach(s => (s.exercises || []).forEach(e => {
+        if (e.weight > 0 && (pb[e.id] == null || e.weight > pb[e.id])) pb[e.id] = e.weight;
+      }));
+
     const session = {
       date: todayIso, dow, title: routine.title, mood,
-      exercises: routine.exercises.map(ex => ({
-        id: ex.id, weight: ex.weight, sets: 0, targetSets: ex.sets, reps: ex.reps, done: false,
+      startTime: Date.now(),
+      exercises: (routine.exercises || []).map(ex => ({
+        id: ex.id,
+        weight: pb[ex.id] != null ? pb[ex.id] : ex.weight,
+        sets: 0, targetSets: ex.sets, reps: ex.reps, done: false,
       })),
+      activities: Object.fromEntries(
+        (routine.activities || []).map(a => [a.id, { id: a.id, done: false, value: a.defaultVal || 10 }])
+      ),
       cardioDone: false, completed: false,
     };
     window.GymStore.setActive(session);
     setActive(session);
     setMoodOpen(false);
-  };
+  }, [todayIso, dow, routine.title]);
 
-  const updateExercise = (exId, state) => {
+  const updateExercise = useCallback((exId, state) => {
     setActive(prev => {
       const next = { ...prev, exercises: prev.exercises.map(e => e.id === exId ? state : e) };
       window.GymStore.setActive(next);
       return next;
     });
-  };
+  }, []);
 
-  const toggleCardio = (minutes) => {
+  const updateActivity = useCallback((actId, state) => {
     setActive(prev => {
-      const next = { ...prev, cardioDone: !prev.cardioDone, cardioMinutes: minutes };
+      const next = { ...prev, activities: { ...(prev.activities || {}), [actId]: state } };
       window.GymStore.setActive(next);
       return next;
     });
-  };
+  }, []);
 
-  const finish = () => {
+  const toggleCardio = useCallback((minutes, laps) => {
+    setActive(prev => {
+      const next = { ...prev, cardioDone: !prev.cardioDone, cardioMinutes: minutes, cardioLaps: laps };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+
+  const finish = useCallback((isComplete) => {
     setActive(prev => {
       if (!prev) return null;
-      const final = { ...prev, completed: true };
+      const final = { ...prev, completed: !!isComplete, endTime: Date.now() };
       window.GymStore.saveSession(final);
       window.GymStore.clearActive();
+      if (isComplete) setCompletionData(final);
       return null;
     });
-    bump();
-    setTab('calendar');
-  };
+    setRefresh(r => r + 1);
+  }, []);
+
+  const resumeSession = useCallback(() => {
+    const saved = window.GymStore.getSession(window.GymStore.iso(new Date()));
+    if (!saved) {
+      window.location.reload();
+      return;
+    }
+    window.GymStore.setActive(saved);
+    setActive(saved);
+  }, []);
+
+  const addExerciseToSession = useCallback((exDef) => {
+    setActive(prev => {
+      if (!prev) return prev;
+      const alreadyIn = (prev.exercises || []).some(e => e.id === exDef.id);
+      if (alreadyIn) return prev;
+      const exState = { id: exDef.id, weight: exDef.weight || 0, sets: 0, targetSets: exDef.sets || 3, reps: exDef.reps || 10, done: false };
+      const exercises = [...(prev.exercises || []), exState];
+      const addedExDefs = [...(prev.addedExDefs || []), exDef];
+      const next = { ...prev, exercises, addedExDefs };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+
+  const addActivityToSession = useCallback((actDef) => {
+    setActive(prev => {
+      if (!prev) return prev;
+      const activities = { ...(prev.activities || {}), [actDef.id]: { id: actDef.id, done: false, value: actDef.defaultVal || 10 } };
+      const addedActDefs = [...(prev.addedActDefs || []), actDef];
+      const next = { ...prev, activities, addedActDefs };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+
+  const swapRoutine = useCallback((srcDow) => {
+    const newRoutine = window.GymStore.getRoutineFor(srcDow);
+    window.GymStore.saveRoutineFor(dow, { ...newRoutine });
+    setRoutineVer(v => v + 1);
+    setRefresh(r => r + 1);
+    setSwapOpen(false);
+  }, [dow]);
+
+  // Lambdas estables para props
+  const handleSetTab = useCallback((newTab) => setTab(newTab), []);
+  const handleSetDayDetail = useCallback((d) => setDayDetail(d), []);
+  const handleSetExerciseDetail = useCallback((ex) => setExerciseDetail(ex), []);
+  const handleOpenRoutineEditor = useCallback((d) => openRoutineEditor(d), [openRoutineEditor]);
+  const handleCloseMoodOpen = useCallback(() => setMoodOpen(false), []);
+  const handleCloseExerciseDetail = useCallback(() => setExerciseDetail(null), []);
+  const handleCloseDayDetail = useCallback(() => setDayDetail(null), []);
+  const handleCloseEditingRoutine = useCallback(() => setEditingRoutine(false), []);
+  const handleCloseSwapOpen = useCallback(() => setSwapOpen(false), []);
+  const handleCloseCompletion = useCallback(() => { setCompletionData(null); setTab('calendar'); }, []);
 
   return (
     <div className="app-root">
-      <header className="app-header">
+      <header className={`app-header${scrolled ? ' scrolled' : ''}`}>
         <div>
+          <div className="header-greeting">{greeting}{profileInfo ? `, ${profileInfo.name}` : ''}</div>
           <div className="header-date">{window.DAY_LONG[dow]} · {today.getDate()} {window.MONTH_LONG[today.getMonth()].slice(0, 3).toUpperCase()}</div>
-          <h1>Pongámonos Vigas</h1>
+          <h1>Ponte Viga App</h1>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <div className="header-streak">🔥 {streak}</div>
@@ -124,50 +230,77 @@ const App = ({ onSwitchProfile }) => {
         </div>
       </header>
 
-      <main className="app-scroll" key={refresh + tab + routineVer}>
+      <main
+        ref={scrollRef}
+        className="app-scroll"
+        key={refresh + tab + routineVer}
+        onScroll={e => setScrolled(e.target.scrollTop > 8)}
+      >
         {tab === 'today' && (
           <TodayScreen
             active={active}
             today={today}
             routine={routine}
+            todaySession={todaySession}
             onStart={() => setMoodOpen(true)}
             onUpdateExercise={updateExercise}
             onToggleCardio={toggleCardio}
             onFinish={finish}
             onOpenExercise={(ex) => setExerciseDetail(ex)}
             onEditRoutine={() => openRoutineEditor(dow)}
+            onSwapRoutine={() => setSwapOpen(true)}
+            onUpdateActivity={updateActivity}
+            onResume={resumeSession}
+            onAddExercise={addExerciseToSession}
+            onAddActivity={addActivityToSession}
           />
         )}
         {tab === 'calendar' && (
-          <CalendarScreen onPickDate={(d) => setDayDetail(d)} streak={streak} />
+          <CalendarScreen onPickDate={handleSetDayDetail} streak={streak} refresh={refresh} routineVer={routineVer} />
         )}
         {tab === 'week' && (
-          <WeekScreen onEditDay={(d) => openRoutineEditor(d)} />
+          <WeekScreen onEditDay={handleOpenRoutineEditor} routineVer={routineVer} />
         )}
         {tab === 'history' && (
-          <HistoryScreen onSelectExercise={(ex) => setExerciseDetail(ex)} />
+          <HistoryScreen onSelectExercise={handleSetExerciseDetail} refresh={refresh} routineVer={routineVer} />
         )}
         {tab === 'measures' && <MeasuresScreen />}
       </main>
 
       <nav className="tabbar">
-        <TabBtn icon="💪" label="Hoy"        active={tab === 'today'}    onClick={() => setTab('today')} />
-        <TabBtn icon="📅" label="Calendario" active={tab === 'calendar'} onClick={() => setTab('calendar')} />
-        <TabBtn icon="🗓️" label="Semana"     active={tab === 'week'}     onClick={() => setTab('week')} />
-        <TabBtn icon="📈" label="Progreso"   active={tab === 'history'}  onClick={() => setTab('history')} />
-        <TabBtn icon="📏" label="Medidas"    active={tab === 'measures'} onClick={() => setTab('measures')} />
+        <TabBtn icon="💪" label="Hoy"        active={tab === 'today'}    onClick={() => handleSetTab('today')} />
+        <TabBtn icon="📅" label="Calendario" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} />
+        <TabBtn icon="🗓️" label="Semana"     active={tab === 'week'}     onClick={() => handleSetTab('week')} />
+        <TabBtn icon="📈" label="Progreso"   active={tab === 'history'}  onClick={() => handleSetTab('history')} />
+        <TabBtn icon="📏" label="Medidas"    active={tab === 'measures'} onClick={() => handleSetTab('measures')} />
       </nav>
 
-      <MoodModal open={moodOpen} onClose={() => setMoodOpen(false)} onPick={startWorkout} />
-      <ExerciseDetail ex={exerciseDetail} onClose={() => setExerciseDetail(null)} />
-      <DayDetail dateIso={dayDetail} onClose={() => setDayDetail(null)} />
+      <MoodModal open={moodOpen} onClose={handleCloseMoodOpen} onPick={startWorkout} />
+      <ExerciseDetail ex={exerciseDetail} onClose={handleCloseExerciseDetail} />
+      <DayDetail dateIso={dayDetail} onClose={handleCloseDayDetail} />
+
       {editingRoutine && (
         <RoutineEditor
           dow={editingDow}
           routine={window.GymStore.getRoutineFor(editingDow)}
-          onClose={() => setEditingRoutine(false)}
-          onSave={(r) => { window.GymStore.saveRoutineFor(editingDow, r); setRoutineVer(v => v + 1); bump(); }}
-          onReset={() => { window.GymStore.resetRoutineFor(editingDow); setRoutineVer(v => v + 1); bump(); }}
+          onClose={handleCloseEditingRoutine}
+          onSave={(r) => { window.GymStore.saveRoutineFor(editingDow, r); setRoutineVer(v => v + 1); setRefresh(r => r + 1); }}
+          onReset={() => { window.GymStore.resetRoutineFor(editingDow); setRoutineVer(v => v + 1); setRefresh(r => r + 1); }}
+        />
+      )}
+
+      {swapOpen && (
+        <SwapRoutineModal
+          currentDow={dow}
+          onClose={handleCloseSwapOpen}
+          onSwap={swapRoutine}
+        />
+      )}
+
+      {completionData && (
+        <CompletionModal
+          session={completionData}
+          onClose={handleCloseCompletion}
         />
       )}
 
@@ -218,21 +351,50 @@ const TabBtn = ({ icon, label, active, onClick }) => (
 
 // Wrapper con selección de perfil + hidratación
 const GymAppLoader = () => {
+  const [profilesReady, setProfilesReady] = useState(
+    () => window.GymStore.getProfiles().length > 0
+  );
   const [profileName, setProfileName] = useState(() => {
-    if (window.GymStore.getProfiles().length === 0 && localStorage.getItem('gym_seeded_v1')) {
-      window.GymStore.migrateV1('Yo');
-      window.GymStore.createProfile({ name: 'Yo', emoji: '💪', color: '#ec6032' });
-    }
     const saved = window.GymStore.getActiveProfile();
     if (saved) window.GymStore.initProfile(saved);
     return saved;
   });
   const [ready, setReady] = useState(false);
+  const [profilesVer, setProfilesVer] = useState(0);
+  const [debugInfo, setDebugInfo] = useState('');
+
+  // Siempre sincronizar perfiles Y grupos del servidor al arrancar
+  // (cada navegador tiene su propio localStorage aislado)
+  useEffect(() => {
+    console.log('[DEBUG] Iniciando hydrateProfiles + hydrateGroups');
+    setDebugInfo('Cargando perfiles...');
+    Promise.all([
+      window.GymStore.hydrateProfiles(),
+      window.GymStore.hydrateGroups(),
+    ]).finally(() => {
+      console.log('[DEBUG] hydrateProfiles + hydrateGroups completado');
+      const saved = window.GymStore.getActiveProfile();
+      console.log('[DEBUG] Perfil guardado:', saved);
+      const exists = window.GymStore.getProfiles().find(p => p.name === saved);
+      console.log('[DEBUG] Perfil existe:', !!exists);
+      if (!profilesReady) {
+        if (saved && exists) {
+          window.GymStore.initProfile(saved);
+          setProfileName(saved);
+        }
+        setProfilesReady(true);
+      } else {
+        setProfilesVer(v => v + 1);
+      }
+    });
+  }, []);
 
   const selectProfile = (name) => {
+    console.log('[DEBUG] selectProfile:', name);
     window.GymStore.initProfile(name);
     setProfileName(name);
     setReady(false);
+    setDebugInfo('Seleccionado: ' + name);
   };
 
   const switchProfile = () => {
@@ -243,21 +405,39 @@ const GymAppLoader = () => {
 
   useEffect(() => {
     if (!profileName) return;
+    console.log('[DEBUG] Iniciando hydrate para:', profileName);
+    setDebugInfo('Hidratando perfil: ' + profileName);
+    const startTime = Date.now();
     window.GymStore.hydrate().then(hasCloud => {
+      const elapsed = Date.now() - startTime;
+      console.log('[DEBUG] hydrate completado en', elapsed + 'ms, hasCloud:', hasCloud);
+      setDebugInfo('Datos: ' + (hasCloud ? 'Encontrados' : 'Creando nuevos'));
       if (!hasCloud) window.GymStore.ensureSeed();
       setReady(true);
-    }).catch(() => {
+    }).catch(err => {
+      const elapsed = Date.now() - startTime;
+      console.error('[DEBUG] hydrate error en', elapsed + 'ms:', err);
+      setDebugInfo('Error: ' + err.message);
       window.GymStore.ensureSeed();
       setReady(true);
     });
   }, [profileName]);
 
-  if (!profileName) return <ProfilePicker onSelect={selectProfile} />;
+  if (!profilesReady) return (
+    <div className="app-loading">
+      <div className="loading-dots"><span /><span /><span /></div>
+      <div className="loading-text">Cargando perfiles...</div>
+      <div style={{fontSize: 11, color: '#666', marginTop: 8}}>{debugInfo}</div>
+    </div>
+  );
+
+  if (!profileName) return <ProfilePicker key={profilesVer} onSelect={selectProfile} />;
 
   if (!ready) return (
     <div className="app-loading">
       <div className="loading-dots"><span /><span /><span /></div>
       <div className="loading-text">Sincronizando...</div>
+      <div style={{fontSize: 11, color: '#666', marginTop: 8}}>{debugInfo}</div>
     </div>
   );
 

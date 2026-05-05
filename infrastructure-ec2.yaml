@@ -288,6 +288,7 @@ Resources:
             inputs:
               workingDirectory: /home/ubuntu/ponte-viga
               runCommand:
+                - export PATH=$PATH:/usr/local/bin:/usr/bin
                 - echo "=== Deploy inicio $(date) ==="
                 - "aws s3 cp s3://{{ BucketName }}/app/index.html     /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
                 - "aws s3 cp s3://{{ BucketName }}/app/server.js      /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"

@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 
 // Claves permitidas: "type" o "profileName_type"
 // Solo alfanumérico + guión bajo/medio: previene path traversal
-const DATA_SUFFIXES = new Set(['sessions', 'measures', 'profile', 'routines']);
+const DATA_SUFFIXES = new Set(['sessions', 'measures', 'profile', 'routines', 'profiles', 'groups']);
 
 function isAllowedKey(key) {
   if (!/^[a-zA-Z0-9_-]+$/.test(key)) return false;
@@ -52,8 +52,14 @@ app.put('/data/:key.json', (req, res) => {
 });
 
 // Solo se sirven estos dos archivos estáticos — nada más del filesystem
-app.get('/sw.js', (req, res) => res.sendFile(path.join(ROOT, 'sw.js')));
-app.get('*',      (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+app.get('/sw.js', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(ROOT, 'sw.js'));
+});
+app.get('*', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(path.join(ROOT, 'index.html'));
+});
 
 app.listen(PORT, () => {
   console.log(`Ponte Viga → http://localhost:${PORT}`);

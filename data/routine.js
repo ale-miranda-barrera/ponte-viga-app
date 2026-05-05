@@ -92,7 +92,7 @@ window.WEEK_ROUTINE = {
       { id: 's6', name: 'Giro ruso', sub: 'Oblicuos · pies elevados', sets: 3, reps: 20, weight: 25, unit: 'lb', tag: 'fire', target: '3×20 @ 25 lb' },
       { id: 's7', name: 'Plancha', sub: 'Plank', sets: 3, reps: 120, weight: 0, unit: 's', tag: 'fire', target: '3 × 2 min' },
     ],
-    cardio: { name: 'Patines', detail: '4 vueltas polideportivo Niquia', minutes: 40 },
+    cardio: { name: 'Patines', detail: 'Polideportivo Niquia', minutes: 20, laps: 4 },
   },
   0: { // Domingo - descanso
     title: 'Descanso',
@@ -111,3 +111,25 @@ window.MONTH_LONG = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Jul
 window._allExMeta = Object.values(window.WEEK_ROUTINE)
   .flatMap(d => d.exercises || [])
   .reduce((m, e) => { m[e.id] = e; return m; }, {});
+
+// Catálogo de actividades físicas por defecto
+window.DEFAULT_ACTIVITIES = [
+  { id: 'walk',   name: 'Caminar',       icon: '🚶', type: 'time',      unit: 'min',   cal10: 4,  defaultVal: 20 },
+  { id: 'run',    name: 'Trotar',         icon: '🏃', type: 'time',      unit: 'min',   cal10: 8,  defaultVal: 20 },
+  { id: 'dance',  name: 'Bailar',         icon: '💃', type: 'time',      unit: 'min',   cal10: 7,  defaultVal: 30 },
+  { id: 'bike',   name: 'Bicicleta',      icon: '🚴', type: 'time',      unit: 'min',   cal10: 6,  defaultVal: 30 },
+  { id: 'swim',   name: 'Nadar',          icon: '🏊', type: 'time',      unit: 'min',   cal10: 9,  defaultVal: 30 },
+  { id: 'jump',   name: 'Saltar cuerda',  icon: '🪢', type: 'time',      unit: 'min',   cal10: 10, defaultVal: 10 },
+  { id: 'yoga',   name: 'Yoga',           icon: '🧘', type: 'time',      unit: 'min',   cal10: 3,  defaultVal: 30 },
+  { id: 'plank',  name: 'Plank',          icon: '🏋️', type: 'sets_reps', unit: 's',     cal10: 4,  defaultVal: 30, sets: 3 },
+  { id: 'pushup', name: 'Lagartijas',     icon: '💪', type: 'sets_reps', unit: 'reps',  cal10: 6,  defaultVal: 15, sets: 3 },
+  { id: 'hiit',   name: 'HIIT',           icon: '⚡', type: 'rounds',    unit: 'rondas',cal10: 11, defaultVal: 4 },
+];
+
+window.ACTIVITY_VALUE_TYPES = [
+  { key: 'time',      label: 'Tiempo',       unit: 'min'    },
+  { key: 'sets_reps', label: 'Series × Reps',unit: 'reps'   },
+  { key: 'rounds',    label: 'Rondas',       unit: 'rondas' },
+  { key: 'distance',  label: 'Distancia',    unit: 'km'     },
+  { key: 'sets_time', label: 'Series × Tiempo', unit: 's'   },
+];

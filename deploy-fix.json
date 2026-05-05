@@ -1,0 +1,19 @@
+{
+  "InstanceIds": ["i-08df5941067afa554"],
+  "DocumentName": "AWS-RunShellScript",
+  "Parameters": {
+    "commands": [
+      "export PATH=$PATH:/usr/local/bin:/usr/bin",
+      "aws s3 cp s3://ponte-viga-deploy-dev-733153951187/app/index.html /home/ubuntu/ponte-viga/ --region us-east-1",
+      "aws s3 cp s3://ponte-viga-deploy-dev-733153951187/app/server.js /home/ubuntu/ponte-viga/ --region us-east-1",
+      "aws s3 cp s3://ponte-viga-deploy-dev-733153951187/app/sw.js /home/ubuntu/ponte-viga/ --region us-east-1",
+      "aws s3 cp s3://ponte-viga-deploy-dev-733153951187/app/package.json /home/ubuntu/ponte-viga/ --region us-east-1",
+      "aws s3 cp s3://ponte-viga-deploy-dev-733153951187/app/ec2-config.json /home/ubuntu/ponte-viga/ --region us-east-1",
+      "chown -R ubuntu:ubuntu /home/ubuntu/ponte-viga",
+      "cd /home/ubuntu/ponte-viga && sudo -u ubuntu npm install --omit=dev",
+      "sudo -u ubuntu pm2 describe ponte-viga > /dev/null 2>&1 && sudo -u ubuntu pm2 restart ponte-viga || sudo -u ubuntu pm2 start server.js --name ponte-viga",
+      "sudo -u ubuntu pm2 save"
+    ]
+  },
+  "Comment": "Deploy manual con PATH fix"
+}

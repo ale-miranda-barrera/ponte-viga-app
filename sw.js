@@ -1,5 +1,5 @@
 // Service Worker — Ponte Viga Gym App
-const CACHE = 'ponte-viga-v2';
+const CACHE = 'ponte-viga-v6';
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -18,8 +18,20 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Don't intercept API or SW routes — let them go to network directly
   if (e.request.url.includes('/data/') || e.request.url.includes('/sw.js')) return;
+
+  // HTML navigation: network-first so deploys are picked up immediately
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        const clone = resp.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return resp;
+      }).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => caches.match('/index.html')))
   );

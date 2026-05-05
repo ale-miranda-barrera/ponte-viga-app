@@ -1,14 +1,22 @@
 // Vista semanal: muestra los 7 días con opción de editar cualquier día
-const WeekScreen = ({ onEditDay }) => {
+const WeekScreen = ({ onEditDay, routineVer }) => {
   const today = new Date();
   const todayDow = today.getDay();
   const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Lun → Dom
+
+  const routineMap = React.useMemo(() => {
+    const map = {};
+    for (let d of WEEK_ORDER) {
+      map[d] = window.GymStore.getRoutineFor(d);
+    }
+    return map;
+  }, [routineVer]);
 
   return (
     <div className="week-screen">
       <div className="week-eyebrow">Rutina Semanal</div>
       {WEEK_ORDER.map(dow => {
-        const routine = window.GymStore.getRoutineFor(dow);
+        const routine = routineMap[dow];
         const isToday = dow === todayDow;
         const isRest = !!routine.rest;
         return (
@@ -20,7 +28,7 @@ const WeekScreen = ({ onEditDay }) => {
               </div>
               <div className="week-card-title">{routine.title}</div>
               {!isRest && (
-                <button className="icon-btn" onClick={() => onEditDay(dow)} title={`Editar ${window.DAY_LONG[dow]}`}>✎</button>
+                <button type="button" className="icon-btn" onClick={() => onEditDay(dow)} title={`Editar ${window.DAY_LONG[dow]}`}>✎</button>
               )}
             </div>
             {!isRest && (
@@ -45,6 +53,24 @@ const WeekScreen = ({ onEditDay }) => {
                       <span className="week-ex-name">{routine.cardio.name}</span>
                       <span className="week-ex-spec">{routine.cardio.minutes} min</span>
                     </div>
+                  )}
+                  {(routine.activities || []).map(act => (
+                    <div key={act.id} className="week-ex-row week-cardio-row">
+                      <span className="week-ex-i">{act.icon || '🏃'}</span>
+                      <span className="week-ex-name">{act.name}</span>
+                      <span className="week-ex-spec">{act.defaultVal} {act.unit}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="week-card-stats">
+                  <span>{(routine.exercises || []).length} ejercicios</span>
+                  <span className="dot-sep">·</span>
+                  <span>~{Math.round((routine.exercises || []).reduce((s,e) => s + e.sets, 0) * 2.2 + (routine.cardio?.minutes || 0))} min</span>
+                  {(routine.exercises || []).reduce((s,e) => s + e.sets, 0) > 0 && (
+                    <>
+                      <span className="dot-sep">·</span>
+                      <span>{(routine.exercises || []).reduce((s,e) => s + e.sets, 0)} sets</span>
+                    </>
                   )}
                 </div>
               </div>

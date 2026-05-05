@@ -1,104 +1,105 @@
-// Medidas corporales + perfil + IMC + calorías
-const MeasuresScreen = () => {
-  const [measures, setMeasures] = React.useState(() => window.GymStore.getMeasures());
-  const [profile, setProfile] = React.useState(() => window.GymStore.getProfile());
-  const [form, setForm] = React.useState({ barriga: '', brazo: '', peso: '' });
-  const [editProfile, setEditProfile] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-
-  const saveProfile = (patch) => {
-    setProfile(prev => {
-      const next = { ...prev, ...patch };
-      window.GymStore.saveProfile(next);
-      return next;
-    });
-  };
-
-  const add = () => {
-    const hasPeso = form.peso && !isNaN(parseFloat(form.peso));
-    const hasBarriga = form.barriga && !isNaN(parseFloat(form.barriga));
-    const hasBrazo = form.brazo && !isNaN(parseFloat(form.brazo));
-    if (!hasPeso && !hasBarriga && !hasBrazo) return;
-    const m = {
-      date: window.GymStore.iso(new Date()),
-      peso: hasPeso ? parseFloat(form.peso) : null,
-      barriga: hasBarriga ? parseFloat(form.barriga) : null,
-      brazo: hasBrazo ? parseFloat(form.brazo) : null,
-    };
-    window.GymStore.saveMeasure(m);
-    setMeasures(window.GymStore.getMeasures());
-    setForm({ barriga: '', brazo: '', peso: '' });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
-
-  const sorted = React.useMemo(
-    () => [...measures].sort((a, b) => b.date.localeCompare(a.date)),
-    [measures]
-  );
-  const latest = sorted[0];
-  const first = sorted[sorted.length-1];
-  const delta = (key) => {
-    if (!latest || !first || latest === first || latest[key] == null || first[key] == null) return null;
-    return latest[key] - first[key];
-  };
-
-  // Última medida con peso
-  const latestWithPeso = sorted.find(m => m.peso != null);
-  const firstWithPeso = sorted.findLast(m => m.peso != null);
-  const pesoActual = latestWithPeso?.peso;
-  const pesoDelta = (latestWithPeso && firstWithPeso && latestWithPeso !== firstWithPeso) ? (latestWithPeso.peso - firstWithPeso.peso) : null;
-
-  // IMC
-  const heightM = profile.height / 100;
-  const bmi = (pesoActual && profile.height > 0) ? pesoActual / (heightM * heightM) : null;
-  const bmiCat = bmiCategory(bmi);
-
-  // BMR Mifflin-St Jeor (requiere altura y edad válidas)
-  const bmr = (pesoActual && profile.height > 0 && profile.age > 0)
-    ? Math.round(mifflin(pesoActual, profile.height, profile.age, profile.sex))
-    : null;
-  const tdee = bmr ? Math.round(bmr * profile.activity) : null;
-  const deficit = tdee ? tdee - 500 : null;
-  const surplus = tdee ? tdee + 500 : null;
-
+// Sección de perfil
+const ProfileSection = ({ profile, onSave }) => {
+  const [editOpen, setEditOpen] = React.useState(false);
   return (
-    <div className="meas-screen">
-      {/* Perfil */}
-      <div className="profile-card" onClick={() => setEditProfile(v => !v)}>
-        <div className="profile-row">
-          <div className="profile-item"><div className="profile-label">Altura</div><div className="profile-val">{profile.height}<span>cm</span></div></div>
-          <div className="profile-item"><div className="profile-label">Edad</div><div className="profile-val">{profile.age}<span>años</span></div></div>
-          <div className="profile-item"><div className="profile-label">Sexo</div><div className="profile-val">{profile.sex === 'm' ? '♂' : '♀'}</div></div>
-          <div className="profile-edit">{editProfile ? '✕' : '✎'}</div>
+    <div className="profile-card" onClick={() => setEditOpen(v => !v)}>
+      <div className="profile-row">
+        <div className="profile-item"><div className="profile-label">Altura</div><div className="profile-val">{profile.height}<span>cm</span></div></div>
+        <div className="profile-item"><div className="profile-label">Edad</div><div className="profile-val">{profile.age}<span>años</span></div></div>
+        <div className="profile-item"><div className="profile-label">Sexo</div><div className="profile-val">{profile.sex === 'm' ? '♂' : '♀'}</div></div>
+        <div className="profile-item"><div className="profile-label">Gym/sem</div><div className="profile-val">{profile.daysPerWeek || 5}<span>días</span></div></div>
+        <div className="profile-edit">{editOpen ? '✕' : '✎'}</div>
+      </div>
+      {!editOpen && (profile.extraActivities || []).length > 0 && (
+        <div className="profile-extra-acts">
+          {(profile.extraActivities || []).map(id => {
+            const act = (window.DEFAULT_ACTIVITIES || []).find(a => a.id === id);
+            return act ? <span key={id} className="extra-act-chip on">{act.icon} {act.name}</span> : null;
+          })}
         </div>
-        {editProfile && (
-          <div className="profile-editor" onClick={e=>e.stopPropagation()}>
-            <label><span>Altura (cm)</span><input inputMode="decimal" value={profile.height} onChange={e=>saveProfile({ height: parseFloat(e.target.value)||0 })}/></label>
-            <label><span>Edad</span><input inputMode="numeric" value={profile.age} onChange={e=>saveProfile({ age: parseInt(e.target.value)||0 })}/></label>
-            <div className="profile-editor-row">
-              <label className="seg"><span>Sexo</span>
-                <div className="seg-ctrl">
-                  <button className={profile.sex==='m'?'on':''} onClick={()=>saveProfile({sex:'m'})}>♂ Hombre</button>
-                  <button className={profile.sex==='f'?'on':''} onClick={()=>saveProfile({sex:'f'})}>♀ Mujer</button>
-                </div>
-              </label>
-            </div>
-            <label className="seg"><span>Actividad</span>
-              <div className="seg-ctrl seg-sm">
-                {[
-                  {v:1.2,  l:'Sedentario'},
-                  {v:1.35, l:'Ligero'},
-                  {v:1.45, l:'Moderado'},
-                  {v:1.60, l:'Intenso'},
-                ].map(a => <button key={a.v} className={Math.abs(profile.activity-a.v)<0.01?'on':''} onClick={()=>saveProfile({activity:a.v})}>{a.l}</button>)}
+      )}
+      {editOpen && (
+        <div className="profile-editor" onClick={e=>e.stopPropagation()}>
+          <label><span>Altura (cm)</span><input inputMode="decimal" value={profile.height} onFocus={e=>e.target.select()} onChange={e=>onSave({ height: parseFloat(e.target.value)||0 })}/></label>
+          <label><span>Edad</span><input inputMode="numeric" value={profile.age} onFocus={e=>e.target.select()} onChange={e=>onSave({ age: parseInt(e.target.value)||0 })}/></label>
+          <div className="profile-editor-row">
+            <label className="seg"><span>Sexo</span>
+              <div className="seg-ctrl">
+                <button type="button" className={profile.sex==='m'?'on':''} onClick={()=>onSave({sex:'m'})}>♂ Hombre</button>
+                <button type="button" className={profile.sex==='f'?'on':''} onClick={()=>onSave({sex:'f'})}>♀ Mujer</button>
               </div>
             </label>
           </div>
-        )}
-      </div>
+          <label className="seg"><span>Actividad</span>
+            <div className="seg-ctrl seg-sm">
+              {[
+                {v:1.2,  l:'Sedentario'},
+                {v:1.35, l:'Ligero'},
+                {v:1.45, l:'Moderado'},
+                {v:1.60, l:'Intenso'},
+              ].map(a => <button key={a.v} className={Math.abs(profile.activity-a.v)<0.01?'on':''} onClick={()=>onSave({activity:a.v})}>{a.l}</button>)}
+            </div>
+          </label>
+          <label className="seg"><span>Días de gym por semana</span>
+            <div className="seg-ctrl seg-sm">
+              {[1,2,3,4,5,6,7].map(n => (
+                <button key={n} className={(profile.daysPerWeek||5)===n?'on':''} onClick={()=>onSave({daysPerWeek:n})}>{n}</button>
+              ))}
+            </div>
+          </label>
+          <div className="profile-field-label">Otras actividades físicas (fuera del gym)</div>
+          <div className="extra-acts-grid">
+            {(window.DEFAULT_ACTIVITIES || []).map(act => {
+              const selected = (profile.extraActivities || []).includes(act.id);
+              return (
+                <button
+                  key={act.id}
+                  className={`extra-act-chip ${selected ? 'on' : ''}`}
+                  onClick={() => {
+                    const cur = profile.extraActivities || [];
+                    const next = selected ? cur.filter(x => x !== act.id) : [...cur, act.id];
+                    onSave({ extraActivities: next });
+                  }}
+                >
+                  {act.icon} {act.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
-      {/* Métricas principales */}
+// Sección de métricas corporales
+const BodyMetricsSection = ({ profile, sorted }) => {
+  const metrics = React.useMemo(() => {
+    const latest = sorted[0];
+    const first = sorted[sorted.length - 1];
+    const delta = (key) => {
+      if (!latest || !first || latest === first || latest[key] == null || first[key] == null) return null;
+      return latest[key] - first[key];
+    };
+    const latestWithPeso = sorted.find(m => m.peso != null);
+    const firstWithPeso = [...sorted].reverse().find(m => m.peso != null);
+    const pesoActual = latestWithPeso?.peso;
+    const pesoDelta = (latestWithPeso && firstWithPeso && latestWithPeso !== firstWithPeso)
+      ? latestWithPeso.peso - firstWithPeso.peso : null;
+    const heightM = profile.height / 100;
+    const bmi = (pesoActual && profile.height > 0) ? pesoActual / (heightM * heightM) : null;
+    const bmiCat = bmiCategory(bmi);
+    const bmr = (pesoActual && profile.height > 0 && profile.age > 0)
+      ? Math.round(mifflin(pesoActual, profile.height, profile.age, profile.sex)) : null;
+    const tdee = bmr ? Math.round(bmr * profile.activity) : null;
+    return { latest, delta, pesoActual, pesoDelta, bmi, bmiCat, bmr, tdee,
+      deficit: tdee ? tdee - 500 : null, surplus: tdee ? tdee + 500 : null };
+  }, [sorted, profile]);
+
+  const { latest, delta, pesoActual, pesoDelta, bmi, bmiCat, bmr, tdee, deficit, surplus } = metrics;
+
+  return (
+    <>
       <div className="meas-cards">
         <div className="meas-card">
           <div className="meas-label">Peso</div>
@@ -108,21 +109,15 @@ const MeasuresScreen = () => {
               {pesoDelta > 0 ? '+' : ''}{pesoDelta.toFixed(1)} kg
             </div>
           )}
-  </div>
+        </div>
         <div className="meas-card">
           <div className="meas-label">IMC</div>
           <div className="meas-num">{bmi ? bmi.toFixed(1) : '—'}</div>
           {bmiCat && <div className={`imc-badge imc-${bmiCat.key}`}>{bmiCat.label}</div>}
         </div>
       </div>
-
-      {/* Rango de peso saludable */}
       {pesoActual && <WeightRangeBar peso={pesoActual} heightCm={profile.height} />}
-
-      {/* Barra IMC */}
       {bmi && <BmiBar bmi={bmi} />}
-
-      {/* Calorías */}
       {tdee && (
         <div className="cal-card">
           <div className="cal-head">
@@ -148,8 +143,6 @@ const MeasuresScreen = () => {
           </div>
         </div>
       )}
-
-      {/* Medidas secundarias */}
       <div className="meas-cards">
         <div className="meas-card sm">
           <div className="meas-label">Barriga</div>
@@ -170,30 +163,34 @@ const MeasuresScreen = () => {
           )}
         </div>
       </div>
+    </>
+  );
+};
 
-      {/* Form nueva medición */}
+// Sección de registro de mediciones
+const MeasureHistorySection = ({ sorted, form, pesoActual, latest, onFormChange, onAddMeasure, saved }) => {
+  return (
+    <>
       <div className="meas-form">
         <div className="meas-form-title">Nueva medición · hoy</div>
         <div className="meas-form-row tri">
           <label>
             <span>Peso (kg)</span>
-            <input inputMode="decimal" value={form.peso} onChange={e=>setForm({...form, peso:e.target.value})} placeholder="85" />
+            <input inputMode="decimal" value={form.peso} onFocus={e=>e.target.select()} onChange={e=>onFormChange({...form, peso:e.target.value})} placeholder={pesoActual?.toString() || '85'} />
           </label>
           <label>
             <span>Barriga (cm)</span>
-            <input inputMode="decimal" value={form.barriga} onChange={e=>setForm({...form, barriga:e.target.value})} placeholder="103" />
+            <input inputMode="decimal" value={form.barriga} onFocus={e=>e.target.select()} onChange={e=>onFormChange({...form, barriga:e.target.value})} placeholder={latest?.barriga?.toString() || '103'} />
           </label>
           <label>
             <span>Brazo (cm)</span>
-            <input inputMode="decimal" value={form.brazo} onChange={e=>setForm({...form, brazo:e.target.value})} placeholder="38" />
+            <input inputMode="decimal" value={form.brazo} onFocus={e=>e.target.select()} onChange={e=>onFormChange({...form, brazo:e.target.value})} placeholder={latest?.brazo?.toString() || '38'} />
           </label>
         </div>
-        <button className={`btn-primary sm ${saved ? 'btn-saved' : ''}`} onClick={add}>
+        <button type="button" className={`btn-primary sm ${saved ? 'btn-saved' : ''}`} onClick={onAddMeasure}>
           {saved ? '¡Guardado! ✓' : 'Guardar medición'}
         </button>
       </div>
-
-      {/* Historial */}
       <div className="meas-hist">
         <div className="meas-hist-title">Historial</div>
         {sorted.map((m,i) => (
@@ -207,6 +204,69 @@ const MeasuresScreen = () => {
           </div>
         ))}
       </div>
+    </>
+  );
+};
+
+// Medidas corporales + perfil + IMC + calorías
+const MeasuresScreen = () => {
+  const [measures, setMeasures] = React.useState(() => window.GymStore.getMeasures());
+  const [profile, setProfile] = React.useState(() => window.GymStore.getProfile());
+  const [form, setForm] = React.useState({ barriga: '', brazo: '', peso: '' });
+  const [saved, setSaved] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!saved) return;
+    const id = setTimeout(() => setSaved(false), 2500);
+    return () => clearTimeout(id);
+  }, [saved]);
+
+  const saveProfile = (patch) => {
+    setProfile(prev => {
+      const next = { ...prev, ...patch };
+      window.GymStore.saveProfile(next);
+      return next;
+    });
+  };
+
+  const sorted = React.useMemo(
+    () => [...measures].sort((a, b) => b.date.localeCompare(a.date)),
+    [measures]
+  );
+
+  const handleAddMeasure = () => {
+    const hasPeso = form.peso && !isNaN(parseFloat(form.peso));
+    const hasBarriga = form.barriga && !isNaN(parseFloat(form.barriga));
+    const hasBrazo = form.brazo && !isNaN(parseFloat(form.brazo));
+    if (!hasPeso && !hasBarriga && !hasBrazo) return;
+    const m = {
+      date: window.GymStore.iso(new Date()),
+      peso: hasPeso ? parseFloat(form.peso) : null,
+      barriga: hasBarriga ? parseFloat(form.barriga) : null,
+      brazo: hasBrazo ? parseFloat(form.brazo) : null,
+    };
+    window.GymStore.saveMeasure(m);
+    setMeasures(window.GymStore.getMeasures());
+    setForm({ barriga: '', brazo: '', peso: '' });
+    setSaved(true);
+  };
+
+  const latestWithPeso = sorted.find(m => m.peso != null);
+  const latest = sorted[0];
+
+  return (
+    <div className="meas-screen">
+      <ProfileSection profile={profile} onSave={saveProfile} />
+      <BodyMetricsSection profile={profile} sorted={sorted} />
+      <MeasureHistorySection
+        sorted={sorted}
+        form={form}
+        pesoActual={latestWithPeso?.peso}
+        latest={latest}
+        onFormChange={setForm}
+        onAddMeasure={handleAddMeasure}
+        saved={saved}
+      />
     </div>
   );
 };

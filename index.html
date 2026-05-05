@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ponte Viga">
 <meta name="theme-color" content="#0A0A0B">
-<title>Pongámonos Vigas</title>
+<title>Ponte Viga App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -418,12 +418,28 @@ body {
 }
 .stepper-btn:active { transform: scale(0.92); background: var(--accent); color: #fff; }
 .weight-display { flex: 1; text-align: center; }
+.weight-num-row { display: flex; align-items: baseline; justify-content: center; gap: 2px; }
 .weight-num {
   font-family: 'JetBrains Mono', monospace;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+.weight-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--border);
+  color: var(--text);
+  text-align: center;
+  width: 5.5ch;
+  min-width: 0;
+  padding: 0 2px 2px;
+  border-radius: 0;
+  outline: none;
+  caret-color: var(--accent);
+  touch-action: manipulation;
+}
+.weight-input:focus { border-bottom-color: var(--accent); }
 .weight-unit {
   font-size: 13px;
   color: var(--text-3);
@@ -809,9 +825,10 @@ body {
   color: var(--text);
   padding: 8px 10px;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 16px;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
+  touch-action: manipulation;
 }
 .profile-editor input:focus { outline: none; border-color: var(--accent); }
 .seg-ctrl {
@@ -1655,6 +1672,8 @@ body {
   font-family: inherit;
 }
 .picker-input:focus { outline: none; border-color: var(--accent); }
+.picker-input-error { border-color: #e74c3c !important; }
+.picker-pin-error { color: #e74c3c; font-size: 13px; text-align: center; margin-top: -4px; }
 .picker-emoji-row {
   display: flex;
   justify-content: center;
@@ -1690,6 +1709,67 @@ body {
 }
 .picker-color-btn.on { border-color: var(--text); transform: scale(1.25); }
 .picker-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+
+/* Leaderboard */
+.lb-wrap {
+  margin-top: 24px;
+  width: 100%;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lb-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 2px;
+}
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lb-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.lb-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+.lb-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.lb-badge {
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 8px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.lb-empty {
+  font-size: 11px;
+  color: var(--text-dim);
+}
 
 /* Profile avatar button in header */
 .profile-btn {
@@ -1845,6 +1925,281 @@ body {
   border-color: color-mix(in oklab, var(--bad) 35%, transparent);
   color: oklch(0.78 0.17 22);
 }
+
+
+/* ===== Placeholder palido en inputs de medidas ===== */
+.meas-form-row input::placeholder {
+  color: var(--text-3);
+  opacity: 0.55;
+  font-weight: 400;
+}
+.meas-form-row input:focus {
+  caret-color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* ===== Intro secondary buttons ===== */
+.intro-secondary-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+/* ===== Swap routine modal ===== */
+.swap-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.swap-option {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+  cursor: pointer; text-align: left; transition: border-color .15s, background .15s;
+}
+.swap-option:active { background: var(--surface-3); }
+.swap-option-day { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; min-width: 52px; font-weight: 700; }
+.swap-option-info { flex: 1; min-width: 0; }
+.swap-option-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.swap-option-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.swap-arrow { font-size: 20px; color: var(--text-3); }
+
+/* ===== ActivityCard ===== */
+.activity-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; transition: opacity .25s;
+}
+.activity-card.is-done { opacity: 0.55; }
+.activity-icon { font-size: 24px; width: 32px; text-align: center; flex-shrink: 0; }
+.activity-info { flex: 1; min-width: 0; }
+.activity-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.activity-val-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.activity-cal { font-size: 11px; color: var(--text-3); background: var(--surface-3); padding: 2px 7px; border-radius: 8px; margin-left: 4px; }
+
+/* ===== Completion modal ===== */
+.completion-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: 300; animation: fadeIn .2s ease;
+}
+.completion-sheet {
+  background: var(--surface); border-radius: 28px 28px 0 0;
+  padding: 32px 24px 48px; width: 100%; max-width: 480px;
+  text-align: center; animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
+}
+.completion-trophy { font-size: 56px; margin-bottom: 12px; animation: bounceIn .5s cubic-bezier(.34,1.56,.64,1) .1s both; }
+@keyframes bounceIn { 0% { transform: scale(.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.completion-title { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.completion-routine { font-size: 14px; color: var(--text-2); margin-bottom: 20px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.completion-stats { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface-2); border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; }
+.completion-stat { text-align: center; }
+.completion-stat-num { font-size: 28px; font-weight: 800; color: var(--accent); font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.completion-stat-label { font-size: 11px; color: var(--text-3); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+.completion-divider { width: 1px; height: 40px; background: var(--border); }
+.completion-pr { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-radius: 12px; padding: 8px 16px; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+.completion-sub-msg { font-size: 13px; color: var(--text-3); margin-bottom: 20px; }
+
+/* ===== Progreso: banner demo ===== */
+.progress-demo-banner {
+  display: flex; gap: 12px;
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface-2));
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
+  border-radius: 14px; padding: 14px; margin-bottom: 14px;
+}
+.demo-banner-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.demo-banner-body { flex: 1; min-width: 0; }
+.demo-banner-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.demo-banner-sub { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+.prog-item-demo { opacity: .72; }
+
+/* ===== Grupos / amigos ===== */
+.friends-section { margin-top: 20px; padding: 16px; background: var(--surface-2); border-radius: 16px; border: 1px solid var(--border); }
+.friends-title { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+.friends-group { margin-bottom: 14px; }
+.friends-group:last-child { margin-bottom: 0; }
+.friends-code { font-size: 11px; color: var(--accent); font-weight: 700; margin-bottom: 8px; letter-spacing: .06em; }
+.friends-avatars { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.friend-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255,255,255,.15); }
+.friend-link { font-size: 18px; }
+.friends-names { font-size: 12px; color: var(--text-3); }
+
+/* ===== Group join step ===== */
+.group-mode-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.group-mode-tab { flex: 1; padding: 8px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.group-mode-tab.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.group-code-preview { font-size: 13px; color: var(--text-2); margin-top: 8px; padding: 8px 12px; background: var(--surface-2); border-radius: 10px; text-align: center; }
+
+/* ===== Routine editor - activities ===== */
+.editor-act-row { background: color-mix(in oklab, var(--accent) 8%, var(--surface-2)); }
+.editor-act-icon { font-size: 20px; margin-right: 8px; }
+.editor-act-name { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+.editor-act-vals { display: flex; gap: 12px; margin-top: 8px; }
+.editor-act-vals label { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.editor-act-input-row { display: flex; align-items: center; gap: 6px; }
+.editor-act-unit { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+
+/* ===== Activity catalog modal ===== */
+.activity-catalog { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.activity-catalog-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+  cursor: pointer; text-align: left; transition: border-color .15s, background .15s;
+}
+.activity-catalog-item:active { background: var(--surface-3); }
+.act-cat-icon { font-size: 24px; width: 32px; text-align: center; }
+.act-cat-info { flex: 1; }
+.act-cat-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.act-cat-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.act-type-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.act-type-btn { padding: 6px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 12px; font-weight: 600; cursor: pointer; }
+.act-type-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+/* ===== today.jsx: bodyweight + last session + cals + pop animation ===== */
+.bodyweight-row { display: flex; justify-content: center; }
+.bodyweight-label { font-size: 14px; color: var(--text-2); background: var(--surface-3); border-radius: 10px; padding: 8px 20px; font-weight: 600; }
+.intro-last-session { font-size: 13px; color: var(--text-2); text-align: center; margin-bottom: 14px; }
+.intro-last-ok { color: var(--good); }
+.intro-last-partial { color: var(--warn); }
+.active-cals { font-size: 12px; color: var(--text-3); text-align: right; padding: 2px 4px 8px; }
+@keyframes pop-done { 0% { transform: scale(1); } 40% { transform: scale(1.04); } 70% { transform: scale(.98); } 100% { transform: scale(1); } }
+.ex-card.just-done { animation: pop-done .55s cubic-bezier(.34,1.56,.64,1); }
+
+/* ===== Mejora 3: greeting ===== */
+.header-greeting { font-size: 12px; color: var(--text-3); margin-bottom: 1px; font-weight: 500; }
+
+/* ===== Mejora 6: scroll shadow ===== */
+.app-header { transition: box-shadow .2s; }
+.app-header.scrolled { box-shadow: 0 4px 20px rgba(0,0,0,.5); }
+
+/* ===== Mejora 7: tab fade-in ===== */
+@keyframes tab-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.app-scroll > * { animation: tab-enter .22s cubic-bezier(.4,0,.2,1) both; }
+
+/* ===== Mejora 9: week stats ===== */
+.week-card-stats { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-3); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+
+/* ===== Mejora 10: history volume ===== */
+.hist-vol { font-size: 11px; color: var(--text-3); font-family: 'JetBrains Mono', monospace; }
+
+/* ===== Admin panel ===== */
+.admin-pin-wrap { display: flex; flex-direction: column; min-height: 100dvh; background: var(--bg); }
+.admin-pin-topbar { padding: 16px 20px 0; }
+.admin-back-link { color: var(--text-3); font-size: 14px; font-weight: 600; text-decoration: none; }
+.admin-back-link:hover { color: var(--accent); }
+.admin-pin-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 16px; }
+.admin-pin-logo { font-size: 48px; }
+.admin-pin-title { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+.admin-pin-sub { font-size: 13px; color: var(--text-3); }
+.admin-pin-dots { display: flex; gap: 14px; margin: 8px 0; }
+.admin-pin-dots.shake { animation: pin-shake .5s cubic-bezier(.36,.07,.19,.97); }
+@keyframes pin-shake { 10%,90%{transform:translateX(-2px)} 20%,80%{transform:translateX(4px)} 30%,50%,70%{transform:translateX(-6px)} 40%,60%{transform:translateX(6px)} }
+.admin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); background: transparent; transition: background .15s, border-color .15s; }
+.admin-dot.on { background: var(--accent); border-color: var(--accent); }
+.admin-numpad { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; }
+.numpad-key { width: 72px; height: 72px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-size: 22px; font-weight: 700; cursor: pointer; font-family: 'JetBrains Mono', monospace; touch-action: manipulation; }
+.numpad-key:active { background: var(--accent); color: #fff; transform: scale(0.94); }
+.numpad-key.invisible { visibility: hidden; }
+
+.admin-panel { display: flex; flex-direction: column; min-height: 100dvh; background: var(--bg); }
+.admin-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); }
+.admin-header-title { flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; text-align: center; }
+.admin-sync-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 18px; cursor: pointer; touch-action: manipulation; }
+.admin-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.admin-tab { flex: 1; padding: 12px 0; font-size: 13px; font-weight: 700; color: var(--text-3); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; touch-action: manipulation; transition: color .15s, border-color .15s; }
+.admin-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.admin-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 40px; }
+.admin-section { display: flex; flex-direction: column; gap: 10px; }
+.admin-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 12px; }
+.admin-empty { text-align: center; color: var(--text-3); font-size: 14px; padding: 40px 0; }
+
+.admin-profile-row { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; }
+.admin-profile-row.editing { flex-direction: column; align-items: stretch; }
+.admin-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.admin-profile-info { flex: 1; min-width: 0; }
+.admin-profile-name { font-size: 15px; font-weight: 700; }
+.admin-profile-groups { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.admin-group-tag { font-size: 11px; background: var(--accent-soft); color: var(--accent); border-radius: 6px; padding: 1px 6px; font-weight: 600; }
+.admin-dim { font-size: 11px; color: var(--text-3); }
+.admin-row-actions { display: flex; gap: 6px; align-items: center; }
+.admin-btn-edit { padding: 6px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 14px; cursor: pointer; touch-action: manipulation; }
+.admin-btn-del { padding: 6px 10px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--bad); font-size: 14px; cursor: pointer; touch-action: manipulation; }
+.admin-btn-danger { padding: 6px 12px; border-radius: 8px; background: var(--bad); border: none; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+.admin-btn-cancel { padding: 6px 12px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
+.admin-btn-cancel.sm { padding: 5px 8px; font-size: 12px; }
+.admin-btn-save { padding: 8px 16px; border-radius: 8px; background: var(--accent); border: none; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+.admin-btn-primary { width: 100%; padding: 12px; border-radius: 12px; background: var(--accent); border: none; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 6px; touch-action: manipulation; }
+.admin-btn-primary:disabled { opacity: 0.4; }
+
+.admin-edit-form { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.admin-edit-row { display: flex; gap: 8px; align-items: center; }
+.admin-edit-actions { display: flex; gap: 8px; }
+.admin-input { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 16px; font-family: 'Inter', sans-serif; font-weight: 600; width: 100%; box-sizing: border-box; outline: none; touch-action: manipulation; }
+.admin-input:focus { border-color: var(--accent); }
+.admin-input.emoji-input { width: 56px; text-align: center; flex-shrink: 0; font-size: 20px; }
+.admin-input.flex-1 { flex: 1; min-width: 0; }
+.admin-section-title { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+.admin-group-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 4px; }
+.admin-group-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.admin-group-code-badge { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 8px; padding: 2px 10px; font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.admin-group-display-name { font-size: 15px; font-weight: 700; margin-top: 4px; }
+.admin-group-members { margin-top: 12px; }
+.admin-members-label { font-size: 11px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.admin-members-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-member-chip { padding: 6px 12px; border-radius: 20px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
+.admin-member-chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+.admin-new-group-form { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* ===== Hoy ya entrenaste ===== */
+.today-done {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48px 24px 32px; text-align: center; gap: 8px;
+}
+.done-trophy { font-size: 64px; margin-bottom: 6px; }
+.done-msg { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; color: var(--accent); }
+.done-routine { font-size: 16px; color: var(--text-2); font-weight: 600; margin-top: 2px; }
+.done-stats { font-size: 14px; color: var(--text-3); display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+.done-add-btn { margin-top: 20px; width: 100%; max-width: 320px; }
+.btn-outline { background: transparent; border: 1.5px solid var(--accent); color: var(--accent); border-radius: 14px; padding: 14px 20px; font-size: 16px; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+
+/* ===== Botones agregar dentro de sesión ===== */
+.add-item-btn {
+  width: 100%; padding: 11px 16px; margin: 6px 0;
+  background: var(--surface-2); border: 1.5px dashed var(--border-strong);
+  border-radius: 12px; color: var(--text-3); font-size: 14px; font-weight: 600;
+  cursor: pointer; touch-action: manipulation; transition: color 0.15s, border-color 0.15s;
+}
+.add-item-btn:active { color: var(--accent); border-color: var(--accent); }
+
+/* ===== AddExercise / AddActivity search input ===== */
+.add-search-input {
+  width: 100%; padding: 12px 14px; margin: 0 0 8px;
+  background: var(--surface-2); border: 1px solid var(--border-strong);
+  border-radius: 10px; color: var(--text); font-size: 15px; outline: none;
+  caret-color: var(--accent);
+}
+
+/* ===== Calendario – estadísticas semanales ===== */
+.cal-week-stats {
+  margin: 0 16px 4px; padding: 14px 16px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+}
+.cal-week-title { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+.cal-week-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.week-stat { text-align: center; }
+.week-stat-num { font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--accent); line-height: 1; }
+.week-stat-label { font-size: 10px; color: var(--text-3); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ===== Medidas – actividades extra del perfil ===== */
+.profile-field-label { font-size: 12px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 6px; }
+.extra-acts-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.extra-act-chip { padding: 6px 12px; border-radius: 20px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
+.extra-act-chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.profile-extra-acts { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 0 4px; }
+
+.admin-toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,.4); pointer-events: none; }
 
 </style>
 </head>
@@ -2659,8 +3014,9 @@ window.WEEK_ROUTINE = {
     }],
     cardio: {
       name: 'Patines',
-      detail: '4 vueltas polideportivo Niquia',
-      minutes: 40
+      detail: 'Polideportivo Niquia',
+      minutes: 20,
+      laps: 4
     }
   },
   0: {
@@ -2681,6 +3037,112 @@ window._allExMeta = Object.values(window.WEEK_ROUTINE).flatMap(d => d.exercises 
   m[e.id] = e;
   return m;
 }, {});
+
+// Catálogo de actividades físicas por defecto
+window.DEFAULT_ACTIVITIES = [{
+  id: 'walk',
+  name: 'Caminar',
+  icon: '🚶',
+  type: 'time',
+  unit: 'min',
+  cal10: 4,
+  defaultVal: 20
+}, {
+  id: 'run',
+  name: 'Trotar',
+  icon: '🏃',
+  type: 'time',
+  unit: 'min',
+  cal10: 8,
+  defaultVal: 20
+}, {
+  id: 'dance',
+  name: 'Bailar',
+  icon: '💃',
+  type: 'time',
+  unit: 'min',
+  cal10: 7,
+  defaultVal: 30
+}, {
+  id: 'bike',
+  name: 'Bicicleta',
+  icon: '🚴',
+  type: 'time',
+  unit: 'min',
+  cal10: 6,
+  defaultVal: 30
+}, {
+  id: 'swim',
+  name: 'Nadar',
+  icon: '🏊',
+  type: 'time',
+  unit: 'min',
+  cal10: 9,
+  defaultVal: 30
+}, {
+  id: 'jump',
+  name: 'Saltar cuerda',
+  icon: '🪢',
+  type: 'time',
+  unit: 'min',
+  cal10: 10,
+  defaultVal: 10
+}, {
+  id: 'yoga',
+  name: 'Yoga',
+  icon: '🧘',
+  type: 'time',
+  unit: 'min',
+  cal10: 3,
+  defaultVal: 30
+}, {
+  id: 'plank',
+  name: 'Plank',
+  icon: '🏋️',
+  type: 'sets_reps',
+  unit: 's',
+  cal10: 4,
+  defaultVal: 30,
+  sets: 3
+}, {
+  id: 'pushup',
+  name: 'Lagartijas',
+  icon: '💪',
+  type: 'sets_reps',
+  unit: 'reps',
+  cal10: 6,
+  defaultVal: 15,
+  sets: 3
+}, {
+  id: 'hiit',
+  name: 'HIIT',
+  icon: '⚡',
+  type: 'rounds',
+  unit: 'rondas',
+  cal10: 11,
+  defaultVal: 4
+}];
+window.ACTIVITY_VALUE_TYPES = [{
+  key: 'time',
+  label: 'Tiempo',
+  unit: 'min'
+}, {
+  key: 'sets_reps',
+  label: 'Series × Reps',
+  unit: 'reps'
+}, {
+  key: 'rounds',
+  label: 'Rondas',
+  unit: 'rondas'
+}, {
+  key: 'distance',
+  label: 'Distancia',
+  unit: 'km'
+}, {
+  key: 'sets_time',
+  label: 'Series × Tiempo',
+  unit: 's'
+}];
 
 // === data/seed-history.js ===
 // Datos de ejemplo para ver progreso inmediato al abrir la app
@@ -2769,7 +3231,12 @@ window.S3Store = (() => {
     try {
       const r = await fetch(`/data/${key}.json`);
       if (!r.ok) return null;
-      return await r.json();
+      const data = await r.json();
+      // Validación básica de estructura
+      if (key.includes('sessions') && typeof data !== 'object') return null;
+      if (key.includes('profiles') && !Array.isArray(data)) return null;
+      if (key.includes('measures') && !Array.isArray(data)) return null;
+      return data;
     } catch {
       return null;
     }
@@ -2793,44 +3260,55 @@ window.S3Store = (() => {
 })();
 
 // === data/store.js ===
-// Store: localStorage como caché rápida + S3 como persistencia durable
+// Store: memoria en sesión + EC2 como única persistencia durable.
+// localStorage solo para: perfil activo (preferencia de dispositivo) y sesión activa (ephemeral).
 window.GymStore = function () {
-  // ── Claves de datos (se reasignan al seleccionar perfil) ──────────────
-  let KEY_SESSIONS = 'gym_sessions_v1';
-  let KEY_MEASURES = 'gym_measures_v1';
-  let KEY_ACTIVE = 'gym_active_v1';
-  let KEY_SEEDED = 'gym_seeded_v1';
-  let KEY_STATS = 'gym_profile_v1'; // estadísticas físicas (altura, edad…)
-  let KEY_ROUTINE = 'gym_routine_overrides_v1';
+  // ── Cache en memoria (sin localStorage para datos) ────────────────────
+  let _mem = {};
 
-  // ── Claves globales (no dependen del perfil) ──────────────────────────
+  // ── Claves de datos (se reasignan en initProfile) ─────────────────────
+  let KEY_SESSIONS = 'gym_sessions_v2_default';
+  let KEY_MEASURES = 'gym_measures_v2_default';
+  let KEY_ACTIVE = 'gym_active_v2_default'; // localStorage solo (ephemeral)
+  let KEY_STATS = 'gym_profile_v2_default';
+  let KEY_ROUTINE = 'gym_routine_overrides_v2_default';
+  let KEY_ACTS = 'gym_activity_catalog_v2_default';
+
+  // ── Claves globales ────────────────────────────────────────────────────
   const KEY_PROFILES_LIST = 'gym_profiles_list_v1';
   const KEY_ACTIVE_PROFILE = 'gym_active_profile_v1';
+  const KEY_GROUPS = 'gym_groups_v1';
 
-  // Mapa clave localStorage → nombre en S3 (se reconstruye en initProfile)
-  let S3_MAP = {
-    [KEY_SESSIONS]: 'sessions',
-    [KEY_MEASURES]: 'measures',
-    [KEY_STATS]: 'profile',
-    [KEY_ROUTINE]: 'routines'
-  };
+  // ── Mapa a nombres EC2 ─────────────────────────────────────────────────
+  let S3_MAP = {};
+
+  // Lee de memoria
   function _load(k, def) {
+    const v = _mem[k];
+    return v !== undefined ? v : def;
+  }
+
+  // Escribe a memoria + EC2
+  function _save(k, v) {
+    _mem[k] = v;
+    const s3key = S3_MAP[k];
+    if (s3key && window.S3Store) window.S3Store.set(s3key, v).catch(() => {});
+  }
+
+  // Escribe global (perfiles, grupos) a memoria + EC2
+  function _saveGlobal(memKey, s3key, v) {
+    _mem[memKey] = v;
+    if (window.S3Store) window.S3Store.set(s3key, v).catch(() => {});
+  }
+
+  // Lee localStorage de forma segura (solo para migración y activos ephemeral)
+  function _lsGet(k) {
     try {
       const r = localStorage.getItem(k);
-      return r ? JSON.parse(r) : def;
+      return r ? JSON.parse(r) : null;
     } catch {
-      return def;
+      return null;
     }
-  }
-  function _saveLocal(k, v) {
-    try {
-      localStorage.setItem(k, JSON.stringify(v));
-    } catch (e) {}
-  }
-  function _save(k, v) {
-    _saveLocal(k, v);
-    const s3key = S3_MAP[k];
-    if (s3key && window.S3Store) window.S3Store.set(s3key, v);
   }
   function iso(d) {
     const x = d instanceof Date ? d : new Date(d);
@@ -2843,84 +3321,104 @@ window.GymStore = function () {
       return _load(KEY_PROFILES_LIST, []);
     },
     createProfile(p) {
-      // p = { name, emoji, color }
       const list = this.getProfiles();
       if (list.find(x => x.name === p.name)) return list;
       list.push(p);
-      _saveLocal(KEY_PROFILES_LIST, list);
+      _saveGlobal(KEY_PROFILES_LIST, 'profiles', list);
       return list;
     },
+    // Siempre trae perfiles del servidor (source of truth)
+    async hydrateProfiles() {
+      if (!window.S3Store) return;
+      const timed = p => Promise.race([p, new Promise(r => setTimeout(() => r(null), 4000))]).catch(() => null);
+      const serverProfiles = await timed(window.S3Store.get('profiles'));
+      if (serverProfiles && serverProfiles.length > 0) {
+        // Server es autoritativo; preservar perfiles locales nuevos no sincronizados aún
+        const local = _load(KEY_PROFILES_LIST, []);
+        const merged = [...serverProfiles];
+        local.forEach(lp => {
+          if (!merged.find(sp => sp.name === lp.name)) merged.push(lp);
+        });
+        _mem[KEY_PROFILES_LIST] = merged;
+      }
+    },
+    // Siempre trae grupos del servidor
+    async hydrateGroups() {
+      if (!window.S3Store) return;
+      const timed = p => Promise.race([p, new Promise(r => setTimeout(() => r(null), 4000))]).catch(() => null);
+      const serverGroups = await timed(window.S3Store.get('groups'));
+      if (serverGroups) _mem[KEY_GROUPS] = serverGroups;
+    },
+    deleteProfile(name) {
+      const list = this.getProfiles().filter(p => p.name !== name);
+      _saveGlobal(KEY_PROFILES_LIST, 'profiles', list);
+      const groups = this.getGroups();
+      let changed = false;
+      Object.keys(groups).forEach(k => {
+        const before = groups[k].members.length;
+        groups[k].members = groups[k].members.filter(m => m !== name);
+        if (groups[k].members.length !== before) changed = true;
+      });
+      if (changed) _saveGlobal(KEY_GROUPS, 'groups', groups);
+      return list;
+    },
+    saveGroups(groups) {
+      _saveGlobal(KEY_GROUPS, 'groups', groups);
+    },
+    // Perfil activo: localStorage (preferencia de dispositivo, no dato de usuario)
     getActiveProfile() {
       return localStorage.getItem(KEY_ACTIVE_PROFILE) || '';
     },
     clearActiveProfile() {
       localStorage.removeItem(KEY_ACTIVE_PROFILE);
     },
-    // Cambia el perfil activo: reasigna todas las claves al namespace del perfil
     initProfile(name) {
       localStorage.setItem(KEY_ACTIVE_PROFILE, name);
       KEY_SESSIONS = `gym_sessions_v2_${name}`;
       KEY_MEASURES = `gym_measures_v2_${name}`;
       KEY_ACTIVE = `gym_active_v2_${name}`;
-      KEY_SEEDED = `gym_seeded_v2_${name}`;
       KEY_STATS = `gym_profile_v2_${name}`;
       KEY_ROUTINE = `gym_routine_overrides_v2_${name}`;
+      KEY_ACTS = `gym_activity_catalog_v2_${name}`;
       S3_MAP = {
         [KEY_SESSIONS]: `${name}_sessions`,
         [KEY_MEASURES]: `${name}_measures`,
         [KEY_STATS]: `${name}_profile`,
-        [KEY_ROUTINE]: `${name}_routines`
+        [KEY_ROUTINE]: `${name}_routines`,
+        [KEY_ACTS]: `${name}_activities`
       };
     },
-    // Copia datos v1 (sin perfil) a las claves v2 del perfil indicado
-    migrateV1(name) {
-      this.initProfile(name);
-      const copy = (oldK, newK) => {
-        const v = localStorage.getItem(oldK);
-        if (v) localStorage.setItem(newK, v);
-      };
-      copy('gym_sessions_v1', KEY_SESSIONS);
-      copy('gym_measures_v1', KEY_MEASURES);
-      copy('gym_profile_v1', KEY_STATS);
-      copy('gym_routine_overrides_v1', KEY_ROUTINE);
-      copy('gym_seeded_v1', KEY_SEEDED);
-      localStorage.removeItem(KEY_ACTIVE_PROFILE); // fuerza re-selección de perfil
-    },
-    // Limpia datos del perfil activo para resembrar demo
-    resetForDemo() {
-      try {
-        localStorage.removeItem(KEY_SEEDED);
-        localStorage.removeItem(KEY_SESSIONS);
-        localStorage.removeItem(KEY_MEASURES);
-        localStorage.removeItem(KEY_ACTIVE);
-      } catch (e) {}
-    },
-    // ─── Hidratación desde servidor ──────────────────────────────────────
+    migrateV1() {/* no-op: datos ya en EC2 */},
+    // ─── Hidratación desde servidor (siempre, sin caché localStorage) ────
     async hydrate() {
-      if (localStorage.getItem(KEY_SEEDED)) return false;
       if (!window.S3Store) return false;
-      const timed = p => Promise.race([p, new Promise(r => setTimeout(() => r(null), 4000))]).catch(() => null);
-      const [sessions, measures, profile, routines] = await Promise.all([timed(window.S3Store.get(S3_MAP[KEY_SESSIONS])), timed(window.S3Store.get(S3_MAP[KEY_MEASURES])), timed(window.S3Store.get(S3_MAP[KEY_STATS])), timed(window.S3Store.get(S3_MAP[KEY_ROUTINE]))]);
-      let found = false;
-      if (sessions) {
-        _saveLocal(KEY_SESSIONS, sessions);
-        found = true;
+      try {
+        // Timeout agresivo: si tarda más de 2s, timeout
+        const timed = p => Promise.race([p, new Promise(r => setTimeout(() => r(null), 2000))]).catch(() => null);
+        const [sessions, measures, profile, routines, activities] = await Promise.all([timed(window.S3Store.get(S3_MAP[KEY_SESSIONS])), timed(window.S3Store.get(S3_MAP[KEY_MEASURES])), timed(window.S3Store.get(S3_MAP[KEY_STATS])), timed(window.S3Store.get(S3_MAP[KEY_ROUTINE])), timed(window.S3Store.get(S3_MAP[KEY_ACTS]))]);
+        if (sessions) _mem[KEY_SESSIONS] = sessions;
+        if (measures) _mem[KEY_MEASURES] = measures;
+        if (profile) _mem[KEY_STATS] = profile;
+        if (routines) _mem[KEY_ROUTINE] = routines;
+        if (activities) _mem[KEY_ACTS] = activities;
+
+        // Migración única: actividades custom que solo estaban en localStorage
+        if (!activities) {
+          const legacyActs = _lsGet('gym_activity_catalog_v1');
+          if (legacyActs && legacyActs.length > 0) {
+            _mem[KEY_ACTS] = legacyActs;
+            window.S3Store.set(S3_MAP[KEY_ACTS], legacyActs).catch(() => {});
+          }
+        }
+        return !!(sessions || measures || profile || routines || activities);
+      } catch (e) {
+        console.error('[Store] hydrate error:', e);
+        return false;
       }
-      if (measures) {
-        _saveLocal(KEY_MEASURES, measures);
-        found = true;
-      }
-      if (profile) _saveLocal(KEY_STATS, profile);
-      if (routines) _saveLocal(KEY_ROUTINE, routines);
-      if (found) localStorage.setItem(KEY_SEEDED, '1');
-      return found;
     },
     ensureSeed() {
-      if (!localStorage.getItem(KEY_SEEDED)) {
-        _save(KEY_SESSIONS, {});
-        _save(KEY_MEASURES, []);
-        localStorage.setItem(KEY_SEEDED, '1');
-      }
+      if (!_load(KEY_SESSIONS, null)) _save(KEY_SESSIONS, {});
+      if (!_load(KEY_MEASURES, null)) _save(KEY_MEASURES, []);
     },
     seedWithDemo() {
       _save(KEY_SESSIONS, window.SEED_HISTORY || {});
@@ -2929,7 +3427,6 @@ window.GymStore = function () {
         barriga: 103,
         brazo: 38
       }]);
-      localStorage.setItem(KEY_SEEDED, '1');
     },
     clearHistory() {
       _save(KEY_SESSIONS, {});
@@ -2972,7 +3469,9 @@ window.GymStore = function () {
         age: 28,
         sex: 'm',
         activity: 1.45,
-        goal: 'deficit'
+        goal: 'deficit',
+        daysPerWeek: 5,
+        extraActivities: []
       });
     },
     saveProfile(p) {
@@ -2993,12 +3492,19 @@ window.GymStore = function () {
       delete overrides[dow];
       _save(KEY_ROUTINE, overrides);
     },
-    // ─── Sesión activa (ephemeral, no va a S3) ───────────────────────────
+    // ─── Sesión activa (localStorage: ephemeral, específica del dispositivo) ──
     getActive() {
-      return _load(KEY_ACTIVE, null);
+      try {
+        const r = localStorage.getItem(KEY_ACTIVE);
+        return r ? JSON.parse(r) : null;
+      } catch {
+        return null;
+      }
     },
     setActive(s) {
-      _saveLocal(KEY_ACTIVE, s);
+      try {
+        localStorage.setItem(KEY_ACTIVE, JSON.stringify(s));
+      } catch (e) {}
     },
     clearActive() {
       try {
@@ -3012,27 +3518,274 @@ window.GymStore = function () {
       const getDay = dow => overrides[dow] || window.WEEK_ROUTINE[dow];
       let streak = 0;
       const today = new Date();
-
-      // Cuenta hoy si ya terminaste
       const todayDow = today.getDay();
       const todayR = getDay(todayDow);
-      if (todayR && !todayR.rest && all[iso(today)]?.completed) streak++;
+      if (todayR && !todayR.rest && all[iso(today)]) streak++;
       for (let i = 1; i < 120; i++) {
         const d = new Date(today.getTime() - i * 86400000);
         const dow = d.getDay();
         const r = getDay(dow);
         if (!r || r.rest) continue;
         const key = iso(d);
-        if (all[key] && all[key].completed) streak++;else break;
+        if (all[key]) streak++;else break;
       }
       return streak;
+    },
+    // ─── Grupos ───────────────────────────────────────────────────────────
+    getGroups() {
+      return _load(KEY_GROUPS, {});
+    },
+    createGroup(code, name) {
+      const groups = this.getGroups();
+      const key = code.startsWith('#') ? code : '#' + code;
+      if (!groups[key]) groups[key] = {
+        name,
+        members: []
+      };
+      _saveGlobal(KEY_GROUPS, 'groups', groups);
+      return key;
+    },
+    joinGroup(code, profileName) {
+      const groups = this.getGroups();
+      const key = code.startsWith('#') ? code.toLowerCase() : '#' + code.toLowerCase();
+      if (!groups[key]) groups[key] = {
+        name: key.slice(1),
+        members: []
+      };
+      if (!groups[key].members.includes(profileName)) groups[key].members.push(profileName);
+      _saveGlobal(KEY_GROUPS, 'groups', groups);
+    },
+    leaveGroup(code, profileName) {
+      const groups = this.getGroups();
+      const key = code.startsWith('#') ? code : '#' + code;
+      if (groups[key]) {
+        groups[key].members = groups[key].members.filter(m => m !== profileName);
+        _saveGlobal(KEY_GROUPS, 'groups', groups);
+      }
+    },
+    getGroupMembers(code) {
+      const groups = this.getGroups();
+      const key = code.startsWith('#') ? code : '#' + code;
+      return groups[key]?.members || [];
+    },
+    getProfileGroups(profileName) {
+      const groups = this.getGroups();
+      return Object.entries(groups).filter(([, g]) => g.members.includes(profileName)).map(([code, g]) => ({
+        code,
+        name: g.name
+      }));
+    },
+    getGroupFriends(profileName) {
+      const myGroups = this.getProfileGroups(profileName);
+      const friendNames = new Set();
+      myGroups.forEach(({
+        code
+      }) => this.getGroupMembers(code).forEach(m => {
+        if (m !== profileName) friendNames.add(m);
+      }));
+      return this.getProfiles().filter(p => friendNames.has(p.name));
+    },
+    // ─── Actividades custom (por perfil, en EC2) ──────────────────────────
+    getActivities() {
+      const custom = _load(KEY_ACTS, []);
+      return [...(window.DEFAULT_ACTIVITIES || []), ...custom];
+    },
+    saveCustomActivity(a) {
+      const custom = _load(KEY_ACTS, []);
+      custom.push({
+        ...a,
+        id: 'custom_' + Date.now()
+      });
+      _save(KEY_ACTS, custom);
+    },
+    // ─── Estadísticas de perfil (para leaderboard, etc) ──────────────────
+    getProfileStats(profileName) {
+      let sessions = {};
+      try {
+        const raw = localStorage.getItem(`gym_sessions_v2_${profileName}`);
+        sessions = raw ? JSON.parse(raw) : {};
+      } catch (e) {}
+      const toIso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      const today = new Date();
+      const todayStr = toIso(today);
+
+      // Semana: lunes a hoy
+      const dow = today.getDay();
+      const daysFromMon = dow === 0 ? 6 : dow - 1;
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - daysFromMon);
+      weekStart.setHours(0, 0, 0, 0);
+      let weekSessions = 0;
+      let maxCardioWeek = 0;
+      const prevBest = {};
+      const weekBest = {};
+      Object.values(sessions).forEach(s => {
+        if (!s.completed) return;
+        const sDate = new Date(s.date + 'T12:00:00');
+        const isThisWeek = sDate >= weekStart && s.date <= todayStr;
+        if (isThisWeek) weekSessions++;
+        if (isThisWeek && s.cardioMinutes > maxCardioWeek) maxCardioWeek = s.cardioMinutes;
+        (s.exercises || []).forEach(ex => {
+          const w = ex.weight || 0;
+          if (w <= 0) return;
+          if (isThisWeek) {
+            if (!weekBest[ex.id] || w > weekBest[ex.id]) weekBest[ex.id] = w;
+          } else {
+            if (!prevBest[ex.id] || w > prevBest[ex.id]) prevBest[ex.id] = w;
+          }
+        });
+      });
+
+      // Racha: días consecutivos con sesión completada
+      let streak = 0;
+      if (sessions[todayStr]?.completed) streak++;
+      for (let i = 1; i < 120; i++) {
+        const d = new Date(today.getTime() - i * 86400000);
+        const dStr = toIso(d);
+        const routineDay = window.WEEK_ROUTINE?.[d.getDay()];
+        if (routineDay?.rest) continue;
+        if (sessions[dStr]?.completed) streak++;else break;
+      }
+
+      // PR: subió peso esta semana vs antes
+      let hasPR = false;
+      Object.keys(weekBest).forEach(id => {
+        if (!prevBest[id] || weekBest[id] > prevBest[id]) hasPR = true;
+      });
+      return {
+        weekSessions,
+        maxCardioWeek,
+        streak,
+        hasPR
+      };
     }
   };
 }();
 
 // === screens/profile-picker.jsx ===
-const PICKER_EMOJIS = ['💪', '🔥', '⚡', '🎯', '🏅', '👊', '🦾', '🏃', '🚀', '😤'];
+const PICKER_EMOJIS = ['💪', '🔥', '⚡', '🎯', '🏅', '👊', '🦾', '🏃', '🚀', '😤', '💃', '🦋', '🌸', '👸', '🧘'];
 const PICKER_COLORS = ['#ec6032', '#3498DB', '#27AE60', '#9B59B6', '#1ABC9C', '#E67E22'];
+
+// ─── Tabla de logros ──────────────────────────────────────────────────────────
+const Leaderboard = ({
+  profiles
+}) => {
+  const data = React.useMemo(() => {
+    const rows = profiles.map(p => ({
+      ...p,
+      stats: window.GymStore.getProfileStats(p.name)
+    }));
+    // Líder = más sesiones esta semana (en empate, mayor racha)
+    const maxSessions = Math.max(...rows.map(r => r.stats.weekSessions));
+    return rows.map(r => ({
+      ...r,
+      isLeader: maxSessions > 0 && r.stats.weekSessions === maxSessions
+    }));
+  }, [profiles]);
+
+  // No mostrar si nadie tiene datos aún
+  const anyData = data.some(r => r.stats.weekSessions > 0 || r.stats.streak > 0);
+  if (!anyData) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lb-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lb-title"
+  }, "Esta semana"), data.map(r => {
+    const {
+      streak,
+      weekSessions,
+      maxCardioWeek,
+      hasPR
+    } = r.stats;
+    const badges = [];
+    if (r.isLeader) badges.push({
+      key: 'l',
+      icon: '🏆',
+      label: 'Líder'
+    });
+    if (streak >= 5) badges.push({
+      key: 's',
+      icon: '🔥',
+      label: `${streak} días`
+    });else if (streak >= 3) badges.push({
+      key: 's',
+      icon: '🔥',
+      label: `${streak} días`
+    });
+    if (weekSessions >= 3) badges.push({
+      key: 'w',
+      icon: '💪',
+      label: `${weekSessions}x sem`
+    });
+    if (maxCardioWeek >= 15) badges.push({
+      key: 'c',
+      icon: '🏃',
+      label: `${maxCardioWeek} min`
+    });
+    if (hasPR) badges.push({
+      key: 'p',
+      icon: '⬆️',
+      label: 'PR peso'
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      key: r.name,
+      className: "lb-row"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "lb-avatar",
+      style: {
+        background: r.color
+      }
+    }, r.emoji), /*#__PURE__*/React.createElement("div", {
+      className: "lb-name"
+    }, r.name), /*#__PURE__*/React.createElement("div", {
+      className: "lb-badges"
+    }, badges.length > 0 ? badges.map(b => /*#__PURE__*/React.createElement("span", {
+      key: b.key,
+      className: "lb-badge"
+    }, b.icon, " ", b.label)) : /*#__PURE__*/React.createElement("span", {
+      className: "lb-empty"
+    }, "Sin actividad")));
+  }));
+};
+
+// ─── Sección de grupos / amigos ──────────────────────────────────────────────
+const GroupsFriendsSection = ({
+  profiles
+}) => {
+  const groups = React.useMemo(() => window.GymStore.getGroups(), []);
+  const entries = Object.entries(groups).filter(([, g]) => g.members.length >= 2);
+  if (entries.length === 0) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "friends-section"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "friends-title"
+  }, "\uD83D\uDC65 Grupos conectados"), entries.map(([code, group]) => {
+    const members = group.members.map(n => profiles.find(p => p.name === n)).filter(Boolean);
+    if (members.length < 2) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      key: code,
+      className: "friends-group"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "friends-code"
+    }, code), /*#__PURE__*/React.createElement("div", {
+      className: "friends-avatars"
+    }, members.map((p, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+      key: p.name
+    }, i > 0 && /*#__PURE__*/React.createElement("span", {
+      className: "friend-link"
+    }, "\uD83E\uDD1D"), /*#__PURE__*/React.createElement("div", {
+      className: "friend-avatar",
+      style: {
+        background: p.color
+      },
+      title: p.name
+    }, /*#__PURE__*/React.createElement("span", null, p.emoji))))), /*#__PURE__*/React.createElement("div", {
+      className: "friends-names"
+    }, members.map(p => p.name).join(' · ')));
+  }));
+};
+
+// ─── Profile Picker ───────────────────────────────────────────────────────────
 const ProfilePicker = ({
   onSelect
 }) => {
@@ -3041,19 +3794,200 @@ const ProfilePicker = ({
   const [form, setForm] = React.useState({
     name: '',
     emoji: '💪',
-    color: '#ec6032'
+    color: '#ec6032',
+    pin: ''
   });
+  const [pinEntry, setPinEntry] = React.useState(null);
+  const [pinValue, setPinValue] = React.useState('');
+  const [pinError, setPinError] = React.useState(false);
+  const [pendingProfile, setPendingProfile] = React.useState(null);
+  const [groupInput, setGroupInput] = React.useState('');
+  const [groupCreateName, setGroupCreateName] = React.useState('');
+  const [groupSubmode, setGroupSubmode] = React.useState('join'); // 'join' | 'create'
+  const [groupError, setGroupError] = React.useState('');
   const create = () => {
     const name = form.name.trim();
     if (!name) return;
-    const updated = window.GymStore.createProfile({
+    console.log('[ProfilePicker] Creando perfil:', name);
+    const profileData = {
       name,
       emoji: form.emoji,
       color: form.color
-    });
+    };
+    if (form.pin.trim()) profileData.pin = form.pin.trim();
+    const updated = window.GymStore.createProfile(profileData);
+    console.log('[ProfilePicker] Perfil creado, total:', updated.length);
     setProfiles(updated);
-    onSelect(name);
+    setPendingProfile(name);
+    setMode('group');
   };
+  const handleGroupJoin = () => {
+    const code = groupInput.trim();
+    if (!code) {
+      console.log('[ProfilePicker] Skip grupo, onSelect:', pendingProfile);
+      onSelect(pendingProfile);
+      return;
+    }
+    const normalCode = code.startsWith('#') ? code.toLowerCase() : '#' + code.toLowerCase();
+    const existing = window.GymStore.getGroups()[normalCode];
+    if (!existing) {
+      setGroupError('Código no encontrado. Revisa e intenta de nuevo.');
+      return;
+    }
+    window.GymStore.joinGroup(normalCode, pendingProfile);
+    onSelect(pendingProfile);
+  };
+  const handleGroupCreate = () => {
+    const name = groupCreateName.trim();
+    if (!name) return;
+    const code = '#' + name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+    window.GymStore.createGroup(code, name);
+    window.GymStore.joinGroup(code, pendingProfile);
+    onSelect(pendingProfile);
+  };
+  const handleProfileClick = p => {
+    if (p.pin) {
+      setPinEntry(p);
+      setPinValue('');
+      setPinError(false);
+    } else {
+      onSelect(p.name);
+    }
+  };
+  const submitPin = () => {
+    if (pinValue === pinEntry.pin) {
+      onSelect(pinEntry.name);
+    } else {
+      setPinError(true);
+      setPinValue('');
+    }
+  };
+
+  // Pantalla de PIN
+  if (pinEntry) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "picker-screen"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "picker-avatar",
+      style: {
+        background: pinEntry.color,
+        width: 72,
+        height: 72,
+        fontSize: 36,
+        margin: '0 auto 12px'
+      }
+    }, /*#__PURE__*/React.createElement("span", null, pinEntry.emoji)), /*#__PURE__*/React.createElement("div", {
+      className: "picker-title"
+    }, pinEntry.name), /*#__PURE__*/React.createElement("div", {
+      className: "picker-create"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "picker-section-label"
+    }, "Ingresa tu PIN"), /*#__PURE__*/React.createElement("input", {
+      className: `picker-input${pinError ? ' picker-input-error' : ''}`,
+      type: "password",
+      inputMode: "numeric",
+      placeholder: "\u2022\u2022\u2022\u2022",
+      value: pinValue,
+      maxLength: 8,
+      onChange: e => {
+        setPinValue(e.target.value);
+        setPinError(false);
+      },
+      onKeyDown: e => e.key === 'Enter' && submitPin(),
+      autoFocus: true
+    }), pinError && /*#__PURE__*/React.createElement("div", {
+      className: "picker-pin-error"
+    }, "PIN incorrecto"), /*#__PURE__*/React.createElement("div", {
+      className: "picker-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-primary",
+      onClick: submitPin,
+      disabled: !pinValue
+    }, "Entrar"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-link",
+      onClick: () => setPinEntry(null)
+    }, "Cancelar"))));
+  }
+
+  // Pantalla de grupo (post-creación de perfil)
+  if (mode === 'group') {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "picker-screen"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "picker-logo"
+    }, "\uD83D\uDC65"), /*#__PURE__*/React.createElement("div", {
+      className: "picker-title"
+    }, "\xDAnete a un grupo"), /*#__PURE__*/React.createElement("div", {
+      className: "picker-create"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "group-mode-tabs"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: `group-mode-tab ${groupSubmode === 'join' ? 'on' : ''}`,
+      onClick: () => {
+        setGroupSubmode('join');
+        setGroupError('');
+      }
+    }, "Unirse a grupo"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: `group-mode-tab ${groupSubmode === 'create' ? 'on' : ''}`,
+      onClick: () => {
+        setGroupSubmode('create');
+        setGroupError('');
+      }
+    }, "Crear grupo")), groupSubmode === 'join' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "picker-section-label"
+    }, "C\xF3digo del grupo (ej: #miranda)"), /*#__PURE__*/React.createElement("input", {
+      className: `picker-input${groupError ? ' picker-input-error' : ''}`,
+      placeholder: "#codigo",
+      value: groupInput,
+      onChange: e => {
+        setGroupInput(e.target.value);
+        setGroupError('');
+      },
+      onKeyDown: e => e.key === 'Enter' && handleGroupJoin(),
+      autoFocus: true
+    }), groupError && /*#__PURE__*/React.createElement("div", {
+      className: "picker-pin-error"
+    }, groupError), /*#__PURE__*/React.createElement("div", {
+      className: "picker-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-primary",
+      onClick: handleGroupJoin,
+      disabled: !groupInput.trim()
+    }, "Unirse"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-link",
+      onClick: () => onSelect(pendingProfile)
+    }, "Saltar por ahora"))), groupSubmode === 'create' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "picker-section-label"
+    }, "Nombre del grupo"), /*#__PURE__*/React.createElement("input", {
+      className: "picker-input",
+      placeholder: "Ej: Miranda, Los Fuertes, Familia...",
+      value: groupCreateName,
+      onChange: e => setGroupCreateName(e.target.value),
+      onKeyDown: e => e.key === 'Enter' && handleGroupCreate(),
+      autoFocus: true
+    }), groupCreateName.trim() && /*#__PURE__*/React.createElement("div", {
+      className: "group-code-preview"
+    }, "C\xF3digo: ", /*#__PURE__*/React.createElement("strong", null, "#", groupCreateName.trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, ''))), /*#__PURE__*/React.createElement("div", {
+      className: "picker-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-primary",
+      onClick: handleGroupCreate,
+      disabled: !groupCreateName.trim()
+    }, "Crear grupo"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-link",
+      onClick: () => onSelect(pendingProfile)
+    }, "Saltar por ahora")))));
+  }
+
+  // Pantalla de creación
   if (mode === 'create') {
     return /*#__PURE__*/React.createElement("div", {
       className: "picker-screen"
@@ -3099,6 +4033,19 @@ const ProfilePicker = ({
         color: c
       }))
     }))), /*#__PURE__*/React.createElement("div", {
+      className: "picker-section-label"
+    }, "PIN (opcional)"), /*#__PURE__*/React.createElement("input", {
+      className: "picker-input",
+      type: "password",
+      inputMode: "numeric",
+      placeholder: "PIN num\xE9rico \u2014 d\xE9jalo vac\xEDo si no quieres",
+      value: form.pin,
+      maxLength: 8,
+      onChange: e => setForm(f => ({
+        ...f,
+        pin: e.target.value
+      }))
+    }), /*#__PURE__*/React.createElement("div", {
       className: "picker-create-preview"
     }, /*#__PURE__*/React.createElement("div", {
       className: "picker-avatar",
@@ -3113,14 +4060,18 @@ const ProfilePicker = ({
     }, form.name || '…')), /*#__PURE__*/React.createElement("div", {
       className: "picker-actions"
     }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
       className: "btn-primary",
       onClick: create,
       disabled: !form.name.trim()
     }, "Crear perfil"), profiles.length > 0 && /*#__PURE__*/React.createElement("button", {
+      type: "button",
       className: "btn-link",
       onClick: () => setMode('pick')
     }, "Cancelar"))));
   }
+
+  // Pantalla principal de selección
   return /*#__PURE__*/React.createElement("div", {
     className: "picker-screen"
   }, /*#__PURE__*/React.createElement("div", {
@@ -3132,7 +4083,7 @@ const ProfilePicker = ({
   }, profiles.map(p => /*#__PURE__*/React.createElement("button", {
     key: p.name,
     className: "picker-profile",
-    onClick: () => onSelect(p.name)
+    onClick: () => handleProfileClick(p)
   }, /*#__PURE__*/React.createElement("div", {
     className: "picker-avatar",
     style: {
@@ -3140,13 +4091,15 @@ const ProfilePicker = ({
     }
   }, /*#__PURE__*/React.createElement("span", null, p.emoji)), /*#__PURE__*/React.createElement("div", {
     className: "picker-name"
-  }, p.name))), /*#__PURE__*/React.createElement("button", {
+  }, p.name, p.pin ? ' 🔒' : ''))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "picker-profile",
     onClick: () => {
       setForm({
         name: '',
         emoji: '💪',
-        color: '#ec6032'
+        color: '#ec6032',
+        pin: ''
       });
       setMode('create');
     }
@@ -3154,26 +4107,78 @@ const ProfilePicker = ({
     className: "picker-avatar picker-add"
   }, /*#__PURE__*/React.createElement("span", null, "+")), /*#__PURE__*/React.createElement("div", {
     className: "picker-name"
-  }, "Agregar"))));
+  }, "Agregar"))), /*#__PURE__*/React.createElement(Leaderboard, {
+    profiles: profiles
+  }), /*#__PURE__*/React.createElement(GroupsFriendsSection, {
+    profiles: profiles
+  }));
 };
 window.ProfilePicker = ProfilePicker;
 
 // === screens/today.jsx ===
+const REST_POOL = [{
+  sub: 'Recupera. Hidrata. Lee.',
+  quote: '"Las mentes fuertes sufren sin quejarse,\nlas débiles se quejan sin sufrir."'
+}, {
+  sub: 'El descanso es parte del plan.',
+  quote: '"No hay campeón que no haya descansado\ncomo si su vida dependiera de ello."'
+}, {
+  sub: 'Hidrata. Estira. Duerme.',
+  quote: '"El cuerpo logra lo que la mente cree."'
+}, {
+  sub: 'Hoy el músculo crece.',
+  quote: '"La fuerza no viene de lo que puedes hacer.\nViene de superar lo que creías que no podías."'
+}, {
+  sub: 'Movilidad y calma.',
+  quote: '"Descansar no es rendirse.\nEs prepararse."'
+}, {
+  sub: 'Recarga. Mañana atacas.',
+  quote: '"La disciplina es hacer lo necesario\ncuando más cuesta."'
+}, {
+  sub: 'Nutrición y sueño primero.',
+  quote: '"El músculo se rompe en el gym,\nse alimenta en la cocina, crece en la cama."'
+}];
+const formatLastDate = isoDate => {
+  const d = new Date(isoDate + 'T00:00:00');
+  const diffDays = Math.floor((new Date() - d) / 86400000);
+  if (diffDays === 0) return 'hoy';
+  if (diffDays === 1) return 'ayer';
+  if (diffDays < 7) return `hace ${diffDays} días`;
+  if (diffDays < 14) return 'hace 1 semana';
+  const weeks = Math.floor(diffDays / 7);
+  if (diffDays < 30) return `hace ${weeks} semanas`;
+  return `${d.getDate()} ${window.MONTH_LONG[d.getMonth()].slice(0, 3).toLowerCase()}`;
+};
+const estimateSessionCals = (exercises, activeExMap) => {
+  let kcal = 0;
+  (exercises || []).forEach(ex => {
+    const doneSets = activeExMap[ex.id]?.sets || 0;
+    if (doneSets === 0) return;
+    kcal += doneSets * (ex.weight > 0 ? 5 : 3);
+  });
+  return kcal;
+};
 const TodayScreen = ({
   active,
   today,
   routine,
+  todaySession,
   onStart,
   onUpdateExercise,
   onFinish,
   onToggleCardio,
   onOpenExercise,
-  onEditRoutine
+  onEditRoutine,
+  onSwapRoutine,
+  onUpdateActivity,
+  onResume,
+  onAddExercise,
+  onAddActivity
 }) => {
-  // Build PB map and last-session map once, shared across all ExerciseCards
   const {
     pbMap,
-    lastMap
+    lastMap,
+    lastRoutineSession
   } = React.useMemo(() => {
     const pb = {},
       last = {};
@@ -3188,14 +4193,19 @@ const TodayScreen = ({
         };
       });
     });
+    const lastForRoutine = sorted.find(s => s.title === routine.title) || null;
     return {
       pbMap: pb,
-      lastMap: last
+      lastMap: last,
+      lastRoutineSession: lastForRoutine
     };
-  }, []);
+  }, [routine.title]);
+  const [addExOpen, setAddExOpen] = React.useState(false);
+  const [addActOpen, setAddActOpen] = React.useState(false);
   const isRest = routine.rest;
   const isStarted = !!active;
   if (isRest) {
+    const restItem = REST_POOL[today.getDate() % REST_POOL.length];
     return /*#__PURE__*/React.createElement("div", {
       className: "today-rest"
     }, /*#__PURE__*/React.createElement("div", {
@@ -3204,11 +4214,58 @@ const TodayScreen = ({
       className: "rest-title"
     }, "D\xEDa de descanso"), /*#__PURE__*/React.createElement("div", {
       className: "rest-sub"
-    }, "Recupera. Hidrata. Lee."), /*#__PURE__*/React.createElement("div", {
+    }, restItem.sub), /*#__PURE__*/React.createElement("div", {
       className: "rest-quote"
-    }, "\"Las mentes fuertes sufren sin quejarse,", /*#__PURE__*/React.createElement("br", null), "las d\xE9biles se quejan sin sufrir.\""));
+    }, restItem.quote.split('\n').map((line, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+      key: i
+    }, line, i === 0 && /*#__PURE__*/React.createElement("br", null)))));
   }
   if (!isStarted) {
+    // Si ya hay sesión de hoy guardada, mostrar estado "ya entrenaste"
+    if (todaySession) {
+      const doneExs = (todaySession.exercises || []).filter(e => e.done).length;
+      const totalExs = (todaySession.exercises || []).length;
+      const dur = todaySession.startTime && todaySession.endTime ? (() => {
+        const ms = todaySession.endTime - todaySession.startTime;
+        const totalMin = Math.round(ms / 60000);
+        if (totalMin < 1) return null;
+        if (totalMin < 60) return `${totalMin} min`;
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        return m > 0 ? `${h}h ${m}min` : `${h}h`;
+      })() : null;
+      const COMPLETE_MSGS = ['¡Eres un crack! 💪', '¡Maquinaaaaa! 🔥', '¡Súper! Lo lograste 😎', '¡Bestia! Eso es dedicación 🏆', '¡Imparable! Así se hace 🚀'];
+      const PARTIAL_MSGS = ['Algo es algo, sigue así 💪', 'Parcial pero presente 👊', 'Mañana lo terminás, crack'];
+      const msgs = todaySession.completed ? COMPLETE_MSGS : PARTIAL_MSGS;
+      const msg = msgs[today.getDate() % msgs.length];
+      return /*#__PURE__*/React.createElement("div", {
+        className: "today-done"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "done-trophy"
+      }, todaySession.completed ? '😎' : '🙌'), /*#__PURE__*/React.createElement("div", {
+        className: "done-msg"
+      }, msg), /*#__PURE__*/React.createElement("div", {
+        className: "done-routine"
+      }, todaySession.title), /*#__PURE__*/React.createElement("div", {
+        className: "done-stats"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: todaySession.completed ? 'ok' : 'warn'
+      }, todaySession.completed ? 'Completo ✓' : 'Parcial'), /*#__PURE__*/React.createElement("span", {
+        className: "dot-sep"
+      }, "\xB7"), /*#__PURE__*/React.createElement("span", null, doneExs, "/", totalExs, " ejercicios"), dur && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+        className: "dot-sep"
+      }, "\xB7"), /*#__PURE__*/React.createElement("span", null, dur))), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        className: "btn-outline done-add-btn",
+        onClick: onResume
+      }, "+ Agregar ejercicios o actividades"), /*#__PURE__*/React.createElement("div", {
+        className: "intro-secondary-btns"
+      }, /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        className: "btn-link",
+        onClick: onEditRoutine
+      }, "\u270E Editar rutina")));
+    }
     return /*#__PURE__*/React.createElement("div", {
       className: "today-intro"
     }, /*#__PURE__*/React.createElement("div", {
@@ -3228,35 +4285,81 @@ const TodayScreen = ({
       className: "stat-block"
     }, /*#__PURE__*/React.createElement("div", {
       className: "stat-num"
-    }, routine.exercises.length), /*#__PURE__*/React.createElement("div", {
+    }, (routine.exercises || []).length), /*#__PURE__*/React.createElement("div", {
       className: "stat-label"
     }, "Ejercicios")), /*#__PURE__*/React.createElement("div", {
       className: "stat-block"
     }, /*#__PURE__*/React.createElement("div", {
       className: "stat-num"
-    }, routine.exercises.reduce((s, e) => s + e.sets, 0)), /*#__PURE__*/React.createElement("div", {
+    }, (routine.exercises || []).reduce((s, e) => s + e.sets, 0)), /*#__PURE__*/React.createElement("div", {
       className: "stat-label"
     }, "Sets totales")), /*#__PURE__*/React.createElement("div", {
       className: "stat-block"
     }, /*#__PURE__*/React.createElement("div", {
       className: "stat-num"
-    }, "~", Math.round(routine.exercises.reduce((s, e) => s + e.sets, 0) * 2.2 + (routine.cardio?.minutes || 0)), /*#__PURE__*/React.createElement("span", {
+    }, "~", Math.round((routine.exercises || []).reduce((s, e) => s + e.sets, 0) * 2.2 + (routine.cardio?.minutes || 0)), /*#__PURE__*/React.createElement("span", {
       className: "stat-unit"
     }, "min")), /*#__PURE__*/React.createElement("div", {
       className: "stat-label"
-    }, "Estimado"))), /*#__PURE__*/React.createElement("button", {
+    }, "Estimado"))), lastRoutineSession && /*#__PURE__*/React.createElement("div", {
+      className: "intro-last-session"
+    }, "\xDAltima vez: ", /*#__PURE__*/React.createElement("strong", null, formatLastDate(lastRoutineSession.date)), lastRoutineSession.completed ? /*#__PURE__*/React.createElement("span", {
+      className: "intro-last-ok"
+    }, " \xB7 Completo \u2713") : /*#__PURE__*/React.createElement("span", {
+      className: "intro-last-partial"
+    }, " \xB7 Parcial")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
       className: "btn-primary",
       onClick: onStart
-    }, "Empezar entrenamiento"), /*#__PURE__*/React.createElement("button", {
+    }, "Empezar entrenamiento"), /*#__PURE__*/React.createElement("div", {
+      className: "intro-secondary-btns"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-link",
+      onClick: onSwapRoutine
+    }, "\u2194 Cambiar entrenamiento del d\xEDa"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
       className: "btn-link",
       onClick: onEditRoutine
-    }, "Editar rutina del d\xEDa"));
+    }, "\u270E Editar rutina")));
   }
-  const activeExMap = Object.fromEntries((active.exercises || []).map(e => [e.id, e]));
-  const doneCount = routine.exercises.filter(ex => activeExMap[ex.id]?.done).length;
-  const cardio = routine.cardio;
-  const totalItems = routine.exercises.length + (cardio ? 1 : 0);
-  const allDone = doneCount === routine.exercises.length && (!cardio || active.cardioDone);
+  const {
+    activeExMap,
+    allExercises,
+    doneCount,
+    cardio,
+    allActivities,
+    activeActMap,
+    actsDone,
+    totalItems,
+    allDone,
+    estimatedCals
+  } = React.useMemo(() => {
+    const activeExMap = Object.fromEntries((active.exercises || []).map(e => [e.id, e]));
+    const addedExDefs = active.addedExDefs || [];
+    const allExercises = [...(routine.exercises || []), ...addedExDefs];
+    const doneCount = allExercises.filter(ex => activeExMap[ex.id]?.done).length;
+    const cardio = routine.cardio;
+    const addedActDefs = active.addedActDefs || [];
+    const allActivities = [...(routine.activities || []), ...addedActDefs];
+    const activeActMap = active.activities || {};
+    const actsDone = allActivities.filter(a => activeActMap[a.id]?.done).length;
+    const totalItems = allExercises.length + (cardio ? 1 : 0) + allActivities.length;
+    const allDone = doneCount === allExercises.length && (!cardio || active.cardioDone) && actsDone === allActivities.length;
+    const estimatedCals = estimateSessionCals(allExercises, activeExMap);
+    return {
+      activeExMap,
+      allExercises,
+      doneCount,
+      cardio,
+      allActivities,
+      activeActMap,
+      actsDone,
+      totalItems,
+      allDone,
+      estimatedCals
+    };
+  }, [active, routine]);
   return /*#__PURE__*/React.createElement("div", {
     className: "today-active"
   }, /*#__PURE__*/React.createElement("div", {
@@ -3272,17 +4375,20 @@ const TodayScreen = ({
       alignItems: 'center'
     }
   }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "icon-btn",
     onClick: onEditRoutine,
     title: "Editar rutina"
   }, "\u270E"), /*#__PURE__*/React.createElement(MoodBadge, {
     mood: active.mood
   }))), /*#__PURE__*/React.createElement(ProgressBar, {
-    done: doneCount + (active.cardioDone ? 1 : 0),
+    done: doneCount + (active.cardioDone ? 1 : 0) + actsDone,
     total: totalItems
-  }), /*#__PURE__*/React.createElement("div", {
+  }), estimatedCals > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "active-cals"
+  }, "~", estimatedCals, " kcal quemadas"), /*#__PURE__*/React.createElement("div", {
     className: "exercise-list"
-  }, routine.exercises.map((ex, i) => {
+  }, allExercises.map((ex, i) => {
     const state = activeExMap[ex.id] || {
       id: ex.id,
       weight: ex.weight,
@@ -3301,16 +4407,164 @@ const TodayScreen = ({
       onChange: onUpdateExercise,
       onOpen: () => onOpenExercise(ex)
     });
-  }), cardio && /*#__PURE__*/React.createElement(CardioCard, {
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "add-item-btn",
+    onClick: () => setAddExOpen(true)
+  }, "+ Agregar ejercicio"), cardio && /*#__PURE__*/React.createElement(CardioCard, {
     cardio: cardio,
     done: !!active.cardioDone,
     onToggle: onToggleCardio,
-    savedMinutes: active.cardioMinutes
-  })), /*#__PURE__*/React.createElement("button", {
+    savedMinutes: active.cardioMinutes,
+    savedLaps: active.cardioLaps
+  }), allActivities.map(act => {
+    const state = activeActMap[act.id] || {
+      id: act.id,
+      done: false,
+      value: act.defaultVal || 10
+    };
+    return /*#__PURE__*/React.createElement(ActivityCard, {
+      key: act.id,
+      activity: act,
+      state: state,
+      onChange: onUpdateActivity
+    });
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "add-item-btn",
+    onClick: () => setAddActOpen(true)
+  }, "+ Agregar actividad")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `btn-primary finish ${allDone ? 'is-ready' : ''}`,
-    disabled: !allDone,
-    onClick: onFinish
-  }, allDone ? 'Terminar entrenamiento ✓' : `${doneCount + (active.cardioDone ? 1 : 0)}/${totalItems} completados`));
+    onClick: () => onFinish(allDone)
+  }, allDone ? '¡Terminar entrenamiento! ✓' : `Terminar · ${doneCount + (active.cardioDone ? 1 : 0) + actsDone}/${totalItems} listos`), addExOpen && /*#__PURE__*/React.createElement(AddExerciseSheet, {
+    currentExIds: new Set(allExercises.map(e => e.id)),
+    onAdd: ex => {
+      onAddExercise(ex);
+      setAddExOpen(false);
+    },
+    onClose: () => setAddExOpen(false)
+  }), addActOpen && /*#__PURE__*/React.createElement(AddActivitySheet, {
+    currentActIds: new Set(allActivities.map(a => a.id)),
+    onAdd: act => {
+      onAddActivity(act);
+      setAddActOpen(false);
+    },
+    onClose: () => setAddActOpen(false)
+  }));
+};
+const AddExerciseSheet = ({
+  currentExIds,
+  onAdd,
+  onClose
+}) => {
+  const [search, setSearch] = React.useState('');
+  const allExs = React.useMemo(() => {
+    const seen = new Set();
+    const result = [];
+    for (let d = 0; d <= 6; d++) {
+      const r = window.GymStore.getRoutineFor(d);
+      if (!r || r.rest) continue;
+      for (const ex of r.exercises || []) {
+        if (!seen.has(ex.id)) {
+          seen.add(ex.id);
+          result.push(ex);
+        }
+      }
+    }
+    return result;
+  }, []);
+  const filtered = allExs.filter(ex => !currentExIds.has(ex.id) && (search === '' || ex.name.toLowerCase().includes(search.toLowerCase()) || (ex.sub || '').toLowerCase().includes(search.toLowerCase())));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "modal-backdrop",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "modal-handle"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "detail-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-tag"
+  }, "AGREGAR EJERCICIO"), /*#__PURE__*/React.createElement("div", {
+    className: "detail-name"
+  }, "Elige de tu rutina")), /*#__PURE__*/React.createElement("input", {
+    className: "add-search-input",
+    placeholder: "Buscar ejercicio...",
+    value: search,
+    onChange: e => setSearch(e.target.value),
+    autoFocus: true
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "swap-list"
+  }, filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, "No hay m\xE1s ejercicios disponibles."), filtered.map(ex => /*#__PURE__*/React.createElement("button", {
+    key: ex.id,
+    className: "swap-option",
+    onClick: () => onAdd(ex)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-title"
+  }, ex.name), /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-sub"
+  }, ex.sub, " \xB7 ", ex.sets, "\xD7", ex.reps, " \xB7 ", ex.weight > 0 ? ex.weight + ' lb' : 'Peso corporal')), /*#__PURE__*/React.createElement("div", {
+    className: "swap-arrow",
+    style: {
+      color: 'var(--accent)',
+      fontWeight: 700
+    }
+  }, "+"))))));
+};
+const AddActivitySheet = ({
+  currentActIds,
+  onAdd,
+  onClose
+}) => {
+  const available = React.useMemo(() => {
+    return window.GymStore.getActivities().filter(a => !currentActIds.has(a.id));
+  }, [currentActIds]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "modal-backdrop",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "modal-handle"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "detail-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-tag"
+  }, "AGREGAR ACTIVIDAD"), /*#__PURE__*/React.createElement("div", {
+    className: "detail-name"
+  }, "Actividad f\xEDsica")), /*#__PURE__*/React.createElement("div", {
+    className: "swap-list"
+  }, available.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, "Ya tienes todas las actividades."), available.map(act => /*#__PURE__*/React.createElement("button", {
+    key: act.id,
+    className: "swap-option",
+    onClick: () => onAdd(act)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-day",
+    style: {
+      fontSize: 22
+    }
+  }, act.icon), /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-title"
+  }, act.name), /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-sub"
+  }, act.defaultVal, " ", act.unit, act.cal10 ? ` · ~${act.cal10} kcal/10${act.unit}` : '')), /*#__PURE__*/React.createElement("div", {
+    className: "swap-arrow",
+    style: {
+      color: 'var(--accent)',
+      fontWeight: 700
+    }
+  }, "+"))))));
 };
 const MOOD_META = {
   sick: {
@@ -3337,7 +4591,7 @@ const MoodBadge = ({
     className: `mood-badge ${m.cls}`
   }, /*#__PURE__*/React.createElement("span", null, m.icon), m.label);
 };
-const ProgressBar = ({
+const ProgressBar = React.memo(({
   done,
   total
 }) => {
@@ -3354,7 +4608,7 @@ const ProgressBar = ({
   })), /*#__PURE__*/React.createElement("div", {
     className: "progress-label"
   }, pct, "%"));
-};
+});
 const TAG_META = {
   fire: {
     icon: '🔥',
@@ -3377,7 +4631,7 @@ const TAG_META = {
     label: 'Bajado'
   }
 };
-const ExerciseCard = ({
+const ExerciseCard = React.memo(({
   index,
   ex,
   state,
@@ -3386,7 +4640,24 @@ const ExerciseCard = ({
   onChange,
   onOpen
 }) => {
-  const trend = last ? state.weight > last.ex.weight ? 'up' : state.weight < last.ex.weight ? 'down' : 'flat' : null;
+  const [justCompleted, setJustCompleted] = React.useState(false);
+  const [weightStr, setWeightStr] = React.useState(() => String(state.weight));
+  const isBodyweight = ex.weight === 0 && ex.unit === 'lb' && state.weight === 0;
+  const isSeconds = ex.unit === 's';
+  const stepSize = isSeconds ? 15 : 2.5;
+
+  // Sync display string when stepper buttons change the weight from outside
+  React.useEffect(() => {
+    setWeightStr(String(state.weight));
+  }, [state.weight]);
+
+  // Cleanup timeout cuando justCompleted cambia
+  React.useEffect(() => {
+    if (!justCompleted) return;
+    const id = setTimeout(() => setJustCompleted(false), 550);
+    return () => clearTimeout(id);
+  }, [justCompleted]);
+  const trend = !isBodyweight && last ? state.weight > last.ex.weight ? 'up' : state.weight < last.ex.weight ? 'down' : 'flat' : null;
   const setWeight = delta => {
     const w = Math.max(0, Math.round((state.weight + delta) * 10) / 10);
     onChange(ex.id, {
@@ -3402,9 +4673,10 @@ const ExerciseCard = ({
       sets: newSets,
       done
     });
+    if (done && !state.done) {
+      setJustCompleted(true);
+    }
   };
-
-  // Single tap on checkmark: complete all sets at once (or uncomplete)
   const toggleComplete = e => {
     e.stopPropagation();
     if (state.done) {
@@ -3419,11 +4691,12 @@ const ExerciseCard = ({
         sets: ex.sets,
         done: true
       });
+      setJustCompleted(true);
     }
   };
   const tagMeta = TAG_META[ex.tag] || TAG_META.fire;
   return /*#__PURE__*/React.createElement("div", {
-    className: `ex-card ${state.done ? 'is-done' : ''}`
+    className: `ex-card ${state.done ? 'is-done' : ''} ${justCompleted ? 'just-done' : ''}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "ex-head"
   }, /*#__PURE__*/React.createElement("div", {
@@ -3437,31 +4710,56 @@ const ExerciseCard = ({
     className: "ex-tag"
   }, tagMeta.icon), ex.name), /*#__PURE__*/React.createElement("div", {
     className: "ex-sub"
-  }, ex.sub), pb != null && pb > 0 ? /*#__PURE__*/React.createElement("div", {
+  }, ex.sub), isBodyweight ? /*#__PURE__*/React.createElement("div", {
+    className: "ex-pb ex-pb-dim"
+  }, "Peso corporal") : pb != null && pb > 0 ? /*#__PURE__*/React.createElement("div", {
     className: "ex-pb"
-  }, "Mejor: ", pb, " lb") : /*#__PURE__*/React.createElement("div", {
+  }, "Mejor: ", pb, isSeconds ? 's' : ' lb') : /*#__PURE__*/React.createElement("div", {
     className: "ex-pb ex-pb-dim"
   }, "Sin registros a\xFAn")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `ex-check ${state.done ? 'is-checked' : ''}`,
     onClick: toggleComplete
   }, state.done ? '✓' : '')), /*#__PURE__*/React.createElement("div", {
     className: "ex-body"
+  }, isBodyweight ? /*#__PURE__*/React.createElement("div", {
+    className: "weight-row bodyweight-row"
   }, /*#__PURE__*/React.createElement("div", {
+    className: "bodyweight-label"
+  }, "\uD83D\uDCAA Peso corporal")) : /*#__PURE__*/React.createElement("div", {
     className: "weight-row"
   }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "stepper-btn",
-    onClick: () => setWeight(-2.5)
+    onClick: () => setWeight(-stepSize)
   }, "\u2212"), /*#__PURE__*/React.createElement("div", {
     className: "weight-display"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "weight-num"
-  }, state.weight, /*#__PURE__*/React.createElement("span", {
+    className: "weight-num-row"
+  }, /*#__PURE__*/React.createElement("input", {
+    className: "weight-num weight-input",
+    type: "text",
+    inputMode: "decimal",
+    value: weightStr,
+    onFocus: e => e.target.select(),
+    onChange: e => setWeightStr(e.target.value.replace(/[^0-9.]/g, '')),
+    onBlur: () => {
+      const v = parseFloat(weightStr);
+      const w = !isNaN(v) && v >= 0 ? Math.round(v * 10) / 10 : state.weight;
+      onChange(ex.id, {
+        ...state,
+        weight: w
+      });
+      setWeightStr(String(w));
+    }
+  }), /*#__PURE__*/React.createElement("span", {
     className: "weight-unit"
-  }, "lb")), last && /*#__PURE__*/React.createElement("div", {
+  }, isSeconds ? 's' : 'lb')), last && /*#__PURE__*/React.createElement("div", {
     className: `weight-trend ${trend ? 'trend-' + trend : ''}`
-  }, trend === 'up' ? '↑' : trend === 'down' ? '↓' : '=', " \xFAlt ", last.ex.weight, " lb")), /*#__PURE__*/React.createElement("button", {
+  }, trend === 'up' ? '↑' : trend === 'down' ? '↓' : '=', " \xFAlt ", last.ex.weight, isSeconds ? 's' : ' lb')), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "stepper-btn",
-    onClick: () => setWeight(2.5)
+    onClick: () => setWeight(stepSize)
   }, "+")), /*#__PURE__*/React.createElement("div", {
     className: "sets-row"
   }, Array.from({
@@ -3474,58 +4772,188 @@ const ExerciseCard = ({
     className: "set-reps"
   }, ex.reps), /*#__PURE__*/React.createElement("div", {
     className: "set-label"
-  }, "reps"))))));
+  }, isSeconds ? 'seg' : 'reps'))))));
+});
+const CARDIO_ICONS = {
+  'Patines': '🛼',
+  'Caminadora': '🚶'
 };
-const CardioCard = ({
+const CardioCard = React.memo(({
   cardio,
   done,
   onToggle,
-  savedMinutes
+  savedMinutes,
+  savedLaps
 }) => {
   const [minutes, setMinutes] = React.useState(savedMinutes || cardio.minutes || 10);
+  const [laps, setLaps] = React.useState(savedLaps || cardio.laps || 1);
   const handleCheck = e => {
     e.stopPropagation();
-    onToggle(minutes);
+    onToggle(minutes, cardio.laps != null ? laps : undefined);
   };
-  const changeMinutes = delta => {
-    setMinutes(m => Math.max(5, m + delta));
-  };
+  const changeMinutes = delta => setMinutes(m => Math.max(5, m + delta));
+  const changeLaps = delta => setLaps(l => Math.max(1, l + delta));
+  const cardioIcon = CARDIO_ICONS[cardio.name] || '🏃';
   return /*#__PURE__*/React.createElement("div", {
     className: `cardio-card ${done ? 'is-done' : ''}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "cardio-icon"
-  }, "\uD83C\uDFC3"), /*#__PURE__*/React.createElement("div", {
+  }, cardioIcon), /*#__PURE__*/React.createElement("div", {
     className: "cardio-info"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cardio-name"
-  }, cardio.name), /*#__PURE__*/React.createElement("div", {
+  }, cardio.name), cardio.laps != null && /*#__PURE__*/React.createElement("div", {
     className: "cardio-time-row"
   }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cardio-time-btn",
+    onClick: () => changeLaps(-1)
+  }, "\u2212"), /*#__PURE__*/React.createElement("span", {
+    className: "cardio-time-val"
+  }, laps, " vueltas"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cardio-time-btn",
+    onClick: () => changeLaps(1)
+  }, "+"), /*#__PURE__*/React.createElement("div", {
+    className: "cardio-presets"
+  }, [2, 4, 6].map(l => /*#__PURE__*/React.createElement("button", {
+    key: l,
+    className: `cardio-preset ${laps === l ? 'on' : ''}`,
+    onClick: () => setLaps(l)
+  }, l)))), /*#__PURE__*/React.createElement("div", {
+    className: "cardio-time-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "cardio-time-btn",
     onClick: () => changeMinutes(-5)
   }, "\u2212"), /*#__PURE__*/React.createElement("span", {
     className: "cardio-time-val"
   }, minutes, " min"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "cardio-time-btn",
     onClick: () => changeMinutes(5)
   }, "+"), /*#__PURE__*/React.createElement("div", {
     className: "cardio-presets"
-  }, [5, 10, 20].map(m => /*#__PURE__*/React.createElement("button", {
+  }, [10, 15, 20].map(m => /*#__PURE__*/React.createElement("button", {
     key: m,
     className: `cardio-preset ${minutes === m ? 'on' : ''}`,
     onClick: () => setMinutes(m)
   }, m))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `ex-check ${done ? 'is-checked' : ''}`,
     onClick: handleCheck
   }, done ? '✓' : ''));
+});
+
+// Tarjeta para actividades físicas (no basadas en peso)
+const ActivityCard = React.memo(({
+  activity,
+  state,
+  onChange
+}) => {
+  const [val, setVal] = React.useState(state.value ?? activity.defaultVal ?? 10);
+  const toggle = e => {
+    e.stopPropagation();
+    onChange(activity.id, {
+      ...state,
+      done: !state.done,
+      value: val
+    });
+  };
+  const step = activity.unit === 'km' ? 0.5 : activity.unit === 's' ? 15 : 5;
+  const changeVal = delta => {
+    const newVal = Math.max(step, Math.round((val + delta) * 10) / 10);
+    setVal(newVal);
+    onChange(activity.id, {
+      ...state,
+      value: newVal
+    });
+  };
+  const calEst = activity.cal10 ? Math.round(val / 10 * activity.cal10) : null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: `activity-card ${state.done ? 'is-done' : ''}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "activity-icon"
+  }, activity.icon || '🏃'), /*#__PURE__*/React.createElement("div", {
+    className: "activity-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "activity-name"
+  }, activity.name), /*#__PURE__*/React.createElement("div", {
+    className: "activity-val-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cardio-time-btn",
+    onClick: () => changeVal(-step)
+  }, "\u2212"), /*#__PURE__*/React.createElement("span", {
+    className: "cardio-time-val"
+  }, val, " ", activity.unit), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cardio-time-btn",
+    onClick: () => changeVal(step)
+  }, "+"), calEst != null && /*#__PURE__*/React.createElement("span", {
+    className: "activity-cal"
+  }, "~", calEst, " kcal"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: `ex-check ${state.done ? 'is-checked' : ''}`,
+    onClick: toggle
+  }, state.done ? '✓' : ''));
+});
+
+// Modal de cambio de entrenamiento
+const SwapRoutineModal = ({
+  currentDow,
+  onClose,
+  onSwap
+}) => {
+  const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "modal-backdrop",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "modal-handle"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "detail-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-tag"
+  }, "HOY \xB7 ", window.DAY_LONG[currentDow].toUpperCase()), /*#__PURE__*/React.createElement("div", {
+    className: "detail-name"
+  }, "Cambiar entrenamiento"), /*#__PURE__*/React.createElement("div", {
+    className: "detail-sub"
+  }, "Elige qu\xE9 hacer hoy en lugar de \"", window.GymStore.getRoutineFor(currentDow).title, "\"")), /*#__PURE__*/React.createElement("div", {
+    className: "swap-list"
+  }, WEEK_ORDER.filter(d => d !== currentDow).map(d => {
+    const r = window.GymStore.getRoutineFor(d);
+    if (r.rest) return null;
+    return /*#__PURE__*/React.createElement("button", {
+      key: d,
+      className: "swap-option",
+      onClick: () => onSwap(d)
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "swap-option-day"
+    }, window.DAY_LONG[d]), /*#__PURE__*/React.createElement("div", {
+      className: "swap-option-info"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "swap-option-title"
+    }, r.title), /*#__PURE__*/React.createElement("div", {
+      className: "swap-option-sub"
+    }, r.subtitle || (r.muscles || []).join(', '))), /*#__PURE__*/React.createElement("div", {
+      className: "swap-arrow"
+    }, "\u203A"));
+  }))));
 };
 window.TodayScreen = TodayScreen;
+window.SwapRoutineModal = SwapRoutineModal;
 
 // === screens/calendar.jsx ===
 // Pantalla Calendario: mes actual, días marcados con estado
 const CalendarScreen = ({
   onPickDate,
-  streak
+  streak,
+  refresh,
+  routineVer
 }) => {
   const [cursor, setCursor] = React.useState(() => {
     const d = new Date();
@@ -3534,7 +4962,7 @@ const CalendarScreen = ({
       m: d.getMonth()
     };
   });
-  const sessions = React.useMemo(() => window.GymStore.getAllSessions(), []);
+  const sessions = React.useMemo(() => window.GymStore.getAllSessions(), [refresh]);
   const today = new Date();
   const todayIso = window.GymStore.iso(today);
   const first = new Date(cursor.y, cursor.m, 1);
@@ -3549,7 +4977,7 @@ const CalendarScreen = ({
     const m = {};
     for (let d = 0; d <= 6; d++) m[d] = window.GymStore.getRoutineFor(d);
     return m;
-  }, []);
+  }, [routineVer]);
   const monthSessions = Object.values(sessions).filter(s => s.date.startsWith(cursor.y + '-' + String(cursor.m + 1).padStart(2, '0')));
   const completedCount = monthSessions.filter(s => s.completed).length;
   const partialCount = monthSessions.filter(s => !s.completed).length;
@@ -3563,11 +4991,40 @@ const CalendarScreen = ({
     if (!routineMap[dow]?.rest) gymDaysPassed++;
   }
   const constancy = Math.round(completedCount / Math.max(1, gymDaysPassed) * 100);
+
+  // Estadísticas de la semana actual (lunes a hoy)
+  const weekStats = React.useMemo(() => {
+    const d = new Date(today);
+    const dayOfWeek = d.getDay();
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - daysFromMonday);
+    const mondayIso = window.GymStore.iso(monday);
+    const allSessions = Object.values(sessions);
+    const weekDone = allSessions.filter(s => s.date >= mondayIso && s.date <= todayIso && s.completed).length;
+    const weekPartial = allSessions.filter(s => s.date >= mondayIso && s.date <= todayIso && !s.completed).length;
+    let weekGymDays = 0;
+    for (let i = 0; i <= daysFromMonday; i++) {
+      const dd = new Date(monday);
+      dd.setDate(monday.getDate() + i);
+      if (!routineMap[dd.getDay()]?.rest) weekGymDays++;
+    }
+    const actividadPct = Math.round((weekDone + weekPartial) / Math.max(1, weekGymDays) * 100);
+    const constanciaWeek = Math.round(weekDone / Math.max(1, weekGymDays) * 100);
+    return {
+      weekDone,
+      weekPartial,
+      weekGymDays,
+      actividadPct,
+      constanciaWeek
+    };
+  }, [sessions, todayIso]);
   return /*#__PURE__*/React.createElement("div", {
     className: "cal-screen"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cal-header"
   }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "cal-nav",
     onClick: () => setCursor(c => {
       const m = c.m - 1;
@@ -3586,6 +5043,7 @@ const CalendarScreen = ({
   }, window.MONTH_LONG[cursor.m]), /*#__PURE__*/React.createElement("div", {
     className: "cal-year"
   }, cursor.y)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "cal-nav",
     onClick: () => setCursor(c => {
       const m = c.m + 1;
@@ -3635,7 +5093,8 @@ const CalendarScreen = ({
     return /*#__PURE__*/React.createElement("button", {
       key: i,
       className: `cal-cell state-${state} ${isToday ? 'is-today' : ''} ${isFuture ? 'is-future' : ''}`,
-      onClick: () => s && onPickDate(iso)
+      disabled: !s,
+      onClick: () => onPickDate(iso)
     }, /*#__PURE__*/React.createElement("div", {
       className: "cal-day-num"
     }, d), state === 'completed' && /*#__PURE__*/React.createElement("div", {
@@ -3648,6 +5107,40 @@ const CalendarScreen = ({
       className: "cal-dot missed"
     }));
   })), /*#__PURE__*/React.createElement("div", {
+    className: "cal-week-stats"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cal-week-title"
+  }, "Esta semana"), /*#__PURE__*/React.createElement("div", {
+    className: "cal-week-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "week-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "week-stat-num"
+  }, weekStats.weekDone, "/", weekStats.weekGymDays), /*#__PURE__*/React.createElement("div", {
+    className: "week-stat-label"
+  }, "constancia")), /*#__PURE__*/React.createElement("div", {
+    className: "week-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "week-stat-num"
+  }, weekStats.actividadPct, /*#__PURE__*/React.createElement("span", {
+    className: "mini-unit"
+  }, "%")), /*#__PURE__*/React.createElement("div", {
+    className: "week-stat-label"
+  }, "actividad")), /*#__PURE__*/React.createElement("div", {
+    className: "week-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "week-stat-num"
+  }, weekStats.constanciaWeek, /*#__PURE__*/React.createElement("span", {
+    className: "mini-unit"
+  }, "%")), /*#__PURE__*/React.createElement("div", {
+    className: "week-stat-label"
+  }, "completos")), /*#__PURE__*/React.createElement("div", {
+    className: "week-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "week-stat-num"
+  }, streak ?? window.GymStore.computeStreak()), /*#__PURE__*/React.createElement("div", {
+    className: "week-stat-label"
+  }, "racha \uD83D\uDD25")))), /*#__PURE__*/React.createElement("div", {
     className: "cal-footer-stats"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mini-stat"
@@ -3663,13 +5156,13 @@ const CalendarScreen = ({
     className: "mini-unit"
   }, "%")), /*#__PURE__*/React.createElement("div", {
     className: "mini-label"
-  }, "constancia")), /*#__PURE__*/React.createElement("div", {
+  }, "constancia mes")), /*#__PURE__*/React.createElement("div", {
     className: "mini-stat"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mini-num"
-  }, streak ?? window.GymStore.computeStreak()), /*#__PURE__*/React.createElement("div", {
+  }, partialCount), /*#__PURE__*/React.createElement("div", {
     className: "mini-label"
-  }, "racha \uD83D\uDD25"))));
+  }, "parciales"))));
 };
 window.CalendarScreen = CalendarScreen;
 
@@ -3678,6 +5171,15 @@ const HIST_MOOD = {
   sick: '🤧',
   normal: '🙂',
   strong: '💪'
+};
+const formatDuration = ms => {
+  if (!ms || ms < 0) return null;
+  const totalMin = Math.round(ms / 60000);
+  if (totalMin < 1) return null;
+  if (totalMin < 60) return `${totalMin} min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m > 0 ? `${h}h ${m}min` : `${h}h`;
 };
 
 // Gráfico de línea SVG con área rellena y fechas en eje X
@@ -3774,13 +5276,16 @@ const LineChart = ({
 };
 window.LineChart = LineChart;
 const HistoryScreen = ({
-  onSelectExercise
+  onSelectExercise,
+  refresh,
+  routineVer
 }) => {
   const [tab, setTab] = React.useState('sessions');
-  const sessions = React.useMemo(() => Object.values(window.GymStore.getAllSessions()).sort((a, b) => b.date.localeCompare(a.date)), []);
+  const sessions = React.useMemo(() => Object.values(window.GymStore.getAllSessions()).sort((a, b) => b.date.localeCompare(a.date)), [refresh]);
   const exMap = React.useMemo(() => {
     const m = {};
     sessions.forEach(s => (s.exercises || []).forEach(e => {
+      if (e.weight <= 0) return; // skip bodyweight — no meaningful weight to chart
       if (!m[e.id]) m[e.id] = [];
       m[e.id].push({
         date: s.date,
@@ -3803,15 +5308,17 @@ const HistoryScreen = ({
       });
     }
     return m;
-  }, []);
+  }, [routineVer]);
   return /*#__PURE__*/React.createElement("div", {
     className: "hist-screen"
   }, /*#__PURE__*/React.createElement("div", {
     className: "hist-tabs"
   }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `hist-tab ${tab === 'sessions' ? 'on' : ''}`,
     onClick: () => setTab('sessions')
   }, "Sesiones"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `hist-tab ${tab === 'progress' ? 'on' : ''}`,
     onClick: () => setTab('progress')
   }, "Progreso")), tab === 'sessions' && /*#__PURE__*/React.createElement("div", {
@@ -3820,6 +5327,10 @@ const HistoryScreen = ({
     className: "empty"
   }, "A\xFAn sin sesiones registradas."), sessions.map(s => {
     const [, mo, day] = s.date.split('-');
+    const allExs = s.exercises || [];
+    const doneExs = allExs.filter(e => e.done).length;
+    const totalExs = allExs.length;
+    const dur = s.startTime && s.endTime ? formatDuration(s.endTime - s.startTime) : null;
     return /*#__PURE__*/React.createElement("div", {
       key: s.date,
       className: "hist-item"
@@ -3835,18 +5346,62 @@ const HistoryScreen = ({
       className: "hist-title"
     }, s.title), /*#__PURE__*/React.createElement("div", {
       className: "hist-meta"
-    }, /*#__PURE__*/React.createElement("span", null, (s.exercises || []).length, " ejercicios"), /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: s.completed ? 'ok' : 'warn'
+    }, s.completed ? 'Completo' : 'Parcial'), /*#__PURE__*/React.createElement("span", {
       className: "dot-sep"
-    }, "\xB7"), /*#__PURE__*/React.createElement("span", null, HIST_MOOD[s.mood] || '🙂'), /*#__PURE__*/React.createElement("span", {
+    }, "\xB7"), /*#__PURE__*/React.createElement("span", null, doneExs, "/", totalExs, " ejercicios"), dur && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
       className: "dot-sep"
     }, "\xB7"), /*#__PURE__*/React.createElement("span", {
-      className: s.completed ? 'ok' : 'warn'
-    }, s.completed ? 'Completo' : 'Parcial'))));
+      className: "hist-vol"
+    }, dur)), /*#__PURE__*/React.createElement("span", {
+      className: "dot-sep"
+    }, "\xB7"), /*#__PURE__*/React.createElement("span", null, HIST_MOOD[s.mood] || '🙂'))));
   })), tab === 'progress' && /*#__PURE__*/React.createElement("div", {
     className: "hist-progress"
-  }, Object.keys(exMap).length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "empty"
-  }, "Haz al menos un entrenamiento para ver progreso."), Object.keys(exMap).map(id => {
+  }, Object.keys(exMap).length === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "progress-demo-banner"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "demo-banner-icon"
+  }, "\u2139\uFE0F"), /*#__PURE__*/React.createElement("div", {
+    className: "demo-banner-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "demo-banner-title"
+  }, "Vista previa"), /*#__PURE__*/React.createElement("div", {
+    className: "demo-banner-sub"
+  }, "As\xED se ver\xE1 tu progreso. Al completar tu primera sesi\xF3n este apartado reflejar\xE1 tus datos reales."))), DEMO_PROGRESS_DATA.map(({
+    id,
+    name,
+    sub,
+    points
+  }) => {
+    const latest = points[points.length - 1];
+    const prev = points[points.length - 2];
+    const delta = prev ? Math.round((latest.weight - prev.weight) * 10) / 10 : 0;
+    return /*#__PURE__*/React.createElement("div", {
+      key: id,
+      className: "prog-item prog-item-demo"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "prog-head"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "prog-name"
+    }, name), /*#__PURE__*/React.createElement("div", {
+      className: "prog-weight"
+    }, latest.weight, /*#__PURE__*/React.createElement("span", {
+      className: "prog-unit"
+    }, "lb"))), /*#__PURE__*/React.createElement("div", {
+      className: "prog-meta"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "prog-sub"
+    }, sub), delta !== 0 && /*#__PURE__*/React.createElement("span", {
+      className: `prog-trend trend-${delta > 0 ? 'up' : 'down'}`
+    }, delta > 0 ? `↑ +${delta}` : `↓ ${delta}`, " lb")), /*#__PURE__*/React.createElement("div", {
+      className: "prog-chart"
+    }, /*#__PURE__*/React.createElement(LineChart, {
+      id: `demo_${id}`,
+      points: points
+    })));
+  })), Object.keys(exMap).map(id => {
     const points = exMap[id]; // newest first
     const ex = allEx[id] || {
       id,
@@ -3885,80 +5440,91 @@ const HistoryScreen = ({
     })));
   })));
 };
+const DEMO_PROGRESS_DATA = [{
+  id: 'demo_bench',
+  name: 'Press plano con barra',
+  sub: 'Bench Press',
+  points: [{
+    date: '2026-01-10',
+    weight: 60
+  }, {
+    date: '2026-01-17',
+    weight: 62.5
+  }, {
+    date: '2026-01-24',
+    weight: 65
+  }, {
+    date: '2026-01-31',
+    weight: 67.5
+  }, {
+    date: '2026-02-07',
+    weight: 70
+  }, {
+    date: '2026-02-14',
+    weight: 70
+  }, {
+    date: '2026-02-21',
+    weight: 72.5
+  }]
+}, {
+  id: 'demo_squat',
+  name: 'Sentadilla con barra',
+  sub: 'Back Squat',
+  points: [{
+    date: '2026-01-06',
+    weight: 95
+  }, {
+    date: '2026-01-13',
+    weight: 100
+  }, {
+    date: '2026-01-20',
+    weight: 105
+  }, {
+    date: '2026-01-27',
+    weight: 107.5
+  }, {
+    date: '2026-02-03',
+    weight: 110
+  }, {
+    date: '2026-02-10',
+    weight: 115
+  }]
+}, {
+  id: 'demo_curl',
+  name: 'Curl con barra',
+  sub: 'Barbell Curl',
+  points: [{
+    date: '2026-01-09',
+    weight: 50
+  }, {
+    date: '2026-01-16',
+    weight: 52.5
+  }, {
+    date: '2026-01-23',
+    weight: 52.5
+  }, {
+    date: '2026-01-30',
+    weight: 55
+  }, {
+    date: '2026-02-06',
+    weight: 57.5
+  }, {
+    date: '2026-02-13',
+    weight: 60
+  }]
+}];
 window.HistoryScreen = HistoryScreen;
 
 // === screens/measures.jsx ===
-// Medidas corporales + perfil + IMC + calorías
-const MeasuresScreen = () => {
-  const [measures, setMeasures] = React.useState(() => window.GymStore.getMeasures());
-  const [profile, setProfile] = React.useState(() => window.GymStore.getProfile());
-  const [form, setForm] = React.useState({
-    barriga: '',
-    brazo: '',
-    peso: ''
-  });
-  const [editProfile, setEditProfile] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-  const saveProfile = patch => {
-    setProfile(prev => {
-      const next = {
-        ...prev,
-        ...patch
-      };
-      window.GymStore.saveProfile(next);
-      return next;
-    });
-  };
-  const add = () => {
-    const hasPeso = form.peso && !isNaN(parseFloat(form.peso));
-    const hasBarriga = form.barriga && !isNaN(parseFloat(form.barriga));
-    const hasBrazo = form.brazo && !isNaN(parseFloat(form.brazo));
-    if (!hasPeso && !hasBarriga && !hasBrazo) return;
-    const m = {
-      date: window.GymStore.iso(new Date()),
-      peso: hasPeso ? parseFloat(form.peso) : null,
-      barriga: hasBarriga ? parseFloat(form.barriga) : null,
-      brazo: hasBrazo ? parseFloat(form.brazo) : null
-    };
-    window.GymStore.saveMeasure(m);
-    setMeasures(window.GymStore.getMeasures());
-    setForm({
-      barriga: '',
-      brazo: '',
-      peso: ''
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
-  const sorted = React.useMemo(() => [...measures].sort((a, b) => b.date.localeCompare(a.date)), [measures]);
-  const latest = sorted[0];
-  const first = sorted[sorted.length - 1];
-  const delta = key => {
-    if (!latest || !first || latest === first || latest[key] == null || first[key] == null) return null;
-    return latest[key] - first[key];
-  };
-
-  // Última medida con peso
-  const latestWithPeso = sorted.find(m => m.peso != null);
-  const firstWithPeso = sorted.findLast(m => m.peso != null);
-  const pesoActual = latestWithPeso?.peso;
-  const pesoDelta = latestWithPeso && firstWithPeso && latestWithPeso !== firstWithPeso ? latestWithPeso.peso - firstWithPeso.peso : null;
-
-  // IMC
-  const heightM = profile.height / 100;
-  const bmi = pesoActual && profile.height > 0 ? pesoActual / (heightM * heightM) : null;
-  const bmiCat = bmiCategory(bmi);
-
-  // BMR Mifflin-St Jeor (requiere altura y edad válidas)
-  const bmr = pesoActual && profile.height > 0 && profile.age > 0 ? Math.round(mifflin(pesoActual, profile.height, profile.age, profile.sex)) : null;
-  const tdee = bmr ? Math.round(bmr * profile.activity) : null;
-  const deficit = tdee ? tdee - 500 : null;
-  const surplus = tdee ? tdee + 500 : null;
+// Sección de perfil
+const ProfileSection = ({
+  profile,
+  onSave
+}) => {
+  const [editOpen, setEditOpen] = React.useState(false);
   return /*#__PURE__*/React.createElement("div", {
-    className: "meas-screen"
-  }, /*#__PURE__*/React.createElement("div", {
     className: "profile-card",
-    onClick: () => setEditProfile(v => !v)
+    onClick: () => setEditOpen(v => !v)
   }, /*#__PURE__*/React.createElement("div", {
     className: "profile-row"
   }, /*#__PURE__*/React.createElement("div", {
@@ -3980,20 +5546,36 @@ const MeasuresScreen = () => {
   }, "Sexo"), /*#__PURE__*/React.createElement("div", {
     className: "profile-val"
   }, profile.sex === 'm' ? '♂' : '♀')), /*#__PURE__*/React.createElement("div", {
+    className: "profile-item"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "profile-label"
+  }, "Gym/sem"), /*#__PURE__*/React.createElement("div", {
+    className: "profile-val"
+  }, profile.daysPerWeek || 5, /*#__PURE__*/React.createElement("span", null, "d\xEDas"))), /*#__PURE__*/React.createElement("div", {
     className: "profile-edit"
-  }, editProfile ? '✕' : '✎')), editProfile && /*#__PURE__*/React.createElement("div", {
+  }, editOpen ? '✕' : '✎')), !editOpen && (profile.extraActivities || []).length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "profile-extra-acts"
+  }, (profile.extraActivities || []).map(id => {
+    const act = (window.DEFAULT_ACTIVITIES || []).find(a => a.id === id);
+    return act ? /*#__PURE__*/React.createElement("span", {
+      key: id,
+      className: "extra-act-chip on"
+    }, act.icon, " ", act.name) : null;
+  })), editOpen && /*#__PURE__*/React.createElement("div", {
     className: "profile-editor",
     onClick: e => e.stopPropagation()
   }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Altura (cm)"), /*#__PURE__*/React.createElement("input", {
     inputMode: "decimal",
     value: profile.height,
-    onChange: e => saveProfile({
+    onFocus: e => e.target.select(),
+    onChange: e => onSave({
       height: parseFloat(e.target.value) || 0
     })
   })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Edad"), /*#__PURE__*/React.createElement("input", {
     inputMode: "numeric",
     value: profile.age,
-    onChange: e => saveProfile({
+    onFocus: e => e.target.select(),
+    onChange: e => onSave({
       age: parseInt(e.target.value) || 0
     })
   })), /*#__PURE__*/React.createElement("div", {
@@ -4003,13 +5585,15 @@ const MeasuresScreen = () => {
   }, /*#__PURE__*/React.createElement("span", null, "Sexo"), /*#__PURE__*/React.createElement("div", {
     className: "seg-ctrl"
   }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: profile.sex === 'm' ? 'on' : '',
-    onClick: () => saveProfile({
+    onClick: () => onSave({
       sex: 'm'
     })
   }, "\u2642 Hombre"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: profile.sex === 'f' ? 'on' : '',
-    onClick: () => saveProfile({
+    onClick: () => onSave({
       sex: 'f'
     })
   }, "\u2640 Mujer")))), /*#__PURE__*/React.createElement("label", {
@@ -4031,10 +5615,86 @@ const MeasuresScreen = () => {
   }].map(a => /*#__PURE__*/React.createElement("button", {
     key: a.v,
     className: Math.abs(profile.activity - a.v) < 0.01 ? 'on' : '',
-    onClick: () => saveProfile({
+    onClick: () => onSave({
       activity: a.v
     })
-  }, a.l)))))), /*#__PURE__*/React.createElement("div", {
+  }, a.l)))), /*#__PURE__*/React.createElement("label", {
+    className: "seg"
+  }, /*#__PURE__*/React.createElement("span", null, "D\xEDas de gym por semana"), /*#__PURE__*/React.createElement("div", {
+    className: "seg-ctrl seg-sm"
+  }, [1, 2, 3, 4, 5, 6, 7].map(n => /*#__PURE__*/React.createElement("button", {
+    key: n,
+    className: (profile.daysPerWeek || 5) === n ? 'on' : '',
+    onClick: () => onSave({
+      daysPerWeek: n
+    })
+  }, n)))), /*#__PURE__*/React.createElement("div", {
+    className: "profile-field-label"
+  }, "Otras actividades f\xEDsicas (fuera del gym)"), /*#__PURE__*/React.createElement("div", {
+    className: "extra-acts-grid"
+  }, (window.DEFAULT_ACTIVITIES || []).map(act => {
+    const selected = (profile.extraActivities || []).includes(act.id);
+    return /*#__PURE__*/React.createElement("button", {
+      key: act.id,
+      className: `extra-act-chip ${selected ? 'on' : ''}`,
+      onClick: () => {
+        const cur = profile.extraActivities || [];
+        const next = selected ? cur.filter(x => x !== act.id) : [...cur, act.id];
+        onSave({
+          extraActivities: next
+        });
+      }
+    }, act.icon, " ", act.name);
+  }))));
+};
+
+// Sección de métricas corporales
+const BodyMetricsSection = ({
+  profile,
+  sorted
+}) => {
+  const metrics = React.useMemo(() => {
+    const latest = sorted[0];
+    const first = sorted[sorted.length - 1];
+    const delta = key => {
+      if (!latest || !first || latest === first || latest[key] == null || first[key] == null) return null;
+      return latest[key] - first[key];
+    };
+    const latestWithPeso = sorted.find(m => m.peso != null);
+    const firstWithPeso = [...sorted].reverse().find(m => m.peso != null);
+    const pesoActual = latestWithPeso?.peso;
+    const pesoDelta = latestWithPeso && firstWithPeso && latestWithPeso !== firstWithPeso ? latestWithPeso.peso - firstWithPeso.peso : null;
+    const heightM = profile.height / 100;
+    const bmi = pesoActual && profile.height > 0 ? pesoActual / (heightM * heightM) : null;
+    const bmiCat = bmiCategory(bmi);
+    const bmr = pesoActual && profile.height > 0 && profile.age > 0 ? Math.round(mifflin(pesoActual, profile.height, profile.age, profile.sex)) : null;
+    const tdee = bmr ? Math.round(bmr * profile.activity) : null;
+    return {
+      latest,
+      delta,
+      pesoActual,
+      pesoDelta,
+      bmi,
+      bmiCat,
+      bmr,
+      tdee,
+      deficit: tdee ? tdee - 500 : null,
+      surplus: tdee ? tdee + 500 : null
+    };
+  }, [sorted, profile]);
+  const {
+    latest,
+    delta,
+    pesoActual,
+    pesoDelta,
+    bmi,
+    bmiCat,
+    bmr,
+    tdee,
+    deficit,
+    surplus
+  } = metrics;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "meas-cards"
   }, /*#__PURE__*/React.createElement("div", {
     className: "meas-card"
@@ -4113,7 +5773,20 @@ const MeasuresScreen = () => {
     className: "meas-unit"
   }, "cm")), delta('brazo') != null && /*#__PURE__*/React.createElement("div", {
     className: `meas-delta ${delta('brazo') > 0 ? 'good' : delta('brazo') < 0 ? 'warn' : ''}`
-  }, delta('brazo') > 0 ? '+' : '', delta('brazo').toFixed(1), " cm"))), /*#__PURE__*/React.createElement("div", {
+  }, delta('brazo') > 0 ? '+' : '', delta('brazo').toFixed(1), " cm"))));
+};
+
+// Sección de registro de mediciones
+const MeasureHistorySection = ({
+  sorted,
+  form,
+  pesoActual,
+  latest,
+  onFormChange,
+  onAddMeasure,
+  saved
+}) => {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "meas-form"
   }, /*#__PURE__*/React.createElement("div", {
     className: "meas-form-title"
@@ -4122,30 +5795,34 @@ const MeasuresScreen = () => {
   }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Peso (kg)"), /*#__PURE__*/React.createElement("input", {
     inputMode: "decimal",
     value: form.peso,
-    onChange: e => setForm({
+    onFocus: e => e.target.select(),
+    onChange: e => onFormChange({
       ...form,
       peso: e.target.value
     }),
-    placeholder: "85"
+    placeholder: pesoActual?.toString() || '85'
   })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Barriga (cm)"), /*#__PURE__*/React.createElement("input", {
     inputMode: "decimal",
     value: form.barriga,
-    onChange: e => setForm({
+    onFocus: e => e.target.select(),
+    onChange: e => onFormChange({
       ...form,
       barriga: e.target.value
     }),
-    placeholder: "103"
+    placeholder: latest?.barriga?.toString() || '103'
   })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Brazo (cm)"), /*#__PURE__*/React.createElement("input", {
     inputMode: "decimal",
     value: form.brazo,
-    onChange: e => setForm({
+    onFocus: e => e.target.select(),
+    onChange: e => onFormChange({
       ...form,
       brazo: e.target.value
     }),
-    placeholder: "38"
+    placeholder: latest?.brazo?.toString() || '38'
   }))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `btn-primary sm ${saved ? 'btn-saved' : ''}`,
-    onClick: add
+    onClick: onAddMeasure
   }, saved ? '¡Guardado! ✓' : 'Guardar medición')), /*#__PURE__*/React.createElement("div", {
     className: "meas-hist"
   }, /*#__PURE__*/React.createElement("div", {
@@ -4158,6 +5835,73 @@ const MeasuresScreen = () => {
   }, m.date), /*#__PURE__*/React.createElement("div", {
     className: "meas-hist-vals"
   }, m.peso != null && /*#__PURE__*/React.createElement("span", null, "P ", /*#__PURE__*/React.createElement("strong", null, m.peso), "kg"), m.barriga != null && /*#__PURE__*/React.createElement("span", null, "B ", /*#__PURE__*/React.createElement("strong", null, m.barriga), "cm"), m.brazo != null && /*#__PURE__*/React.createElement("span", null, "Br ", /*#__PURE__*/React.createElement("strong", null, m.brazo), "cm"))))));
+};
+
+// Medidas corporales + perfil + IMC + calorías
+const MeasuresScreen = () => {
+  const [measures, setMeasures] = React.useState(() => window.GymStore.getMeasures());
+  const [profile, setProfile] = React.useState(() => window.GymStore.getProfile());
+  const [form, setForm] = React.useState({
+    barriga: '',
+    brazo: '',
+    peso: ''
+  });
+  const [saved, setSaved] = React.useState(false);
+  React.useEffect(() => {
+    if (!saved) return;
+    const id = setTimeout(() => setSaved(false), 2500);
+    return () => clearTimeout(id);
+  }, [saved]);
+  const saveProfile = patch => {
+    setProfile(prev => {
+      const next = {
+        ...prev,
+        ...patch
+      };
+      window.GymStore.saveProfile(next);
+      return next;
+    });
+  };
+  const sorted = React.useMemo(() => [...measures].sort((a, b) => b.date.localeCompare(a.date)), [measures]);
+  const handleAddMeasure = () => {
+    const hasPeso = form.peso && !isNaN(parseFloat(form.peso));
+    const hasBarriga = form.barriga && !isNaN(parseFloat(form.barriga));
+    const hasBrazo = form.brazo && !isNaN(parseFloat(form.brazo));
+    if (!hasPeso && !hasBarriga && !hasBrazo) return;
+    const m = {
+      date: window.GymStore.iso(new Date()),
+      peso: hasPeso ? parseFloat(form.peso) : null,
+      barriga: hasBarriga ? parseFloat(form.barriga) : null,
+      brazo: hasBrazo ? parseFloat(form.brazo) : null
+    };
+    window.GymStore.saveMeasure(m);
+    setMeasures(window.GymStore.getMeasures());
+    setForm({
+      barriga: '',
+      brazo: '',
+      peso: ''
+    });
+    setSaved(true);
+  };
+  const latestWithPeso = sorted.find(m => m.peso != null);
+  const latest = sorted[0];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "meas-screen"
+  }, /*#__PURE__*/React.createElement(ProfileSection, {
+    profile: profile,
+    onSave: saveProfile
+  }), /*#__PURE__*/React.createElement(BodyMetricsSection, {
+    profile: profile,
+    sorted: sorted
+  }), /*#__PURE__*/React.createElement(MeasureHistorySection, {
+    sorted: sorted,
+    form: form,
+    pesoActual: latestWithPeso?.peso,
+    latest: latest,
+    onFormChange: setForm,
+    onAddMeasure: handleAddMeasure,
+    saved: saved
+  }));
 };
 function mifflin(kg, cm, age, sex) {
   const base = 10 * kg + 6.25 * cm - 5 * age;
@@ -4433,8 +6177,8 @@ const ExerciseDetail = ({
   const allSessions = React.useMemo(() => Object.values(window.GymStore.getAllSessions()).filter(s => (s.exercises || []).some(e => e.id === ex.id)).sort((a, b) => a.date.localeCompare(b.date)), [ex.id]);
   const chartPoints = allSessions.map(s => ({
     date: s.date,
-    weight: s.exercises.find(e => e.id === ex.id).weight
-  }));
+    weight: s.exercises.find(e => e.id === ex.id)?.weight ?? 0
+  })).filter(p => p.weight > 0);
 
   // Últimas 8 sesiones en orden inverso (más reciente primero)
   const recentSessions = [...allSessions].reverse().slice(0, 8);
@@ -4473,6 +6217,7 @@ const ExerciseDetail = ({
     className: "empty"
   }, "A\xFAn sin registros."), recentSessions.map(s => {
     const e = s.exercises.find(x => x.id === ex.id);
+    if (!e) return null;
     return /*#__PURE__*/React.createElement("div", {
       key: s.date,
       className: "detail-row"
@@ -4500,6 +6245,16 @@ const DayDetail = ({
   if (!s) return null;
   const d = new Date(dateIso + 'T00:00:00');
   const exMeta = window._allExMeta;
+  const dur = s.startTime && s.endTime ? (() => {
+    const ms = s.endTime - s.startTime;
+    const totalMin = Math.round(ms / 60000);
+    if (totalMin < 1) return null;
+    if (totalMin < 60) return `${totalMin} min`;
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return m > 0 ? `${h}h ${m}min` : `${h}h`;
+  })() : null;
+  const doneActs = Object.values(s.activities || {}).filter(a => a.done);
   return /*#__PURE__*/React.createElement("div", {
     className: "modal-backdrop",
     onClick: onClose
@@ -4516,7 +6271,7 @@ const DayDetail = ({
     className: "detail-name"
   }, s.title), /*#__PURE__*/React.createElement("div", {
     className: "detail-sub"
-  }, "Estado: ", DETAIL_MOOD_META[s.mood] || '🙂', " \xB7 ", s.completed ? 'Completo' : 'Parcial')), /*#__PURE__*/React.createElement("div", {
+  }, DETAIL_MOOD_META[s.mood] || '🙂', " \xB7 ", s.completed ? 'Completo' : 'Parcial', dur && ` · ${dur}`)), /*#__PURE__*/React.createElement("div", {
     className: "detail-section-title"
   }, "Ejercicios"), /*#__PURE__*/React.createElement("div", {
     className: "detail-history"
@@ -4537,17 +6292,128 @@ const DayDetail = ({
       }
     }, meta?.name || e.id), /*#__PURE__*/React.createElement("div", {
       className: "detail-row-meta"
-    }, e.weight, " lb \xB7 ", e.sets, "/", e.targetSets, "\xD7", e.reps)), /*#__PURE__*/React.createElement("div", {
+    }, e.weight > 0 ? `${e.weight} lb · ` : '', e.sets, "/", e.targetSets, "\xD7", e.reps)), /*#__PURE__*/React.createElement("div", {
       className: `set-dot ${e.done ? 'is-done' : ''}`
     }, e.done ? '✓' : '·'));
-  }))));
+  })), s.cardioDone && s.cardioMinutes && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "detail-section-title"
+  }, "Cardio"), /*#__PURE__*/React.createElement("div", {
+    className: "detail-history"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-row-body",
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-row-w",
+    style: {
+      fontSize: 15
+    }
+  }, "\uD83C\uDFC3 ", s.cardioMinutes, " min"), s.cardioLaps != null && /*#__PURE__*/React.createElement("div", {
+    className: "detail-row-meta"
+  }, s.cardioLaps, " vueltas")), /*#__PURE__*/React.createElement("div", {
+    className: "set-dot is-done"
+  }, "\u2713")))), doneActs.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "detail-section-title"
+  }, "Actividades"), /*#__PURE__*/React.createElement("div", {
+    className: "detail-history"
+  }, doneActs.map(a => {
+    const actDef = (window.DEFAULT_ACTIVITIES || []).find(x => x.id === a.id);
+    return /*#__PURE__*/React.createElement("div", {
+      key: a.id,
+      className: "detail-row"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "detail-row-body",
+      style: {
+        flex: 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "detail-row-w",
+      style: {
+        fontSize: 15
+      }
+    }, actDef?.icon || '🏃', " ", actDef?.name || a.id), a.value != null && /*#__PURE__*/React.createElement("div", {
+      className: "detail-row-meta"
+    }, a.value, " ", actDef?.unit || '')), /*#__PURE__*/React.createElement("div", {
+      className: "set-dot is-done"
+    }, "\u2713"));
+  })))));
+};
+const CompletionModal = ({
+  session,
+  onClose
+}) => {
+  const doneCount = (session.exercises || []).filter(e => e.done).length;
+  const setsTotal = (session.exercises || []).reduce((s, e) => s + (e.sets || 0), 0);
+  const hasPR = React.useMemo(() => {
+    const allSessions = Object.values(window.GymStore.getAllSessions());
+    const before = allSessions.filter(s => s.date < session.date);
+    return (session.exercises || []).some(ex => {
+      const pastBest = before.reduce((max, s) => {
+        const found = (s.exercises || []).find(e => e.id === ex.id);
+        return found ? Math.max(max, found.weight) : max;
+      }, 0);
+      return ex.weight > pastBest && pastBest > 0;
+    });
+  }, [session]);
+  const MSGS = ['¡Buen trabajo!', '¡Lo lograste!', '¡Excelente sesión!', '¡Sigue así!'];
+  const [msg] = React.useState(() => MSGS[Math.floor(Math.random() * MSGS.length)]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "completion-backdrop",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-trophy"
+  }, "\uD83C\uDFC6"), /*#__PURE__*/React.createElement("div", {
+    className: "completion-title"
+  }, msg), /*#__PURE__*/React.createElement("div", {
+    className: "completion-routine"
+  }, session.title), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stats"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-num"
+  }, doneCount), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-label"
+  }, "ejercicios")), /*#__PURE__*/React.createElement("div", {
+    className: "completion-divider"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-num"
+  }, setsTotal), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-label"
+  }, "sets")), session.cardioDone && session.cardioMinutes && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "completion-divider"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-num"
+  }, session.cardioMinutes), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-label"
+  }, "min cardio")))), hasPR && /*#__PURE__*/React.createElement("div", {
+    className: "completion-pr"
+  }, "\u2B06\uFE0F \xA1Nuevo r\xE9cord personal!"), /*#__PURE__*/React.createElement("div", {
+    className: "completion-sub-msg"
+  }, "Entrenamiento guardado. \xA1Descansa bien!"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn-primary",
+    onClick: onClose
+  }, "Ver calendario \u2192")));
 };
 window.MoodModal = MoodModal;
 window.ExerciseDetail = ExerciseDetail;
 window.DayDetail = DayDetail;
+window.CompletionModal = CompletionModal;
 
 // === screens/routine-editor.jsx ===
 // Editor de rutina del día
+let _idCtr = Date.now();
 const RoutineEditor = ({
   dow,
   routine,
@@ -4559,8 +6425,12 @@ const RoutineEditor = ({
     ...routine,
     exercises: (routine.exercises || []).map(e => ({
       ...e
+    })),
+    activities: (routine.activities || []).map(a => ({
+      ...a
     }))
   }));
+  const [showActivityPicker, setShowActivityPicker] = React.useState(false);
   const updateEx = (idx, patch) => {
     setDraft(d => ({
       ...d,
@@ -4588,7 +6458,7 @@ const RoutineEditor = ({
     setDraft(d => ({
       ...d,
       exercises: [...d.exercises, {
-        id: 'ex_' + Date.now(),
+        id: 'ex_' + ++_idCtr,
         name: 'Nuevo ejercicio',
         sub: '',
         sets: 3,
@@ -4600,13 +6470,37 @@ const RoutineEditor = ({
       }]
     }));
   };
+  const addActivity = activity => {
+    setDraft(d => ({
+      ...d,
+      activities: [...(d.activities || []), {
+        ...activity,
+        id: activity.id + '_' + Date.now(),
+        defaultVal: activity.defaultVal || 20
+      }]
+    }));
+  };
+  const updateAct = (idx, patch) => {
+    setDraft(d => ({
+      ...d,
+      activities: d.activities.map((a, i) => i === idx ? {
+        ...a,
+        ...patch
+      } : a)
+    }));
+  };
+  const removeAct = idx => setDraft(d => ({
+    ...d,
+    activities: d.activities.filter((_, i) => i !== idx)
+  }));
   const save = () => {
     onSave({
       ...draft,
       exercises: draft.exercises.map(e => ({
         ...e,
         target: `${e.sets}×${e.reps} @ ${e.weight} ${e.unit}`
-      }))
+      })),
+      activities: draft.activities || []
     });
     onClose();
   };
@@ -4653,6 +6547,7 @@ const RoutineEditor = ({
       name: e.target.value
     })
   }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "editor-rm",
     onClick: () => removeEx(i)
   }, "\u2715")), /*#__PURE__*/React.createElement("input", {
@@ -4668,6 +6563,7 @@ const RoutineEditor = ({
     type: "number",
     value: ex.sets,
     min: "1",
+    onFocus: e => e.target.select(),
     onChange: e => updateEx(i, {
       sets: parseInt(e.target.value) || 1
     })
@@ -4675,6 +6571,7 @@ const RoutineEditor = ({
     type: "number",
     value: ex.reps,
     min: "1",
+    onFocus: e => e.target.select(),
     onChange: e => updateEx(i, {
       reps: parseInt(e.target.value) || 1
     })
@@ -4682,8 +6579,10 @@ const RoutineEditor = ({
     type: "number",
     value: ex.weight,
     step: "2.5",
+    min: "0",
+    onFocus: e => e.target.select(),
     onChange: e => updateEx(i, {
-      weight: parseFloat(e.target.value) || 0
+      weight: Math.max(0, parseFloat(e.target.value) || 0)
     })
   })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Unid"), /*#__PURE__*/React.createElement("select", {
     value: ex.unit,
@@ -4705,41 +6604,247 @@ const RoutineEditor = ({
     onClick: () => moveEx(i, 1),
     disabled: i === draft.exercises.length - 1
   }, "\u2193"))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "btn-secondary",
     onClick: addEx
   }, "+ Agregar ejercicio"), /*#__PURE__*/React.createElement("div", {
+    className: "detail-section-title",
+    style: {
+      marginTop: 20
+    }
+  }, "Actividades f\xEDsicas (", (draft.activities || []).length, ")"), /*#__PURE__*/React.createElement("div", {
+    className: "editor-list"
+  }, (draft.activities || []).map((act, i) => /*#__PURE__*/React.createElement("div", {
+    key: act.id,
+    className: "editor-row editor-act-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "editor-row-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "editor-act-icon"
+  }, act.icon || '🏃'), /*#__PURE__*/React.createElement("span", {
+    className: "editor-act-name"
+  }, act.name), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "editor-rm",
+    onClick: () => removeAct(i)
+  }, "\u2715")), /*#__PURE__*/React.createElement("div", {
+    className: "editor-act-vals"
+  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Valor por defecto"), /*#__PURE__*/React.createElement("div", {
+    className: "editor-act-input-row"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: act.defaultVal,
+    min: "1",
+    onFocus: e => e.target.select(),
+    onChange: e => updateAct(i, {
+      defaultVal: parseInt(e.target.value) || 1
+    })
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "editor-act-unit"
+  }, act.unit))), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Cal/10 min"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: act.cal10 || 4,
+    min: "1",
+    onFocus: e => e.target.select(),
+    onChange: e => updateAct(i, {
+      cal10: parseInt(e.target.value) || 4
+    })
+  })))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn-secondary",
+    onClick: () => setShowActivityPicker(true)
+  }, "+ Agregar actividad"), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 10
     }
   }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "btn-primary",
     onClick: save
   }, "Guardar rutina del ", window.DAY_LONG[dow].toLowerCase()), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "btn-link",
     onClick: () => {
       window.GymStore.resetRoutineFor(dow);
       onReset();
       onClose();
     }
-  }, "Restablecer al original")));
+  }, "Restablecer al original"), showActivityPicker && /*#__PURE__*/React.createElement(ActivityPickerModal, {
+    onClose: () => setShowActivityPicker(false),
+    onSelect: act => {
+      addActivity(act);
+      setShowActivityPicker(false);
+    }
+  })));
+};
+
+// Modal para elegir actividad del catálogo
+const ActivityPickerModal = ({
+  onClose,
+  onSelect
+}) => {
+  const [customMode, setCustomMode] = React.useState(false);
+  const [customForm, setCustomForm] = React.useState({
+    name: '',
+    icon: '🏃',
+    type: 'time',
+    unit: 'min',
+    cal10: 4,
+    defaultVal: 20
+  });
+  const catalog = window.GymStore.getActivities();
+  const saveCustom = () => {
+    if (!customForm.name.trim()) return;
+    const act = {
+      ...customForm,
+      id: 'custom_' + ++_idCtr,
+      name: customForm.name.trim()
+    };
+    window.GymStore.saveCustomActivity(act);
+    onSelect(act);
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "modal-backdrop",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "modal-handle"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "detail-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-name"
+  }, "Agregar actividad"), /*#__PURE__*/React.createElement("div", {
+    className: "detail-sub"
+  }, "Elige del cat\xE1logo o crea una nueva")), !customMode ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "activity-catalog"
+  }, catalog.map(act => /*#__PURE__*/React.createElement("button", {
+    key: act.id,
+    className: "activity-catalog-item",
+    onClick: () => onSelect(act)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "act-cat-icon"
+  }, act.icon || '🏃'), /*#__PURE__*/React.createElement("div", {
+    className: "act-cat-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "act-cat-name"
+  }, act.name), /*#__PURE__*/React.createElement("div", {
+    className: "act-cat-meta"
+  }, act.defaultVal, " ", act.unit, " \xB7 ~", act.cal10, " kcal/10min"))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn-secondary",
+    onClick: () => setCustomMode(true)
+  }, "+ Crear actividad nueva")) : /*#__PURE__*/React.createElement("div", {
+    className: "editor-list"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "picker-section-label"
+  }, "Nombre"), /*#__PURE__*/React.createElement("input", {
+    className: "picker-input",
+    placeholder: "Ej: Aer\xF3bicos, Box, Patines...",
+    value: customForm.name,
+    onChange: e => setCustomForm(f => ({
+      ...f,
+      name: e.target.value
+    })),
+    autoFocus: true
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "picker-section-label",
+    style: {
+      marginTop: 12
+    }
+  }, "Tipo de valor"), /*#__PURE__*/React.createElement("div", {
+    className: "act-type-row"
+  }, (window.ACTIVITY_VALUE_TYPES || []).map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.key,
+    className: `act-type-btn ${customForm.type === t.key ? 'on' : ''}`,
+    onClick: () => setCustomForm(f => ({
+      ...f,
+      type: t.key,
+      unit: t.unit
+    }))
+  }, t.label))), /*#__PURE__*/React.createElement("div", {
+    className: "editor-nums",
+    style: {
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Valor defecto"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: customForm.defaultVal,
+    min: "1",
+    onFocus: e => e.target.select(),
+    onChange: e => setCustomForm(f => ({
+      ...f,
+      defaultVal: parseInt(e.target.value) || 1
+    }))
+  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Cal/10 min"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: customForm.cal10,
+    min: "1",
+    onFocus: e => e.target.select(),
+    onChange: e => setCustomForm(f => ({
+      ...f,
+      cal10: parseInt(e.target.value) || 4
+    }))
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "picker-section-label",
+    style: {
+      marginTop: 8
+    }
+  }, "\xCDcono"), /*#__PURE__*/React.createElement("div", {
+    className: "picker-emoji-row"
+  }, ['🏃', '💃', '🏊', '🚴', '🧘', '⚡', '🥊', '⛷️', '🏄', '🤸'].map(ic => /*#__PURE__*/React.createElement("button", {
+    key: ic,
+    className: `picker-emoji-btn ${customForm.icon === ic ? 'on' : ''}`,
+    onClick: () => setCustomForm(f => ({
+      ...f,
+      icon: ic
+    }))
+  }, ic))), /*#__PURE__*/React.createElement("div", {
+    className: "picker-actions",
+    style: {
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn-primary",
+    onClick: saveCustom,
+    disabled: !customForm.name.trim()
+  }, "Crear y agregar"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn-link",
+    onClick: () => setCustomMode(false)
+  }, "\u2190 Volver al cat\xE1logo"))))));
 };
 window.RoutineEditor = RoutineEditor;
 
 // === screens/week.jsx ===
 // Vista semanal: muestra los 7 días con opción de editar cualquier día
 const WeekScreen = ({
-  onEditDay
+  onEditDay,
+  routineVer
 }) => {
   const today = new Date();
   const todayDow = today.getDay();
   const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Lun → Dom
 
+  const routineMap = React.useMemo(() => {
+    const map = {};
+    for (let d of WEEK_ORDER) {
+      map[d] = window.GymStore.getRoutineFor(d);
+    }
+    return map;
+  }, [routineVer]);
   return /*#__PURE__*/React.createElement("div", {
     className: "week-screen"
   }, /*#__PURE__*/React.createElement("div", {
     className: "week-eyebrow"
   }, "Rutina Semanal"), WEEK_ORDER.map(dow => {
-    const routine = window.GymStore.getRoutineFor(dow);
+    const routine = routineMap[dow];
     const isToday = dow === todayDow;
     const isRest = !!routine.rest;
     return /*#__PURE__*/React.createElement("div", {
@@ -4754,6 +6859,7 @@ const WeekScreen = ({
     }), window.DAY_LONG[dow]), /*#__PURE__*/React.createElement("div", {
       className: "week-card-title"
     }, routine.title), !isRest && /*#__PURE__*/React.createElement("button", {
+      type: "button",
       className: "icon-btn",
       onClick: () => onEditDay(dow),
       title: `Editar ${window.DAY_LONG[dow]}`
@@ -4785,20 +6891,436 @@ const WeekScreen = ({
       className: "week-ex-name"
     }, routine.cardio.name), /*#__PURE__*/React.createElement("span", {
       className: "week-ex-spec"
-    }, routine.cardio.minutes, " min")))), isRest && /*#__PURE__*/React.createElement("div", {
+    }, routine.cardio.minutes, " min")), (routine.activities || []).map(act => /*#__PURE__*/React.createElement("div", {
+      key: act.id,
+      className: "week-ex-row week-cardio-row"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "week-ex-i"
+    }, act.icon || '🏃'), /*#__PURE__*/React.createElement("span", {
+      className: "week-ex-name"
+    }, act.name), /*#__PURE__*/React.createElement("span", {
+      className: "week-ex-spec"
+    }, act.defaultVal, " ", act.unit)))), /*#__PURE__*/React.createElement("div", {
+      className: "week-card-stats"
+    }, /*#__PURE__*/React.createElement("span", null, (routine.exercises || []).length, " ejercicios"), /*#__PURE__*/React.createElement("span", {
+      className: "dot-sep"
+    }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "~", Math.round((routine.exercises || []).reduce((s, e) => s + e.sets, 0) * 2.2 + (routine.cardio?.minutes || 0)), " min"), (routine.exercises || []).reduce((s, e) => s + e.sets, 0) > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      className: "dot-sep"
+    }, "\xB7"), /*#__PURE__*/React.createElement("span", null, (routine.exercises || []).reduce((s, e) => s + e.sets, 0), " sets")))), isRest && /*#__PURE__*/React.createElement("div", {
       className: "week-rest-body"
     }, "D\xEDa de descanso \xB7 Recupera y disfruta"));
   }));
 };
 window.WeekScreen = WeekScreen;
 
+// === screens/admin.jsx ===
+const ADMIN_PIN = '1236';
+
+// ── PIN screen ──────────────────────────────────────────────────────────────
+const AdminPin = ({
+  onUnlock
+}) => {
+  const [digits, setDigits] = React.useState('');
+  const [shake, setShake] = React.useState(false);
+  const addDigit = d => {
+    if (digits.length >= 4) return;
+    const next = digits + d;
+    setDigits(next);
+    if (next.length === 4) {
+      if (next === ADMIN_PIN) {
+        setTimeout(() => onUnlock(), 150);
+      } else {
+        setShake(true);
+        setTimeout(() => {
+          setDigits('');
+          setShake(false);
+        }, 620);
+      }
+    }
+  };
+  const KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "admin-pin-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "admin-pin-topbar"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "/",
+    className: "admin-back-link"
+  }, "\u2190 Volver al app")), /*#__PURE__*/React.createElement("div", {
+    className: "admin-pin-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "admin-pin-logo"
+  }, "\uD83C\uDFCB\uFE0F"), /*#__PURE__*/React.createElement("div", {
+    className: "admin-pin-title"
+  }, "Ponte Viga"), /*#__PURE__*/React.createElement("div", {
+    className: "admin-pin-sub"
+  }, "Panel de administraci\xF3n"), /*#__PURE__*/React.createElement("div", {
+    className: `admin-pin-dots${shake ? ' shake' : ''}`
+  }, [0, 1, 2, 3].map(i => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: `admin-dot${i < digits.length ? ' on' : ''}`
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "admin-numpad"
+  }, KEYS.map((k, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    className: `numpad-key${k === '' ? ' invisible' : ''}`,
+    onClick: () => {
+      if (k === '⌫') setDigits(p => p.slice(0, -1));else if (k !== '') addDigit(String(k));
+    }
+  }, k)))));
+};
+
+// ── Admin Panel ─────────────────────────────────────────────────────────────
+const AdminPanel = () => {
+  const [profiles, setProfiles] = React.useState([]);
+  const [groups, setGroups] = React.useState({});
+  const [loading, setLoading] = React.useState(true);
+  const [tab, setTab] = React.useState('profiles');
+  const [syncing, setSyncing] = React.useState(false);
+  const [toast, setToast] = React.useState('');
+
+  // Edit states
+  const [editingProfile, setEditingProfile] = React.useState(null); // { name, emoji, color }
+  const [confirmDelete, setConfirmDelete] = React.useState(null);
+  const [editingGroup, setEditingGroup] = React.useState(null); // { code, name }
+  const [newGroup, setNewGroup] = React.useState({
+    code: '',
+    name: ''
+  });
+  const [confirmDeleteGroup, setConfirmDeleteGroup] = React.useState(null);
+  const showToast = msg => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2000);
+  };
+  const load = async () => {
+    setLoading(true);
+    await Promise.all([window.GymStore.hydrateProfiles(), window.GymStore.hydrateGroups()]);
+    setProfiles(window.GymStore.getProfiles());
+    setGroups(window.GymStore.getGroups());
+    setLoading(false);
+  };
+  React.useEffect(() => {
+    load();
+  }, []);
+  const sync = async () => {
+    setSyncing(true);
+    await load();
+    setSyncing(false);
+    showToast('Sincronizado ✓');
+  };
+
+  // ── Profile actions ──
+  const deleteProfile = name => {
+    window.GymStore.deleteProfile(name);
+    setProfiles(window.GymStore.getProfiles());
+    setGroups(window.GymStore.getGroups());
+    setConfirmDelete(null);
+    showToast(`"${name}" eliminado`);
+  };
+  const saveProfileEdit = () => {
+    if (!editingProfile) return;
+    const list = profiles.map(p => p.name === editingProfile.original ? {
+      ...p,
+      name: editingProfile.name,
+      emoji: editingProfile.emoji
+    } : p);
+    // If name changed, update group memberships too
+    if (editingProfile.original !== editingProfile.name) {
+      const g = {
+        ...groups
+      };
+      Object.keys(g).forEach(k => {
+        g[k] = {
+          ...g[k],
+          members: g[k].members.map(m => m === editingProfile.original ? editingProfile.name : m)
+        };
+      });
+      window.GymStore.saveGroups(g);
+      setGroups(window.GymStore.getGroups());
+    }
+    // Update active profile key if it was the current one
+    const activeKey = localStorage.getItem('gym_active_profile_v1');
+    if (activeKey === editingProfile.original && editingProfile.original !== editingProfile.name) {
+      localStorage.setItem('gym_active_profile_v1', editingProfile.name);
+    }
+    const S3 = window.S3Store;
+    localStorage.setItem('gym_profiles_list_v1', JSON.stringify(list));
+    if (S3) S3.set('profiles', list);
+    setProfiles(list);
+    setEditingProfile(null);
+    showToast('Perfil actualizado ✓');
+  };
+
+  // ── Group actions ──
+  const createGroup = () => {
+    if (!newGroup.name.trim()) return;
+    const raw = newGroup.code.trim() || newGroup.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const code = raw.startsWith('#') ? raw : '#' + raw;
+    window.GymStore.createGroup(code, newGroup.name.trim());
+    setGroups(window.GymStore.getGroups());
+    setNewGroup({
+      code: '',
+      name: ''
+    });
+    showToast(`Grupo ${code} creado ✓`);
+  };
+  const saveGroupEdit = () => {
+    if (!editingGroup) return;
+    const g = {
+      ...groups
+    };
+    if (!g[editingGroup.code]) return;
+    // Rename group display name only (code stays)
+    g[editingGroup.code] = {
+      ...g[editingGroup.code],
+      name: editingGroup.name
+    };
+    window.GymStore.saveGroups(g);
+    setGroups(g);
+    setEditingGroup(null);
+    showToast('Grupo actualizado ✓');
+  };
+  const deleteGroup = code => {
+    const g = {
+      ...groups
+    };
+    delete g[code];
+    window.GymStore.saveGroups(g);
+    setGroups(g);
+    setConfirmDeleteGroup(null);
+    showToast(`Grupo ${code} eliminado`);
+  };
+  const toggleMember = (code, profileName) => {
+    const isMember = (groups[code]?.members || []).includes(profileName);
+    if (isMember) window.GymStore.leaveGroup(code, profileName);else window.GymStore.joinGroup(code, profileName);
+    setGroups(window.GymStore.getGroups());
+  };
+  const getProfileGroups = name => Object.entries(groups).filter(([, g]) => (g.members || []).includes(name)).map(([c]) => c);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "admin-panel"
+  }, toast && /*#__PURE__*/React.createElement("div", {
+    className: "admin-toast"
+  }, toast), /*#__PURE__*/React.createElement("div", {
+    className: "admin-header"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "/",
+    className: "admin-back-link"
+  }, "\u2190 App"), /*#__PURE__*/React.createElement("div", {
+    className: "admin-header-title"
+  }, "Panel Admin"), /*#__PURE__*/React.createElement("button", {
+    className: "admin-sync-btn",
+    onClick: sync,
+    disabled: syncing
+  }, syncing ? '⟳' : '↻')), /*#__PURE__*/React.createElement("div", {
+    className: "admin-tabs"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: `admin-tab${tab === 'profiles' ? ' on' : ''}`,
+    onClick: () => setTab('profiles')
+  }, "Perfiles ", loading ? '' : `(${profiles.length})`), /*#__PURE__*/React.createElement("button", {
+    className: `admin-tab${tab === 'groups' ? ' on' : ''}`,
+    onClick: () => setTab('groups')
+  }, "Grupos ", loading ? '' : `(${Object.keys(groups).length})`)), /*#__PURE__*/React.createElement("div", {
+    className: "admin-scroll"
+  }, loading && /*#__PURE__*/React.createElement("div", {
+    className: "admin-loading"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "loading-dots"
+  }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#555',
+      fontSize: 13,
+      marginTop: 12
+    }
+  }, "Cargando desde servidor...")), !loading && tab === 'profiles' && /*#__PURE__*/React.createElement("div", {
+    className: "admin-section"
+  }, profiles.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "admin-empty"
+  }, "No hay perfiles registrados en el servidor."), profiles.map(p => {
+    const pGroups = getProfileGroups(p.name);
+    const isEditing = editingProfile?.original === p.name;
+    return /*#__PURE__*/React.createElement("div", {
+      key: p.name,
+      className: `admin-profile-row${isEditing ? ' editing' : ''}`
+    }, isEditing ? /*#__PURE__*/React.createElement("div", {
+      className: "admin-edit-form"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "admin-edit-row"
+    }, /*#__PURE__*/React.createElement("input", {
+      className: "admin-input emoji-input",
+      value: editingProfile.emoji,
+      maxLength: 2,
+      onChange: e => setEditingProfile(x => ({
+        ...x,
+        emoji: e.target.value
+      }))
+    }), /*#__PURE__*/React.createElement("input", {
+      className: "admin-input flex-1",
+      value: editingProfile.name,
+      onChange: e => setEditingProfile(x => ({
+        ...x,
+        name: e.target.value
+      })),
+      placeholder: "Nombre del perfil"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "admin-edit-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "admin-btn-save",
+      onClick: saveProfileEdit
+    }, "Guardar"), /*#__PURE__*/React.createElement("button", {
+      className: "admin-btn-cancel",
+      onClick: () => setEditingProfile(null)
+    }, "Cancelar"))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "admin-avatar",
+      style: {
+        background: p.color || '#555'
+      }
+    }, p.emoji), /*#__PURE__*/React.createElement("div", {
+      className: "admin-profile-info"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "admin-profile-name"
+    }, p.name), /*#__PURE__*/React.createElement("div", {
+      className: "admin-profile-groups"
+    }, pGroups.length > 0 ? pGroups.map(c => /*#__PURE__*/React.createElement("span", {
+      key: c,
+      className: "admin-group-tag"
+    }, c)) : /*#__PURE__*/React.createElement("span", {
+      className: "admin-dim"
+    }, "Sin grupo"))), /*#__PURE__*/React.createElement("div", {
+      className: "admin-row-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "admin-btn-edit",
+      onClick: () => setEditingProfile({
+        original: p.name,
+        name: p.name,
+        emoji: p.emoji
+      })
+    }, "\u270E"), confirmDelete === p.name ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+      className: "admin-btn-danger",
+      onClick: () => deleteProfile(p.name)
+    }, "Borrar"), /*#__PURE__*/React.createElement("button", {
+      className: "admin-btn-cancel sm",
+      onClick: () => setConfirmDelete(null)
+    }, "No")) : /*#__PURE__*/React.createElement("button", {
+      className: "admin-btn-del",
+      onClick: () => setConfirmDelete(p.name)
+    }, "\u2715"))));
+  })), !loading && tab === 'groups' && /*#__PURE__*/React.createElement("div", {
+    className: "admin-section"
+  }, Object.keys(groups).length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "admin-empty"
+  }, "No hay grupos creados a\xFAn."), Object.entries(groups).map(([code, g]) => /*#__PURE__*/React.createElement("div", {
+    key: code,
+    className: "admin-group-card"
+  }, editingGroup?.code === code ? /*#__PURE__*/React.createElement("div", {
+    className: "admin-edit-form"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "admin-edit-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "admin-group-code-badge"
+  }, code), /*#__PURE__*/React.createElement("input", {
+    className: "admin-input flex-1",
+    value: editingGroup.name,
+    onChange: e => setEditingGroup(x => ({
+      ...x,
+      name: e.target.value
+    })),
+    placeholder: "Nombre del grupo"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "admin-edit-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "admin-btn-save",
+    onClick: saveGroupEdit
+  }, "Guardar"), /*#__PURE__*/React.createElement("button", {
+    className: "admin-btn-cancel",
+    onClick: () => setEditingGroup(null)
+  }, "Cancelar"))) : /*#__PURE__*/React.createElement("div", {
+    className: "admin-group-head"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "admin-group-code-badge"
+  }, code), /*#__PURE__*/React.createElement("div", {
+    className: "admin-group-display-name"
+  }, g.name)), /*#__PURE__*/React.createElement("div", {
+    className: "admin-row-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "admin-btn-edit",
+    onClick: () => setEditingGroup({
+      code,
+      name: g.name
+    })
+  }, "\u270E"), confirmDeleteGroup === code ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    className: "admin-btn-danger",
+    onClick: () => deleteGroup(code)
+  }, "Borrar"), /*#__PURE__*/React.createElement("button", {
+    className: "admin-btn-cancel sm",
+    onClick: () => setConfirmDeleteGroup(null)
+  }, "No")) : /*#__PURE__*/React.createElement("button", {
+    className: "admin-btn-del",
+    onClick: () => setConfirmDeleteGroup(code)
+  }, "\u2715"))), /*#__PURE__*/React.createElement("div", {
+    className: "admin-group-members"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "admin-members-label"
+  }, "Miembros:"), /*#__PURE__*/React.createElement("div", {
+    className: "admin-members-chips"
+  }, profiles.map(p => {
+    const isMember = (g.members || []).includes(p.name);
+    return /*#__PURE__*/React.createElement("button", {
+      key: p.name,
+      className: `admin-member-chip${isMember ? ' on' : ''}`,
+      onClick: () => toggleMember(code, p.name)
+    }, p.emoji, " ", p.name);
+  }), profiles.length === 0 && /*#__PURE__*/React.createElement("span", {
+    className: "admin-dim"
+  }, "No hay perfiles"))))), /*#__PURE__*/React.createElement("div", {
+    className: "admin-new-group-form"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "admin-section-title"
+  }, "Crear nuevo grupo"), /*#__PURE__*/React.createElement("input", {
+    className: "admin-input",
+    placeholder: "Nombre (ej: Miranda)",
+    value: newGroup.name,
+    onChange: e => setNewGroup(g => ({
+      ...g,
+      name: e.target.value
+    }))
+  }), /*#__PURE__*/React.createElement("input", {
+    className: "admin-input",
+    placeholder: "C\xF3digo (ej: #miranda \u2014 opcional)",
+    value: newGroup.code,
+    onChange: e => setNewGroup(g => ({
+      ...g,
+      code: e.target.value
+    }))
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "admin-btn-primary",
+    onClick: createGroup,
+    disabled: !newGroup.name.trim()
+  }, "Crear grupo")))));
+};
+
+// ── Root admin app ──────────────────────────────────────────────────────────
+const AdminApp = () => {
+  const [unlocked, setUnlocked] = React.useState(false);
+  if (!unlocked) return /*#__PURE__*/React.createElement(AdminPin, {
+    onUnlock: () => setUnlocked(true)
+  });
+  return /*#__PURE__*/React.createElement(AdminPanel, null);
+};
+window.AdminApp = AdminApp;
+
 // === app.jsx ===
 // App shell: navegación por tabs, modales, hoy/calendario/semana/historial/medidas
 const {
   useState,
   useEffect,
-  useMemo
+  useMemo,
+  useRef,
+  useCallback
 } = React;
+const getGreeting = () => {
+  const h = new Date().getHours();
+  return h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches';
+};
 const App = ({
   onSwitchProfile
 }) => {
@@ -4822,7 +7344,7 @@ const App = ({
     document.documentElement.style.setProperty('--accent-soft', tweaks.accent + '24');
     document.body.style.fontSize = tweaks.fontSize + 'px';
   }, [tweaks]);
-  const updateTweak = patch => {
+  const updateTweak = useCallback(patch => {
     setTweaks(prev => ({
       ...prev,
       ...patch
@@ -4831,28 +7353,49 @@ const App = ({
       type: '__edit_mode_set_keys',
       edits: patch
     }, '*');
-  };
+  }, []);
   const [tab, setTab] = useState(() => localStorage.getItem('gym_tab') || 'today');
   useEffect(() => {
     localStorage.setItem('gym_tab', tab);
   }, [tab]);
+  const [scrolled, setScrolled] = useState(false);
+  const scrollRef = useRef(null);
+  const greeting = useMemo(getGreeting, []);
   const [moodOpen, setMoodOpen] = useState(false);
   const [exerciseDetail, setExerciseDetail] = useState(null);
   const [dayDetail, setDayDetail] = useState(null);
   const [refresh, setRefresh] = useState(0);
-  const bump = () => setRefresh(r => r + 1);
+  const [swapOpen, setSwapOpen] = useState(false);
+  const [completionData, setCompletionData] = useState(null);
   const today = new Date();
   const dow = today.getDay();
+
+  // Recarga cuando cambia el día (setInterval cada 60s + visibilitychange)
+  const mountedDayRef = useRef(window.GymStore.iso(today));
+  useEffect(() => {
+    const check = () => {
+      if (window.GymStore.iso(new Date()) !== mountedDayRef.current) {
+        window.location.reload();
+      }
+    };
+    const id = setInterval(check, 60000);
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', check);
+    };
+  }, []);
   const [routineVer, setRoutineVer] = useState(0);
   const routine = useMemo(() => window.GymStore.getRoutineFor(dow), [routineVer]);
   const [editingRoutine, setEditingRoutine] = useState(false);
   const [editingDow, setEditingDow] = useState(dow);
-  const openRoutineEditor = d => {
+  const openRoutineEditor = useCallback(d => {
     setEditingDow(d !== undefined ? d : dow);
     setEditingRoutine(true);
-  };
+  }, [dow]);
   const streak = useMemo(() => window.GymStore.computeStreak(), [refresh]);
   const todayIso = window.GymStore.iso(today);
+  const todaySession = useMemo(() => window.GymStore.getSession(todayIso), [refresh]);
   const profileInfo = useMemo(() => {
     const name = window.GymStore.getActiveProfile();
     return window.GymStore.getProfiles().find(p => p.name === name) || null;
@@ -4861,28 +7404,39 @@ const App = ({
     const a = window.GymStore.getActive();
     return a && a.date === todayIso ? a : null;
   });
-  const startWorkout = mood => {
+  const startWorkout = useCallback(mood => {
+    // Peso inteligente: usar máximo histórico por ejercicio como punto de partida
+    const pb = {};
+    Object.values(window.GymStore.getAllSessions()).filter(s => s.date < todayIso).forEach(s => (s.exercises || []).forEach(e => {
+      if (e.weight > 0 && (pb[e.id] == null || e.weight > pb[e.id])) pb[e.id] = e.weight;
+    }));
     const session = {
       date: todayIso,
       dow,
       title: routine.title,
       mood,
-      exercises: routine.exercises.map(ex => ({
+      startTime: Date.now(),
+      exercises: (routine.exercises || []).map(ex => ({
         id: ex.id,
-        weight: ex.weight,
+        weight: pb[ex.id] != null ? pb[ex.id] : ex.weight,
         sets: 0,
         targetSets: ex.sets,
         reps: ex.reps,
         done: false
       })),
+      activities: Object.fromEntries((routine.activities || []).map(a => [a.id, {
+        id: a.id,
+        done: false,
+        value: a.defaultVal || 10
+      }])),
       cardioDone: false,
       completed: false
     };
     window.GymStore.setActive(session);
     setActive(session);
     setMoodOpen(false);
-  };
-  const updateExercise = (exId, state) => {
+  }, [todayIso, dow, routine.title]);
+  const updateExercise = useCallback((exId, state) => {
     setActive(prev => {
       const next = {
         ...prev,
@@ -4891,39 +7445,134 @@ const App = ({
       window.GymStore.setActive(next);
       return next;
     });
-  };
-  const toggleCardio = minutes => {
+  }, []);
+  const updateActivity = useCallback((actId, state) => {
     setActive(prev => {
       const next = {
         ...prev,
-        cardioDone: !prev.cardioDone,
-        cardioMinutes: minutes
+        activities: {
+          ...(prev.activities || {}),
+          [actId]: state
+        }
       };
       window.GymStore.setActive(next);
       return next;
     });
-  };
-  const finish = () => {
+  }, []);
+  const toggleCardio = useCallback((minutes, laps) => {
+    setActive(prev => {
+      const next = {
+        ...prev,
+        cardioDone: !prev.cardioDone,
+        cardioMinutes: minutes,
+        cardioLaps: laps
+      };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+  const finish = useCallback(isComplete => {
     setActive(prev => {
       if (!prev) return null;
       const final = {
         ...prev,
-        completed: true
+        completed: !!isComplete,
+        endTime: Date.now()
       };
       window.GymStore.saveSession(final);
       window.GymStore.clearActive();
+      if (isComplete) setCompletionData(final);
       return null;
     });
-    bump();
+    setRefresh(r => r + 1);
+  }, []);
+  const resumeSession = useCallback(() => {
+    const saved = window.GymStore.getSession(window.GymStore.iso(new Date()));
+    if (!saved) {
+      window.location.reload();
+      return;
+    }
+    window.GymStore.setActive(saved);
+    setActive(saved);
+  }, []);
+  const addExerciseToSession = useCallback(exDef => {
+    setActive(prev => {
+      if (!prev) return prev;
+      const alreadyIn = (prev.exercises || []).some(e => e.id === exDef.id);
+      if (alreadyIn) return prev;
+      const exState = {
+        id: exDef.id,
+        weight: exDef.weight || 0,
+        sets: 0,
+        targetSets: exDef.sets || 3,
+        reps: exDef.reps || 10,
+        done: false
+      };
+      const exercises = [...(prev.exercises || []), exState];
+      const addedExDefs = [...(prev.addedExDefs || []), exDef];
+      const next = {
+        ...prev,
+        exercises,
+        addedExDefs
+      };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+  const addActivityToSession = useCallback(actDef => {
+    setActive(prev => {
+      if (!prev) return prev;
+      const activities = {
+        ...(prev.activities || {}),
+        [actDef.id]: {
+          id: actDef.id,
+          done: false,
+          value: actDef.defaultVal || 10
+        }
+      };
+      const addedActDefs = [...(prev.addedActDefs || []), actDef];
+      const next = {
+        ...prev,
+        activities,
+        addedActDefs
+      };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+  const swapRoutine = useCallback(srcDow => {
+    const newRoutine = window.GymStore.getRoutineFor(srcDow);
+    window.GymStore.saveRoutineFor(dow, {
+      ...newRoutine
+    });
+    setRoutineVer(v => v + 1);
+    setRefresh(r => r + 1);
+    setSwapOpen(false);
+  }, [dow]);
+
+  // Lambdas estables para props
+  const handleSetTab = useCallback(newTab => setTab(newTab), []);
+  const handleSetDayDetail = useCallback(d => setDayDetail(d), []);
+  const handleSetExerciseDetail = useCallback(ex => setExerciseDetail(ex), []);
+  const handleOpenRoutineEditor = useCallback(d => openRoutineEditor(d), [openRoutineEditor]);
+  const handleCloseMoodOpen = useCallback(() => setMoodOpen(false), []);
+  const handleCloseExerciseDetail = useCallback(() => setExerciseDetail(null), []);
+  const handleCloseDayDetail = useCallback(() => setDayDetail(null), []);
+  const handleCloseEditingRoutine = useCallback(() => setEditingRoutine(false), []);
+  const handleCloseSwapOpen = useCallback(() => setSwapOpen(false), []);
+  const handleCloseCompletion = useCallback(() => {
+    setCompletionData(null);
     setTab('calendar');
-  };
+  }, []);
   return /*#__PURE__*/React.createElement("div", {
     className: "app-root"
   }, /*#__PURE__*/React.createElement("header", {
-    className: "app-header"
+    className: `app-header${scrolled ? ' scrolled' : ''}`
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "header-greeting"
+  }, greeting, profileInfo ? `, ${profileInfo.name}` : ''), /*#__PURE__*/React.createElement("div", {
     className: "header-date"
-  }, window.DAY_LONG[dow], " \xB7 ", today.getDate(), " ", window.MONTH_LONG[today.getMonth()].slice(0, 3).toUpperCase()), /*#__PURE__*/React.createElement("h1", null, "Pong\xE1monos Vigas")), /*#__PURE__*/React.createElement("div", {
+  }, window.DAY_LONG[dow], " \xB7 ", today.getDate(), " ", window.MONTH_LONG[today.getMonth()].slice(0, 3).toUpperCase()), /*#__PURE__*/React.createElement("h1", null, "Ponte Viga App")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -4939,76 +7588,96 @@ const App = ({
     onClick: onSwitchProfile,
     title: `Perfil: ${profileInfo.name}`
   }, profileInfo.emoji))), /*#__PURE__*/React.createElement("main", {
+    ref: scrollRef,
     className: "app-scroll",
-    key: refresh + tab + routineVer
+    key: refresh + tab + routineVer,
+    onScroll: e => setScrolled(e.target.scrollTop > 8)
   }, tab === 'today' && /*#__PURE__*/React.createElement(TodayScreen, {
     active: active,
     today: today,
     routine: routine,
+    todaySession: todaySession,
     onStart: () => setMoodOpen(true),
     onUpdateExercise: updateExercise,
     onToggleCardio: toggleCardio,
     onFinish: finish,
     onOpenExercise: ex => setExerciseDetail(ex),
-    onEditRoutine: () => openRoutineEditor(dow)
+    onEditRoutine: () => openRoutineEditor(dow),
+    onSwapRoutine: () => setSwapOpen(true),
+    onUpdateActivity: updateActivity,
+    onResume: resumeSession,
+    onAddExercise: addExerciseToSession,
+    onAddActivity: addActivityToSession
   }), tab === 'calendar' && /*#__PURE__*/React.createElement(CalendarScreen, {
-    onPickDate: d => setDayDetail(d),
-    streak: streak
+    onPickDate: handleSetDayDetail,
+    streak: streak,
+    refresh: refresh,
+    routineVer: routineVer
   }), tab === 'week' && /*#__PURE__*/React.createElement(WeekScreen, {
-    onEditDay: d => openRoutineEditor(d)
+    onEditDay: handleOpenRoutineEditor,
+    routineVer: routineVer
   }), tab === 'history' && /*#__PURE__*/React.createElement(HistoryScreen, {
-    onSelectExercise: ex => setExerciseDetail(ex)
+    onSelectExercise: handleSetExerciseDetail,
+    refresh: refresh,
+    routineVer: routineVer
   }), tab === 'measures' && /*#__PURE__*/React.createElement(MeasuresScreen, null)), /*#__PURE__*/React.createElement("nav", {
     className: "tabbar"
   }, /*#__PURE__*/React.createElement(TabBtn, {
     icon: "\uD83D\uDCAA",
     label: "Hoy",
     active: tab === 'today',
-    onClick: () => setTab('today')
+    onClick: () => handleSetTab('today')
   }), /*#__PURE__*/React.createElement(TabBtn, {
     icon: "\uD83D\uDCC5",
     label: "Calendario",
     active: tab === 'calendar',
-    onClick: () => setTab('calendar')
+    onClick: () => handleSetTab('calendar')
   }), /*#__PURE__*/React.createElement(TabBtn, {
     icon: "\uD83D\uDDD3\uFE0F",
     label: "Semana",
     active: tab === 'week',
-    onClick: () => setTab('week')
+    onClick: () => handleSetTab('week')
   }), /*#__PURE__*/React.createElement(TabBtn, {
     icon: "\uD83D\uDCC8",
     label: "Progreso",
     active: tab === 'history',
-    onClick: () => setTab('history')
+    onClick: () => handleSetTab('history')
   }), /*#__PURE__*/React.createElement(TabBtn, {
     icon: "\uD83D\uDCCF",
     label: "Medidas",
     active: tab === 'measures',
-    onClick: () => setTab('measures')
+    onClick: () => handleSetTab('measures')
   })), /*#__PURE__*/React.createElement(MoodModal, {
     open: moodOpen,
-    onClose: () => setMoodOpen(false),
+    onClose: handleCloseMoodOpen,
     onPick: startWorkout
   }), /*#__PURE__*/React.createElement(ExerciseDetail, {
     ex: exerciseDetail,
-    onClose: () => setExerciseDetail(null)
+    onClose: handleCloseExerciseDetail
   }), /*#__PURE__*/React.createElement(DayDetail, {
     dateIso: dayDetail,
-    onClose: () => setDayDetail(null)
+    onClose: handleCloseDayDetail
   }), editingRoutine && /*#__PURE__*/React.createElement(RoutineEditor, {
     dow: editingDow,
     routine: window.GymStore.getRoutineFor(editingDow),
-    onClose: () => setEditingRoutine(false),
+    onClose: handleCloseEditingRoutine,
     onSave: r => {
       window.GymStore.saveRoutineFor(editingDow, r);
       setRoutineVer(v => v + 1);
-      bump();
+      setRefresh(r => r + 1);
     },
     onReset: () => {
       window.GymStore.resetRoutineFor(editingDow);
       setRoutineVer(v => v + 1);
-      bump();
+      setRefresh(r => r + 1);
     }
+  }), swapOpen && /*#__PURE__*/React.createElement(SwapRoutineModal, {
+    currentDow: dow,
+    onClose: handleCloseSwapOpen,
+    onSwap: swapRoutine
+  }), completionData && /*#__PURE__*/React.createElement(CompletionModal, {
+    session: completionData,
+    onClose: handleCloseCompletion
   }), showTweaks && /*#__PURE__*/React.createElement("div", {
     className: "tweaks-panel"
   }, /*#__PURE__*/React.createElement("div", {
@@ -5076,24 +7745,44 @@ const TabBtn = ({
 
 // Wrapper con selección de perfil + hidratación
 const GymAppLoader = () => {
+  const [profilesReady, setProfilesReady] = useState(() => window.GymStore.getProfiles().length > 0);
   const [profileName, setProfileName] = useState(() => {
-    if (window.GymStore.getProfiles().length === 0 && localStorage.getItem('gym_seeded_v1')) {
-      window.GymStore.migrateV1('Yo');
-      window.GymStore.createProfile({
-        name: 'Yo',
-        emoji: '💪',
-        color: '#ec6032'
-      });
-    }
     const saved = window.GymStore.getActiveProfile();
     if (saved) window.GymStore.initProfile(saved);
     return saved;
   });
   const [ready, setReady] = useState(false);
+  const [profilesVer, setProfilesVer] = useState(0);
+  const [debugInfo, setDebugInfo] = useState('');
+
+  // Siempre sincronizar perfiles Y grupos del servidor al arrancar
+  // (cada navegador tiene su propio localStorage aislado)
+  useEffect(() => {
+    console.log('[DEBUG] Iniciando hydrateProfiles + hydrateGroups');
+    setDebugInfo('Cargando perfiles...');
+    Promise.all([window.GymStore.hydrateProfiles(), window.GymStore.hydrateGroups()]).finally(() => {
+      console.log('[DEBUG] hydrateProfiles + hydrateGroups completado');
+      const saved = window.GymStore.getActiveProfile();
+      console.log('[DEBUG] Perfil guardado:', saved);
+      const exists = window.GymStore.getProfiles().find(p => p.name === saved);
+      console.log('[DEBUG] Perfil existe:', !!exists);
+      if (!profilesReady) {
+        if (saved && exists) {
+          window.GymStore.initProfile(saved);
+          setProfileName(saved);
+        }
+        setProfilesReady(true);
+      } else {
+        setProfilesVer(v => v + 1);
+      }
+    });
+  }, []);
   const selectProfile = name => {
+    console.log('[DEBUG] selectProfile:', name);
     window.GymStore.initProfile(name);
     setProfileName(name);
     setReady(false);
+    setDebugInfo('Seleccionado: ' + name);
   };
   const switchProfile = () => {
     window.GymStore.clearActiveProfile();
@@ -5102,15 +7791,38 @@ const GymAppLoader = () => {
   };
   useEffect(() => {
     if (!profileName) return;
+    console.log('[DEBUG] Iniciando hydrate para:', profileName);
+    setDebugInfo('Hidratando perfil: ' + profileName);
+    const startTime = Date.now();
     window.GymStore.hydrate().then(hasCloud => {
+      const elapsed = Date.now() - startTime;
+      console.log('[DEBUG] hydrate completado en', elapsed + 'ms, hasCloud:', hasCloud);
+      setDebugInfo('Datos: ' + (hasCloud ? 'Encontrados' : 'Creando nuevos'));
       if (!hasCloud) window.GymStore.ensureSeed();
       setReady(true);
-    }).catch(() => {
+    }).catch(err => {
+      const elapsed = Date.now() - startTime;
+      console.error('[DEBUG] hydrate error en', elapsed + 'ms:', err);
+      setDebugInfo('Error: ' + err.message);
       window.GymStore.ensureSeed();
       setReady(true);
     });
   }, [profileName]);
+  if (!profilesReady) return /*#__PURE__*/React.createElement("div", {
+    className: "app-loading"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "loading-dots"
+  }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null)), /*#__PURE__*/React.createElement("div", {
+    className: "loading-text"
+  }, "Cargando perfiles..."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: '#666',
+      marginTop: 8
+    }
+  }, debugInfo));
   if (!profileName) return /*#__PURE__*/React.createElement(ProfilePicker, {
+    key: profilesVer,
     onSelect: selectProfile
   });
   if (!ready) return /*#__PURE__*/React.createElement("div", {
@@ -5119,7 +7831,13 @@ const GymAppLoader = () => {
     className: "loading-dots"
   }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null)), /*#__PURE__*/React.createElement("div", {
     className: "loading-text"
-  }, "Sincronizando..."));
+  }, "Sincronizando..."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: '#666',
+      marginTop: 8
+    }
+  }, debugInfo));
   return /*#__PURE__*/React.createElement(App, {
     onSwitchProfile: switchProfile
   });
@@ -5159,6 +7877,13 @@ class ErrorBoundary extends React.Component {
   }
 }
 function tryMount() {
+  const isAdmin = window.location.pathname === '/admin';
+  if (isAdmin) {
+    if (!window.AdminApp) return setTimeout(tryMount, 40);
+    const root = document.getElementById('root');
+    ReactDOM.createRoot(root).render(React.createElement(ErrorBoundary, null, React.createElement(window.AdminApp, null)));
+    return;
+  }
   if (!window.GymApp || !window.TodayScreen) {
     return setTimeout(tryMount, 40);
   }
@@ -5166,6 +7891,9 @@ function tryMount() {
   ReactDOM.createRoot(root).render(React.createElement(ErrorBoundary, null, React.createElement(window.GymApp, null)));
 }
 tryMount();
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(function () {});
+}
 </script>
 </body>
 </html>

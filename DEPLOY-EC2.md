@@ -71,7 +71,6 @@ node --version   # necesitas v18 o superior
 
 # Key Pair creado en AWS Console
 # Si ya tienes viga-key.pem → el nombre es "viga-key"
-viga-key
 # Si no tienes uno: AWS Console → EC2 → Key Pairs → Create key pair
 ```
 
@@ -80,7 +79,7 @@ viga-key
 ## Paso 1 — Build de la app
 
 ```bash
-# Desde la carpeta del proyecto (ponte viga/)
+# Desde la carpeta del proyecto (ponteViga/)
 node build.js
 ```
 
@@ -102,10 +101,18 @@ aws cloudformation deploy \
   --region us-east-1
 ```
 
-> CloudFormation tarda ~3-5 minutos en crear todos los recursos.
-> Puedes seguir el progreso en: AWS Console → CloudFormation → Stacks → ponte-viga-ec2 → Events
+CloudFormation tarda ~3-5 minutos en crear todos los recursos.
 
-### Ver los recursos creados
+**Puedes ver el progreso en la consola mientras esperas:**
+> AWS Console → CloudFormation → Stacks → `ponte-viga-ec2` → pestaña **Events**
+> Verás cada recurso aparecer uno a uno: SecurityGroup, S3 Bucket, IAM Role, EC2, Elastic IP.
+> Si algo falla, la columna "Status reason" te dice exactamente qué salió mal.
+
+**Al terminar, revisa los recursos creados en la consola:**
+> AWS Console → CloudFormation → Stacks → `ponte-viga-ec2` → pestaña **Outputs**
+> Ahí verás la IP pública, el ID de la instancia, el nombre del bucket y la URL de la app.
+
+### Ver los recursos creados por terminal
 
 ```bash
 aws cloudformation describe-stacks \
@@ -148,12 +155,25 @@ aws s3 ls s3://$BUCKET/app/
 
 Deberías ver los 5 archivos listados.
 
+**También puedes verificarlo visualmente en la consola:**
+> AWS Console → S3 → busca el bucket `ponte-viga-deploy-dev-...` → carpeta `app/`
+> Verás los 5 archivos con su tamaño y fecha de subida.
+
 ---
 
 ## Paso 4 — Esperar a que EC2 termine su bootstrap
 
 El servidor necesita ~3-4 minutos para instalar Node.js, PM2 y Nginx.
-Puedes verificar cuando está listo:
+
+**Puedes ver el estado del servidor en la consola:**
+> AWS Console → EC2 → Instances → busca `ponte-viga-server-dev`
+> Columna **Instance state**: arranca en `pending`, pasa a `running` cuando el servidor está encendido.
+> Columna **Status checks**: espera a que diga `2/2 checks passed` — eso significa que el sistema operativo está listo.
+> La IP pública aparece en la columna **Public IPv4 address** (es la misma que la Elastic IP).
+
+https://44.214.37.40
+
+Para ver los logs del bootstrap (instalación inicial):
 
 ```bash
 INSTANCE_ID=$(aws cloudformation describe-stacks \
@@ -161,7 +181,7 @@ INSTANCE_ID=$(aws cloudformation describe-stacks \
   --query 'Stacks[0].Outputs[?OutputKey==`InstanceId`].OutputValue' \
   --output text)
 
-# Ver el log del bootstrap (necesitas SSM conectado)
+# Conectarse al servidor vía SSM (sin SSH)
 aws ssm start-session --target $INSTANCE_ID
 # Una vez dentro del servidor:
 # tail -f /var/log/ponte-viga-setup.log
@@ -194,7 +214,12 @@ aws ssm send-command \
 
 Este comando le dice al EC2: "descarga los archivos de S3 y arranca el servidor".
 
-### Verificar que el comando se ejecutó bien
+**Puedes ver el resultado del comando en la consola:**
+> AWS Console → Systems Manager → Run Command → pestaña **Command history**
+> Busca el comando más reciente. El estado pasa de `In Progress` a `Success` (o `Failed`).
+> Haz click en el comando → **Output** para ver los logs detallados de lo que hizo.
+
+### Verificar por terminal
 
 ```bash
 # El send-command devuelve un CommandId, úsalo aquí:
@@ -229,6 +254,9 @@ curl -I http://$IP
 ```
 
 Abre `http://TU_IP` en Safari → Compartir → **Agregar a pantalla de inicio** → lista.
+
+**La IP también aparece en la consola:**
+> AWS Console → EC2 → Elastic IPs → verás la IP asociada a `ponte-viga-server-dev`
 
 ---
 
@@ -310,7 +338,7 @@ aws s3 sync . s3://$BUCKET/app/ \
   --include "ec2-config.json" \
   --region $REGION
 
-echo "=== 4. Deploy al EC2 vía SSM ==="
+echo "=== 4. Deploy al EC2 via SSM ==="
 COMMAND_ID=$(aws ssm send-command \
   --instance-ids $INSTANCE_ID \
   --document-name "ponte-viga-deploy-dev" \
@@ -322,7 +350,7 @@ COMMAND_ID=$(aws ssm send-command \
 echo "  Command ID: $COMMAND_ID"
 echo "  Esperando resultado..."
 
-# Esperar a que termine (máx 2 minutos)
+# Esperar a que termine (max 2 minutos)
 for i in $(seq 1 24); do
   sleep 5
   STATUS=$(aws ssm get-command-invocation \
@@ -341,10 +369,10 @@ if [ "$STATUS" = "Success" ]; then
     --query 'Stacks[0].Outputs[?OutputKey==`PublicIP`].OutputValue' \
     --output text --region $REGION)
   echo ""
-  echo "✓ Deploy exitoso"
-  echo "✓ App disponible en: http://$IP"
+  echo "Deploy exitoso"
+  echo "App disponible en: http://$IP"
 else
-  echo "✗ Deploy falló. Ver logs:"
+  echo "Deploy fallo. Ver logs:"
   aws ssm get-command-invocation \
     --command-id $COMMAND_ID \
     --instance-id $INSTANCE_ID \
@@ -372,7 +400,7 @@ ssh -i viga-key.pem ubuntu@TU_IP
 # En el servidor:
 sudo apt-get install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d tu-dominio.com
-# Certbot configura HTTPS automáticamente y renueva cada 90 días
+# Certbot configura HTTPS automaticamente y renueva cada 90 dias
 ```
 
 Si no tienes dominio, la app funciona en HTTP. Solo que en iPhone la instalación
@@ -403,15 +431,24 @@ aws ssm send-command \
 
 ## Diagnosticar problemas
 
+**Desde la consola:**
+> AWS Console → EC2 → Instances → selecciona `ponte-viga-server-dev` → pestaña **Actions** → **Monitor and troubleshoot** → **Get system log**
+> Muestra los logs de arranque del sistema operativo.
+
+> AWS Console → Systems Manager → Run Command → Command history → click en el comando fallido → **Output**
+> Muestra el stdout y stderr del script que corrió en el servidor.
+
+**Desde la terminal:**
+
 ```bash
-# Ver logs del bootstrap (instalación inicial)
-# Requiere SSM Session Manager:
+# Conectarse al servidor via SSM (sin SSH)
 aws ssm start-session --target $INSTANCE_ID --region us-east-1
-# Dentro del servidor:
-# cat /var/log/ponte-viga-setup.log
-# sudo -u ubuntu pm2 logs ponte-viga
-# sudo nginx -t
-# systemctl status nginx
+
+# Una vez dentro del servidor:
+# cat /var/log/ponte-viga-setup.log    <- logs del bootstrap
+# sudo -u ubuntu pm2 logs ponte-viga  <- logs de la app en tiempo real
+# sudo nginx -t                        <- verificar config de Nginx
+# systemctl status nginx               <- estado de Nginx
 
 # Ver estado de la instancia
 aws ec2 describe-instance-status \
@@ -420,6 +457,16 @@ aws ec2 describe-instance-status \
   --output text
 ```
 
+
+
+      "CommandId": "4963d400-be93-4f6a-acb9-7dab9c8fcf07",
+
+    aws ssm get-command-invocation \
+  --command-id 4963d400-be93-4f6a-acb9-7dab9c8fcf07 \
+  --instance-id i-08df5941067afa554 \
+  --query '[Status,StandardOutputContent,StandardErrorContent]' \
+  --output text
+
 ---
 
 ## Limpiar todo (borrar recursos)
@@ -427,7 +474,7 @@ aws ec2 describe-instance-status \
 ```bash
 # CUIDADO: esto borra EC2, IPs, S3 (con todos los datos)
 
-# 1. Primero vacía el bucket S3 (CFn no puede borrar buckets con contenido)
+# 1. Primero vacia el bucket S3 (CFn no puede borrar buckets con contenido)
 BUCKET=$(aws cloudformation describe-stacks \
   --stack-name ponte-viga-ec2 \
   --query 'Stacks[0].Outputs[?OutputKey==`DeploymentBucketName`].OutputValue' \
@@ -437,6 +484,9 @@ aws s3 rm s3://$BUCKET --recursive
 # 2. Borrar el stack completo
 aws cloudformation delete-stack --stack-name ponte-viga-ec2 --region us-east-1
 ```
+
+**Puedes verificar que se borró en la consola:**
+> AWS Console → CloudFormation → Stacks → el stack pasara a estado `DELETE_IN_PROGRESS` y luego desaparecera.
 
 ---
 
@@ -457,16 +507,52 @@ aws cloudformation delete-stack --stack-name ponte-viga-ec2 --region us-east-1
 
 ```
 Primera vez:
-  1. node build.js                    ← compilar la app
-  2. aws cloudformation deploy ...    ← crear EC2 + S3 + todo
-  3. aws s3 sync ... s3://BUCKET/app/ ← subir archivos
+  1. node build.js                    <- compilar la app
+  2. aws cloudformation deploy ...    <- crear EC2 + S3 + todo
+  3. aws s3 sync ... s3://BUCKET/app/ <- subir archivos
   4. (esperar ~4 min el bootstrap)
-  5. aws ssm send-command ...         ← arrancar la app en el servidor
+  5. aws ssm send-command ...         <- arrancar la app en el servidor
 
 Actualizaciones:
-  1. node build.js                    ← compilar cambios
-  2. aws s3 sync ... s3://BUCKET/app/ ← actualizar S3
-  3. aws ssm send-command ...         ← EC2 jala los cambios
+  1. node build.js                    <- compilar cambios
+  2. aws s3 sync ... s3://BUCKET/app/ <- actualizar S3
+  3. aws ssm send-command ...         <- EC2 jala los cambios
   
-  O simplemente: ./deploy.sh          ← hace los 3 pasos en uno
+  O simplemente: ./deploy.sh          <- hace los 3 pasos en uno
 ```
+
+
+
+
+  1. Crear el dominio en DuckDNS (2 minutos, sin terminal)
+  - Entra a duckdns.org → login con Google
+  - Escribe el nombre que quieras (ej: ponteviga) → add domain
+  - En el campo IP pon 44.214.37.40 → update ip
+
+  2. Instalar HTTPS en el servidor (una sola vez por SSH):
+  ssh -i viga-key.pem ubuntu@44.214.37.40
+  Una vez dentro:
+  sudo apt-get install -y certbot python3-certbot-nginx
+  sudo certbot --nginx -d ponteviga.duckdns.org
+  Certbot pregunta tu email, aceptas términos, y configura HTTPS automáticamente. Se renueva solo cada 90 días.
+
+  3. Actualizar deploy.sh con el dominio para que el build lo use — eso lo hacemos después de que tengas el dominio.
+
+  Una vez hecho, la app queda en https://ponteviga.duckdns.org y Safari la acepta sin problemas.
+
+  ---
+  Costo mensual de AWS:
+
+  ┌─────────────────────┬────────────┐
+  │       Recurso       │   Costo    │
+  ├─────────────────────┼────────────┤
+  │ EC2 t3.micro        │ ~$8.50     │
+  ├─────────────────────┼────────────┤
+  │ EBS 10 GB           │ ~$0.80     │
+  ├─────────────────────┼────────────┤
+  │ Elastic IP (en uso) │ $0.00      │
+  ├─────────────────────┼────────────┤
+  │ S3 (pocos MB)       │ ~$0.01     │
+  ├─────────────────────┼────────────┤
+  │ Total               │ ~$9.30/mes │
+  └─────────────────────┴────────────┘

@@ -1,5 +1,15 @@
 const HIST_MOOD = { sick: '🤧', normal: '🙂', strong: '💪' };
 
+const formatDuration = (ms) => {
+  if (!ms || ms < 0) return null;
+  const totalMin = Math.round(ms / 60000);
+  if (totalMin < 1) return null;
+  if (totalMin < 60) return `${totalMin} min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m > 0 ? `${h}h ${m}min` : `${h}h`;
+};
+
 // Gráfico de línea SVG con área rellena y fechas en eje X
 const LineChart = ({ id, points }) => {
   if (!points || points.length < 2) {
@@ -82,15 +92,16 @@ const LineChart = ({ id, points }) => {
 
 window.LineChart = LineChart;
 
-const HistoryScreen = ({ onSelectExercise }) => {
+const HistoryScreen = ({ onSelectExercise, refresh, routineVer }) => {
   const [tab, setTab] = React.useState('sessions');
   const sessions = React.useMemo(
     () => Object.values(window.GymStore.getAllSessions()).sort((a, b) => b.date.localeCompare(a.date)),
-    []
+    [refresh]
   );
   const exMap = React.useMemo(() => {
     const m = {};
     sessions.forEach(s => (s.exercises || []).forEach(e => {
+      if (e.weight <= 0) return; // skip bodyweight — no meaningful weight to chart
       if (!m[e.id]) m[e.id] = [];
       m[e.id].push({ date: s.date, weight: e.weight, reps: e.reps });
     }));
@@ -106,13 +117,13 @@ const HistoryScreen = ({ onSelectExercise }) => {
       if (r) (r.exercises || []).forEach(e => { if (e.id && e.name) m[e.id] = e; });
     }
     return m;
-  }, []);
+  }, [routineVer]);
 
   return (
     <div className="hist-screen">
       <div className="hist-tabs">
-        <button className={`hist-tab ${tab === 'sessions' ? 'on' : ''}`} onClick={() => setTab('sessions')}>Sesiones</button>
-        <button className={`hist-tab ${tab === 'progress' ? 'on' : ''}`} onClick={() => setTab('progress')}>Progreso</button>
+        <button type="button" className={`hist-tab ${tab === 'sessions' ? 'on' : ''}`} onClick={() => setTab('sessions')}>Sesiones</button>
+        <button type="button" className={`hist-tab ${tab === 'progress' ? 'on' : ''}`} onClick={() => setTab('progress')}>Progreso</button>
       </div>
 
       {tab === 'sessions' && (
@@ -120,6 +131,10 @@ const HistoryScreen = ({ onSelectExercise }) => {
           {sessions.length === 0 && <div className="empty">Aún sin sesiones registradas.</div>}
           {sessions.map(s => {
             const [, mo, day] = s.date.split('-');
+            const allExs = s.exercises || [];
+            const doneExs = allExs.filter(e => e.done).length;
+            const totalExs = allExs.length;
+            const dur = (s.startTime && s.endTime) ? formatDuration(s.endTime - s.startTime) : null;
             return (
               <div key={s.date} className="hist-item">
                 <div className="hist-date">
@@ -129,11 +144,12 @@ const HistoryScreen = ({ onSelectExercise }) => {
                 <div className="hist-body">
                   <div className="hist-title">{s.title}</div>
                   <div className="hist-meta">
-                    <span>{(s.exercises || []).length} ejercicios</span>
+                    <span className={s.completed ? 'ok' : 'warn'}>{s.completed ? 'Completo' : 'Parcial'}</span>
+                    <span className="dot-sep">·</span>
+                    <span>{doneExs}/{totalExs} ejercicios</span>
+                    {dur && <><span className="dot-sep">·</span><span className="hist-vol">{dur}</span></>}
                     <span className="dot-sep">·</span>
                     <span>{HIST_MOOD[s.mood] || '🙂'}</span>
-                    <span className="dot-sep">·</span>
-                    <span className={s.completed ? 'ok' : 'warn'}>{s.completed ? 'Completo' : 'Parcial'}</span>
                   </div>
                 </div>
               </div>
@@ -144,7 +160,37 @@ const HistoryScreen = ({ onSelectExercise }) => {
 
       {tab === 'progress' && (
         <div className="hist-progress">
-          {Object.keys(exMap).length === 0 && <div className="empty">Haz al menos un entrenamiento para ver progreso.</div>}
+          {Object.keys(exMap).length === 0 && (
+            <>
+              <div className="progress-demo-banner">
+                <div className="demo-banner-icon">ℹ️</div>
+                <div className="demo-banner-body">
+                  <div className="demo-banner-title">Vista previa</div>
+                  <div className="demo-banner-sub">Así se verá tu progreso. Al completar tu primera sesión este apartado reflejará tus datos reales.</div>
+                </div>
+              </div>
+              {DEMO_PROGRESS_DATA.map(({ id, name, sub, points }) => {
+                const latest = points[points.length - 1];
+                const prev = points[points.length - 2];
+                const delta = prev ? Math.round((latest.weight - prev.weight) * 10) / 10 : 0;
+                return (
+                  <div key={id} className="prog-item prog-item-demo">
+                    <div className="prog-head">
+                      <div className="prog-name">{name}</div>
+                      <div className="prog-weight">{latest.weight}<span className="prog-unit">lb</span></div>
+                    </div>
+                    <div className="prog-meta">
+                      <span className="prog-sub">{sub}</span>
+                      {delta !== 0 && <span className={`prog-trend trend-${delta > 0 ? 'up' : 'down'}`}>{delta > 0 ? `↑ +${delta}` : `↓ ${delta}`} lb</span>}
+                    </div>
+                    <div className="prog-chart">
+                      <LineChart id={`demo_${id}`} points={points} />
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
           {Object.keys(exMap).map(id => {
             const points = exMap[id]; // newest first
             const ex = allEx[id] || { id, name: id, sub: 'Ejercicio personalizado' };
@@ -182,5 +228,24 @@ const HistoryScreen = ({ onSelectExercise }) => {
     </div>
   );
 };
+
+const DEMO_PROGRESS_DATA = [
+  { id: 'demo_bench', name: 'Press plano con barra', sub: 'Bench Press', points: [
+    { date: '2026-01-10', weight: 60 }, { date: '2026-01-17', weight: 62.5 },
+    { date: '2026-01-24', weight: 65 }, { date: '2026-01-31', weight: 67.5 },
+    { date: '2026-02-07', weight: 70 }, { date: '2026-02-14', weight: 70 },
+    { date: '2026-02-21', weight: 72.5 },
+  ]},
+  { id: 'demo_squat', name: 'Sentadilla con barra', sub: 'Back Squat', points: [
+    { date: '2026-01-06', weight: 95 }, { date: '2026-01-13', weight: 100 },
+    { date: '2026-01-20', weight: 105 }, { date: '2026-01-27', weight: 107.5 },
+    { date: '2026-02-03', weight: 110 }, { date: '2026-02-10', weight: 115 },
+  ]},
+  { id: 'demo_curl', name: 'Curl con barra', sub: 'Barbell Curl', points: [
+    { date: '2026-01-09', weight: 50 }, { date: '2026-01-16', weight: 52.5 },
+    { date: '2026-01-23', weight: 52.5 }, { date: '2026-01-30', weight: 55 },
+    { date: '2026-02-06', weight: 57.5 }, { date: '2026-02-13', weight: 60 },
+  ]},
+];
 
 window.HistoryScreen = HistoryScreen;

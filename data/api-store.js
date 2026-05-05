@@ -27,7 +27,12 @@ window.S3Store = (() => {
     try {
       const r = await fetch(`/data/${key}.json`);
       if (!r.ok) return null;
-      return await r.json();
+      const data = await r.json();
+      // Validación básica de estructura
+      if (key.includes('sessions') && typeof data !== 'object') return null;
+      if (key.includes('profiles') && !Array.isArray(data)) return null;
+      if (key.includes('measures') && !Array.isArray(data)) return null;
+      return data;
     } catch { return null; }
   }
 
