@@ -71,6 +71,7 @@ async function main() {
   //   ec2-config.json presente → EC2 servidor local (REST simple)
   //   ninguno               → solo localStorage
   let awsConfig = {};
+  let serverConfig = {};
   let serverStorage = false;
   const awsConfigPath = path.join(ROOT, 'aws-config.json');
   const ec2ConfigPath = path.join(ROOT, 'ec2-config.json');
@@ -80,7 +81,8 @@ async function main() {
     console.log('  ✓ Modo S3 — bucket:', awsConfig.bucket);
   } else if (fs.existsSync(ec2ConfigPath)) {
     serverStorage = true;
-    console.log('  ✓ Modo EC2 — datos en servidor (data/*.json)');
+    serverConfig = JSON.parse(fs.readFileSync(ec2ConfigPath, 'utf8'));
+    console.log('  ✓ Modo EC2 — API:', serverConfig.apiUrl);
   } else {
     console.log('  ⚠ Sin config — solo localStorage (crea aws-config.json o ec2-config.json)');
   }
@@ -236,6 +238,7 @@ ${reactDomJs}
 /* Config */
 window.__TWEAKS__ = { accent: "#ec6032", accent2: "#C93416", fontSize: 15 };
 window.__AWS__ = ${JSON.stringify(awsConfig)};
+window.__SERVER_CONFIG__ = ${JSON.stringify(serverConfig)};
 window.__SERVER_STORAGE__ = ${serverStorage};
 </script>
 <script>

@@ -82,8 +82,8 @@ const CalendarScreen = ({ onPickDate, streak, refresh, routineVer }) => {
       </div>
 
       <div className="cal-stats">
-        <div className="cal-stat"><span className="cal-stat-dot completed"></span>{completedCount} completos</div>
-        <div className="cal-stat"><span className="cal-stat-dot partial"></span>{partialCount} parciales</div>
+        <div className="cal-stat"><span className="cal-stat-icon">🔥</span>{completedCount} completos</div>
+        <div className="cal-stat"><span className="cal-stat-icon">💪</span>{partialCount} parciales</div>
         <div className="cal-stat"><span className="cal-stat-dot rest"></span>Descanso</div>
       </div>
 
@@ -107,14 +107,23 @@ const CalendarScreen = ({ onPickDate, streak, refresh, routineVer }) => {
           else if (isRestDay) state = 'rest';
           else if (!isFuture) state = 'missed';
 
+          // Texto de progreso parcial: "3/5" ejercicios completados (solo si parcial con datos)
+          let partialLabel = null;
+          if (state === 'partial' && s) {
+            const doneEx = (s.exercises || []).filter(e => e.done).length;
+            const totalEx = (s.exercises || []).length;
+            if (totalEx > 0) partialLabel = `${doneEx}/${totalEx}`;
+          }
+
           return (
             <button key={i} className={`cal-cell state-${state} ${isToday ? 'is-today' : ''} ${isFuture?'is-future':''}`}
               disabled={!s}
               onClick={() => onPickDate(iso)}>
               <div className="cal-day-num">{d}</div>
-              {state === 'completed' && <div className="cal-dot completed"></div>}
-              {state === 'partial' && <div className="cal-dot partial"></div>}
-              {state === 'rest' && <div className="cal-dot rest"></div>}
+              {state === 'completed' && <div className="cal-big-icon">🔥</div>}
+              {state === 'partial' && <div className="cal-big-icon partial">💪</div>}
+              {partialLabel && <div className="cal-partial-label">{partialLabel}</div>}
+              {state === 'rest' && <div className="cal-rest-icon">·</div>}
               {state === 'missed' && <div className="cal-dot missed"></div>}
             </button>
           );

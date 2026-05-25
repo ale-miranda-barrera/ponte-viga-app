@@ -1,67 +1,64 @@
-// server.js — Backend Express para EC2
+// server.js — Servidor Express simple para servir /data/*.json localmente
 const express = require('express');
-const fs      = require('fs');
-const path    = require('path');
+const fs = require('fs');
+const path = require('path');
+const cors = require('cors');
 
-const app      = express();
-const PORT     = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, 'data');
-const ROOT     = __dirname;
+const app = express();
+const PORT = 3000;
+const DATA_DIR = path.join(__dirname, 'data-files');
 
-// Crear directorio de datos al iniciar
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-
-app.use(express.json({ limit: '5mb' }));
-
-// CORS (permite acceso desde cualquier origen — es una app personal)
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
-});
-
-// Claves permitidas: "type" o "profileName_type"
-// Solo alfanumérico + guión bajo/medio: previene path traversal
-const DATA_SUFFIXES = new Set(['sessions', 'measures', 'profile', 'routines', 'profiles', 'groups']);
-
-function isAllowedKey(key) {
-  if (!/^[a-zA-Z0-9_-]+$/.test(key)) return false;
-  const parts = key.split('_');
-  return DATA_SUFFIXES.has(parts[parts.length - 1]);
+// Crear directorio de datos si no existe
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  console.log(`✓ Directorio ${DATA_DIR} creado`);
 }
 
-app.get('/data/:key.json', (req, res) => {
-  if (!isAllowedKey(req.params.key)) return res.status(404).end();
-  const file = path.join(DATA_DIR, `${req.params.key}.json`);
-  if (!fs.existsSync(file)) return res.status(404).json(null);
-  res.sendFile(file);
-});
+// Middlewares
+app.use(cors());
+app.use(express.json());
 
-app.put('/data/:key.json', (req, res) => {
-  if (!isAllowedKey(req.params.key)) return res.status(403).end();
-  const file = path.join(DATA_DIR, `${req.params.key}.json`);
-  try {
-    fs.writeFileSync(file, JSON.stringify(req.body, null, 2), 'utf8');
-    res.json({ ok: true });
-  } catch (e) {
-    console.error('[server] error escribiendo', req.params.key, e.message);
-    res.status(500).json({ error: 'write failed' });
+// Servir archivos estáticos (index.html, etc)
+app.use(express.static(__dirname));
+
+// GET /data/:key.json — Leer datos
+app.get('/data/:key.json', (req, res) => {
+  const key = req.params.key;
+  const filePath = path.join(DATA_DIR, `${key}.json`);
+
+  if (fs.existsSync(filePath)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      console.log(`[GET] /data/${key}.json ✓`);
+      res.json(data);
+    } catch (e) {
+      console.error(`[GET] /data/${key}.json - Error parsing:`, e.message);
+      res.status(500).json({ error: 'Invalid JSON' });
+    }
+  } else {
+    console.log(`[GET] /data/${key}.json - Not found (404)`);
+    // Retornar 404 para datos no encontrados (correcto)
+    res.status(404).json({ error: 'Not found' });
   }
 });
 
-// Solo se sirven estos dos archivos estáticos — nada más del filesystem
-app.get('/sw.js', (req, res) => {
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.sendFile(path.join(ROOT, 'sw.js'));
-});
-app.get('*', (req, res) => {
-  res.set('Cache-Control', 'no-cache');
-  res.sendFile(path.join(ROOT, 'index.html'));
+// PUT /data/:key.json — Escribir datos
+app.put('/data/:key.json', (req, res) => {
+  const key = req.params.key;
+  const filePath = path.join(DATA_DIR, `${key}.json`);
+
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(req.body, null, 2), 'utf8');
+    console.log(`[PUT] /data/${key}.json ✓`);
+    res.json({ success: true, key });
+  } catch (e) {
+    console.error(`[PUT] /data/${key}.json - Error:`, e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`Ponte Viga → http://localhost:${PORT}`);
-  console.log(`Datos  → ${DATA_DIR}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🚀 Servidor Ponte Viga en http://localhost:${PORT}`);
+  console.log(`📁 Datos guardados en: ${DATA_DIR}`);
+  console.log(`🌐 Abre http://localhost:${PORT}\n`);
 });

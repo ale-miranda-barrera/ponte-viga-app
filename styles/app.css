@@ -535,6 +535,7 @@ body {
 .cal-stat-dot.completed { background: var(--good); }
 .cal-stat-dot.partial { background: var(--warn); }
 .cal-stat-dot.rest { background: var(--text-3); }
+.cal-stat-icon { font-size: 14px; line-height: 1; }
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -568,17 +569,36 @@ body {
 .cal-cell.empty { visibility: hidden; }
 .cal-cell.is-future { color: var(--text-3); opacity: 0.5; cursor: default; }
 .cal-cell.is-today { border-color: var(--accent); color: var(--accent); }
-.cal-cell.state-completed { background: color-mix(in oklab, var(--good) 14%, transparent); color: var(--text); }
-.cal-cell.state-partial { background: color-mix(in oklab, var(--warn) 12%, transparent); color: var(--text); }
-.cal-cell.state-missed { color: var(--text-3); }
-.cal-day-num { font-size: 13px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
-.cal-dot {
-  width: 4px; height: 4px; border-radius: 50%;
+.cal-cell.state-completed {
+  background: color-mix(in oklab, var(--good) 22%, transparent);
+  border-color: color-mix(in oklab, var(--good) 60%, transparent);
+  color: var(--text);
 }
-.cal-dot.completed { background: var(--good); }
-.cal-dot.partial { background: var(--warn); }
-.cal-dot.rest { background: var(--text-3); opacity: 0.6; }
+.cal-cell.state-partial {
+  background: color-mix(in oklab, var(--warn) 18%, transparent);
+  border-color: color-mix(in oklab, var(--warn) 55%, transparent);
+  color: var(--text);
+}
+.cal-cell.state-missed { color: var(--text-3); }
+.cal-day-num { font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; opacity: 0.75; line-height: 1; }
+.cal-big-icon {
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  animation: cal-icon-pop 0.4s ease;
+}
+.cal-big-icon.partial { font-size: 18px; opacity: 0.9; }
+.cal-partial-label {
+  font-size: 9px; font-weight: 700; color: var(--warn);
+  font-family: 'JetBrains Mono', monospace; line-height: 1;
+}
+.cal-rest-icon { font-size: 14px; color: var(--text-3); opacity: 0.4; line-height: 1; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; }
 .cal-dot.missed { background: var(--bad); opacity: 0.5; }
+@keyframes cal-icon-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
 
 .cal-footer-stats {
   display: grid;
@@ -1216,6 +1236,16 @@ body {
   border: 1px solid var(--border-strong);
 }
 .set-dot.is-done { background: var(--good); color: #0a1a0e; border-color: var(--good); font-weight: 700; }
+.set-chip-partial {
+  background: color-mix(in oklab, var(--warn) 22%, transparent);
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  padding: 3px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; justify-content: center;
+  min-width: 36px;
+}
 
 .empty { text-align: center; padding: 30px; color: var(--text-3); font-size: 13px; }
 
@@ -1722,17 +1752,29 @@ body {
 
 /* Profile avatar button in header */
 .profile-btn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  border: 0;
-  font-size: 16px;
+  border: 2px solid rgba(255,255,255,0.18);
+  font-size: 19px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.15s, box-shadow 0.15s;
   flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255,255,255,0.2);
+  position: relative;
+  z-index: 5;
+}
+.profile-btn::after {
+  content: '↻'; position: absolute; bottom: -3px; right: -3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface-3); color: var(--text-2);
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--bg);
 }
 .profile-btn:active { transform: scale(0.88); }
 .profile-btn:hover { box-shadow: 0 0 0 2px rgba(255,255,255,0.3); }
@@ -1924,6 +1966,28 @@ body {
 .activity-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .activity-val-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .activity-cal { font-size: 11px; color: var(--text-3); background: var(--surface-3); padding: 2px 7px; border-radius: 8px; margin-left: 4px; }
+.activity-val-input {
+  width: 56px; min-width: 56px; padding: 6px 8px; border-radius: 10px;
+  background: var(--surface-3); border: 1px solid var(--border); color: var(--text);
+  font-size: 16px; font-weight: 700; text-align: center;
+  caret-color: var(--accent); outline: none; -webkit-appearance: none;
+  font-family: inherit;
+}
+.activity-val-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.activity-val-unit { font-size: 13px; color: var(--text-2); font-weight: 600; margin-left: -4px; }
+
+/* ===== Swap banner ===== */
+.swap-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--accent-soft); border: 1px solid var(--accent);
+  color: var(--text); border-radius: 12px; padding: 8px 12px;
+  font-size: 13px; font-weight: 600; margin-bottom: 12px;
+}
+.swap-banner-clear {
+  background: transparent; border: none; color: var(--accent);
+  font-size: 12px; font-weight: 700; padding: 4px 8px; cursor: pointer;
+  border-radius: 8px;
+}
 
 /* ===== Completion modal ===== */
 .completion-backdrop {

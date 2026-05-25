@@ -30,7 +30,7 @@ const estimateSessionCals = (exercises, activeExMap) => {
   return kcal;
 };
 
-const TodayScreen = ({ active, today, routine, todaySession, onStart, onUpdateExercise, onFinish, onToggleCardio, onOpenExercise, onEditRoutine, onSwapRoutine, onUpdateActivity, onResume, onAddExercise, onAddActivity }) => {
+const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onClearSwap, onStart, onUpdateExercise, onFinish, onToggleCardio, onOpenExercise, onEditRoutine, onSwapRoutine, onUpdateActivity, onResume, onAddExercise, onAddActivity }) => {
   const { pbMap, lastMap, lastRoutineSession } = React.useMemo(() => {
     const pb = {}, last = {};
     const todayIso = window.GymStore.iso(new Date());
@@ -52,6 +52,27 @@ const TodayScreen = ({ active, today, routine, todaySession, onStart, onUpdateEx
 
   const isRest = routine.rest;
   const isStarted = !!active;
+
+  const { activeExMap, allExercises, doneCount, cardio, allActivities, activeActMap, actsDone, totalItems, allDone, estimatedCals } = React.useMemo(() => {
+    if (!active) {
+      return { activeExMap: {}, allExercises: [], doneCount: 0, cardio: null, allActivities: [], activeActMap: {}, actsDone: 0, totalItems: 0, allDone: false, estimatedCals: 0 };
+    }
+    const activeExMap = Object.fromEntries((active.exercises || []).map(e => [e.id, e]));
+    const addedExDefs = active.addedExDefs || [];
+    const allExercises = [...(routine.exercises || []), ...addedExDefs];
+    const doneCount = allExercises.filter(ex => activeExMap[ex.id]?.done).length;
+    const cardio = routine.cardio;
+    const addedActDefs = active.addedActDefs || [];
+    const allActivities = [...(routine.activities || []), ...addedActDefs];
+    const activeActMap = active.activities || {};
+    const actsDone = allActivities.filter(a => activeActMap[a.id]?.done).length;
+    const totalItems = allExercises.length + (cardio ? 1 : 0) + allActivities.length;
+    const allDone = doneCount === allExercises.length
+      && (!cardio || active.cardioDone)
+      && actsDone === allActivities.length;
+    const estimatedCals = estimateSessionCals(allExercises, activeExMap);
+    return { activeExMap, allExercises, doneCount, cardio, allActivities, activeActMap, actsDone, totalItems, allDone, estimatedCals };
+  }, [active, routine]);
 
   if (isRest) {
     const restItem = REST_POOL[today.getDate() % REST_POOL.length];
@@ -124,6 +145,12 @@ const TodayScreen = ({ active, today, routine, todaySession, onStart, onUpdateEx
 
     return (
       <div className="today-intro">
+        {swappedFromDow != null && (
+          <div className="swap-banner">
+            <span>↔ Solo por hoy: {routine.title}</span>
+            <button type="button" className="swap-banner-clear" onClick={onClearSwap}>Cancelar</button>
+          </div>
+        )}
         <div className="intro-eyebrow">ENTRENAMIENTO DE HOY</div>
         <div className="intro-title">{routine.title}</div>
         <div className="intro-sub">{routine.subtitle}</div>
@@ -160,24 +187,6 @@ const TodayScreen = ({ active, today, routine, todaySession, onStart, onUpdateEx
       </div>
     );
   }
-
-  const { activeExMap, allExercises, doneCount, cardio, allActivities, activeActMap, actsDone, totalItems, allDone, estimatedCals } = React.useMemo(() => {
-    const activeExMap = Object.fromEntries((active.exercises || []).map(e => [e.id, e]));
-    const addedExDefs = active.addedExDefs || [];
-    const allExercises = [...(routine.exercises || []), ...addedExDefs];
-    const doneCount = allExercises.filter(ex => activeExMap[ex.id]?.done).length;
-    const cardio = routine.cardio;
-    const addedActDefs = active.addedActDefs || [];
-    const allActivities = [...(routine.activities || []), ...addedActDefs];
-    const activeActMap = active.activities || {};
-    const actsDone = allActivities.filter(a => activeActMap[a.id]?.done).length;
-    const totalItems = allExercises.length + (cardio ? 1 : 0) + allActivities.length;
-    const allDone = doneCount === allExercises.length
-      && (!cardio || active.cardioDone)
-      && actsDone === allActivities.length;
-    const estimatedCals = estimateSessionCals(allExercises, activeExMap);
-    return { activeExMap, allExercises, doneCount, cardio, allActivities, activeActMap, actsDone, totalItems, allDone, estimatedCals };
-  }, [active, routine]);
 
   return (
     <div className="today-active">
@@ -522,6 +531,9 @@ const CardioCard = React.memo(({ cardio, done, onToggle, savedMinutes, savedLaps
 // Tarjeta para actividades físicas (no basadas en peso)
 const ActivityCard = React.memo(({ activity, state, onChange }) => {
   const [val, setVal] = React.useState(state.value ?? activity.defaultVal ?? 10);
+  const [valStr, setValStr] = React.useState(() => String(state.value ?? activity.defaultVal ?? 10));
+
+  React.useEffect(() => { setValStr(String(val)); }, [val]);
 
   const toggle = (e) => {
     e.stopPropagation();
@@ -535,6 +547,14 @@ const ActivityCard = React.memo(({ activity, state, onChange }) => {
     onChange(activity.id, { ...state, value: newVal });
   };
 
+  const commitInput = () => {
+    const v = parseFloat(valStr);
+    const nv = (!isNaN(v) && v > 0) ? Math.round(v * 10) / 10 : val;
+    setVal(nv);
+    setValStr(String(nv));
+    onChange(activity.id, { ...state, value: nv });
+  };
+
   const calEst = activity.cal10 ? Math.round((val / 10) * activity.cal10) : null;
 
   return (
@@ -544,7 +564,16 @@ const ActivityCard = React.memo(({ activity, state, onChange }) => {
         <div className="activity-name">{activity.name}</div>
         <div className="activity-val-row">
           <button type="button" className="cardio-time-btn" onClick={() => changeVal(-step)}>−</button>
-          <span className="cardio-time-val">{val} {activity.unit}</span>
+          <input
+            className="activity-val-input"
+            type="text"
+            inputMode="decimal"
+            value={valStr}
+            onFocus={e => e.target.select()}
+            onChange={e => setValStr(e.target.value.replace(/[^0-9.]/g, ''))}
+            onBlur={commitInput}
+          />
+          <span className="activity-val-unit">{activity.unit}</span>
           <button type="button" className="cardio-time-btn" onClick={() => changeVal(step)}>+</button>
           {calEst != null && <span className="activity-cal">~{calEst} kcal</span>}
         </div>

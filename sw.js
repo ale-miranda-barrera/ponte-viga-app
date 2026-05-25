@@ -1,5 +1,5 @@
 // Service Worker — Ponte Viga Gym App
-const CACHE = 'ponte-viga-v6';
+const CACHE = 'ponte-viga-v13';
 
 self.addEventListener('install', e => {
   e.waitUntil(

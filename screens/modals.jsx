@@ -137,13 +137,18 @@ const DayDetail = ({ dateIso, onClose }) => {
         <div className="detail-history">
           {(s.exercises || []).map(e => {
             const meta = exMeta[e.id];
+            const partial = !e.done && e.sets > 0;
             return (
               <div key={e.id} className="detail-row">
                 <div className="detail-row-body" style={{ flex: 1 }}>
                   <div className="detail-row-w" style={{ fontSize: 15 }}>{meta?.name || e.id}</div>
                   <div className="detail-row-meta">{e.weight > 0 ? `${e.weight} lb · ` : ''}{e.sets}/{e.targetSets}×{e.reps}</div>
                 </div>
-                <div className={`set-dot ${e.done ? 'is-done' : ''}`}>{e.done ? '✓' : '·'}</div>
+                {e.done
+                  ? <div className="set-dot is-done">✓</div>
+                  : partial
+                    ? <div className="set-chip-partial">{e.sets}/{e.targetSets}</div>
+                    : <div className="set-dot">·</div>}
               </div>
             );
           })}

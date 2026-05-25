@@ -3,8 +3,13 @@
 window.S3Store = (() => {
   'use strict';
   if (!window.__SERVER_STORAGE__) {
-    return { get: async () => null, set: () => {}, flush: async () => {} };
+    return { get: async () => null, set: () => Promise.resolve(), flush: async () => {} };
   }
+
+  // apiUrl vacío = same-origin (URL relativa). Funciona tanto en dev (localhost:3000)
+  // como en producción (cualquier dominio). Solo se especifica si la API vive en otro host.
+  const baseUrl = (window.__SERVER_CONFIG__ && window.__SERVER_CONFIG__.apiUrl) || '';
+  console.log('[Storage] Modo servidor activo. baseUrl:', baseUrl || '(same-origin)');
 
   // Escrituras debounced: 1s de inactividad antes de escribir al servidor
   const queue = {}, timers = {};
@@ -14,32 +19,42 @@ window.S3Store = (() => {
     if (data === undefined) return;
     delete queue[key];
     try {
-      const r = await fetch(`/data/${key}.json`, {
+      const url = `${baseUrl}/data/${key}.json`;
+      const r = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data, null, 2),
       });
-      if (!r.ok) console.warn('[Storage] error escribiendo', key, r.status);
+      if (!r.ok) console.warn('[Storage] error escribiendo', key, r.status, url);
     } catch (e) { console.warn('[Storage] sin conexión', key, e.message); }
   }
 
   async function get(key) {
     try {
-      const r = await fetch(`/data/${key}.json`);
-      if (!r.ok) return null;
+      const url = `${baseUrl}/data/${key}.json`;
+      const r = await fetch(url);
+      if (r.status === 404) return null;
+      if (!r.ok) {
+        console.warn('[Storage] error leyendo', key, r.status);
+        return null;
+      }
       const data = await r.json();
       // Validación básica de estructura
       if (key.includes('sessions') && typeof data !== 'object') return null;
       if (key.includes('profiles') && !Array.isArray(data)) return null;
       if (key.includes('measures') && !Array.isArray(data)) return null;
       return data;
-    } catch { return null; }
+    } catch (e) {
+      console.warn('[Storage] error parseando', key, e.message);
+      return null;
+    }
   }
 
   function set(key, data) {
     queue[key] = data;
     clearTimeout(timers[key]);
     timers[key] = setTimeout(() => _flush(key), 1000);
+    return Promise.resolve();
   }
 
   async function flush() {

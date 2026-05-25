@@ -586,6 +586,7 @@ body {
 .cal-stat-dot.completed { background: var(--good); }
 .cal-stat-dot.partial { background: var(--warn); }
 .cal-stat-dot.rest { background: var(--text-3); }
+.cal-stat-icon { font-size: 14px; line-height: 1; }
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -619,17 +620,36 @@ body {
 .cal-cell.empty { visibility: hidden; }
 .cal-cell.is-future { color: var(--text-3); opacity: 0.5; cursor: default; }
 .cal-cell.is-today { border-color: var(--accent); color: var(--accent); }
-.cal-cell.state-completed { background: color-mix(in oklab, var(--good) 14%, transparent); color: var(--text); }
-.cal-cell.state-partial { background: color-mix(in oklab, var(--warn) 12%, transparent); color: var(--text); }
-.cal-cell.state-missed { color: var(--text-3); }
-.cal-day-num { font-size: 13px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
-.cal-dot {
-  width: 4px; height: 4px; border-radius: 50%;
+.cal-cell.state-completed {
+  background: color-mix(in oklab, var(--good) 22%, transparent);
+  border-color: color-mix(in oklab, var(--good) 60%, transparent);
+  color: var(--text);
 }
-.cal-dot.completed { background: var(--good); }
-.cal-dot.partial { background: var(--warn); }
-.cal-dot.rest { background: var(--text-3); opacity: 0.6; }
+.cal-cell.state-partial {
+  background: color-mix(in oklab, var(--warn) 18%, transparent);
+  border-color: color-mix(in oklab, var(--warn) 55%, transparent);
+  color: var(--text);
+}
+.cal-cell.state-missed { color: var(--text-3); }
+.cal-day-num { font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; opacity: 0.75; line-height: 1; }
+.cal-big-icon {
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  animation: cal-icon-pop 0.4s ease;
+}
+.cal-big-icon.partial { font-size: 18px; opacity: 0.9; }
+.cal-partial-label {
+  font-size: 9px; font-weight: 700; color: var(--warn);
+  font-family: 'JetBrains Mono', monospace; line-height: 1;
+}
+.cal-rest-icon { font-size: 14px; color: var(--text-3); opacity: 0.4; line-height: 1; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; }
 .cal-dot.missed { background: var(--bad); opacity: 0.5; }
+@keyframes cal-icon-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
 
 .cal-footer-stats {
   display: grid;
@@ -1267,6 +1287,16 @@ body {
   border: 1px solid var(--border-strong);
 }
 .set-dot.is-done { background: var(--good); color: #0a1a0e; border-color: var(--good); font-weight: 700; }
+.set-chip-partial {
+  background: color-mix(in oklab, var(--warn) 22%, transparent);
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  padding: 3px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; justify-content: center;
+  min-width: 36px;
+}
 
 .empty { text-align: center; padding: 30px; color: var(--text-3); font-size: 13px; }
 
@@ -1773,17 +1803,29 @@ body {
 
 /* Profile avatar button in header */
 .profile-btn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  border: 0;
-  font-size: 16px;
+  border: 2px solid rgba(255,255,255,0.18);
+  font-size: 19px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.15s, box-shadow 0.15s;
   flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255,255,255,0.2);
+  position: relative;
+  z-index: 5;
+}
+.profile-btn::after {
+  content: '↻'; position: absolute; bottom: -3px; right: -3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface-3); color: var(--text-2);
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--bg);
 }
 .profile-btn:active { transform: scale(0.88); }
 .profile-btn:hover { box-shadow: 0 0 0 2px rgba(255,255,255,0.3); }
@@ -1975,6 +2017,28 @@ body {
 .activity-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .activity-val-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .activity-cal { font-size: 11px; color: var(--text-3); background: var(--surface-3); padding: 2px 7px; border-radius: 8px; margin-left: 4px; }
+.activity-val-input {
+  width: 56px; min-width: 56px; padding: 6px 8px; border-radius: 10px;
+  background: var(--surface-3); border: 1px solid var(--border); color: var(--text);
+  font-size: 16px; font-weight: 700; text-align: center;
+  caret-color: var(--accent); outline: none; -webkit-appearance: none;
+  font-family: inherit;
+}
+.activity-val-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.activity-val-unit { font-size: 13px; color: var(--text-2); font-weight: 600; margin-left: -4px; }
+
+/* ===== Swap banner ===== */
+.swap-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--accent-soft); border: 1px solid var(--accent);
+  color: var(--text); border-radius: 12px; padding: 8px 12px;
+  font-size: 13px; font-weight: 600; margin-bottom: 12px;
+}
+.swap-banner-clear {
+  background: transparent; border: none; color: var(--accent);
+  font-size: 12px; font-weight: 700; padding: 4px 8px; cursor: pointer;
+  border-radius: 8px;
+}
 
 /* ===== Completion modal ===== */
 .completion-backdrop {
@@ -2516,6 +2580,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 /* Config */
 window.__TWEAKS__ = { accent: "#ec6032", accent2: "#C93416", fontSize: 15 };
 window.__AWS__ = {};
+window.__SERVER_CONFIG__ = {"apiUrl":""};
 window.__SERVER_STORAGE__ = true;
 </script>
 <script>
@@ -3202,10 +3267,15 @@ window.S3Store = (() => {
   if (!window.__SERVER_STORAGE__) {
     return {
       get: async () => null,
-      set: () => {},
+      set: () => Promise.resolve(),
       flush: async () => {}
     };
   }
+
+  // apiUrl vacío = same-origin (URL relativa). Funciona tanto en dev (localhost:3000)
+  // como en producción (cualquier dominio). Solo se especifica si la API vive en otro host.
+  const baseUrl = window.__SERVER_CONFIG__ && window.__SERVER_CONFIG__.apiUrl || '';
+  console.log('[Storage] Modo servidor activo. baseUrl:', baseUrl || '(same-origin)');
 
   // Escrituras debounced: 1s de inactividad antes de escribir al servidor
   const queue = {},
@@ -3215,29 +3285,36 @@ window.S3Store = (() => {
     if (data === undefined) return;
     delete queue[key];
     try {
-      const r = await fetch(`/data/${key}.json`, {
+      const url = `${baseUrl}/data/${key}.json`;
+      const r = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(data, null, 2)
       });
-      if (!r.ok) console.warn('[Storage] error escribiendo', key, r.status);
+      if (!r.ok) console.warn('[Storage] error escribiendo', key, r.status, url);
     } catch (e) {
       console.warn('[Storage] sin conexión', key, e.message);
     }
   }
   async function get(key) {
     try {
-      const r = await fetch(`/data/${key}.json`);
-      if (!r.ok) return null;
+      const url = `${baseUrl}/data/${key}.json`;
+      const r = await fetch(url);
+      if (r.status === 404) return null;
+      if (!r.ok) {
+        console.warn('[Storage] error leyendo', key, r.status);
+        return null;
+      }
       const data = await r.json();
       // Validación básica de estructura
       if (key.includes('sessions') && typeof data !== 'object') return null;
       if (key.includes('profiles') && !Array.isArray(data)) return null;
       if (key.includes('measures') && !Array.isArray(data)) return null;
       return data;
-    } catch {
+    } catch (e) {
+      console.warn('[Storage] error parseando', key, e.message);
       return null;
     }
   }
@@ -3245,6 +3322,7 @@ window.S3Store = (() => {
     queue[key] = data;
     clearTimeout(timers[key]);
     timers[key] = setTimeout(() => _flush(key), 1000);
+    return Promise.resolve();
   }
   async function flush() {
     return Promise.all(Object.keys(queue).map(_flush));
@@ -3364,6 +3442,10 @@ window.GymStore = function () {
     },
     saveGroups(groups) {
       _saveGlobal(KEY_GROUPS, 'groups', groups);
+    },
+    // Reemplaza toda la lista de perfiles en memoria + servidor. Usado por admin.
+    saveProfiles(list) {
+      _saveGlobal(KEY_PROFILES_LIST, 'profiles', list);
     },
     // Perfil activo: localStorage (preferencia de dispositivo, no dato de usuario)
     getActiveProfile() {
@@ -3599,12 +3681,20 @@ window.GymStore = function () {
       _save(KEY_ACTS, custom);
     },
     // ─── Estadísticas de perfil (para leaderboard, etc) ──────────────────
-    getProfileStats(profileName) {
-      let sessions = {};
-      try {
-        const raw = localStorage.getItem(`gym_sessions_v2_${profileName}`);
-        sessions = raw ? JSON.parse(raw) : {};
-      } catch (e) {}
+    // Async: lee las sesiones del servidor (S3/EC2). Cache simple para no
+    // re-pedir cada render del leaderboard.
+    _statsCache: {},
+    async getProfileStats(profileName) {
+      let sessions = this._statsCache[profileName];
+      if (!sessions) {
+        if (window.S3Store) {
+          const data = await window.S3Store.get(`${profileName}_sessions`);
+          sessions = data && typeof data === 'object' ? data : {};
+        } else {
+          sessions = {};
+        }
+        this._statsCache[profileName] = sessions;
+      }
       const toIso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       const today = new Date();
       const todayStr = toIso(today);
@@ -3670,19 +3760,25 @@ const PICKER_COLORS = ['#ec6032', '#3498DB', '#27AE60', '#9B59B6', '#1ABC9C', '#
 const Leaderboard = ({
   profiles
 }) => {
-  const data = React.useMemo(() => {
-    const rows = profiles.map(p => ({
+  const [data, setData] = React.useState(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    Promise.all(profiles.map(p => window.GymStore.getProfileStats(p.name).then(stats => ({
       ...p,
-      stats: window.GymStore.getProfileStats(p.name)
-    }));
-    // Líder = más sesiones esta semana (en empate, mayor racha)
-    const maxSessions = Math.max(...rows.map(r => r.stats.weekSessions));
-    return rows.map(r => ({
-      ...r,
-      isLeader: maxSessions > 0 && r.stats.weekSessions === maxSessions
-    }));
+      stats
+    })))).then(rows => {
+      if (cancelled) return;
+      const maxSessions = Math.max(0, ...rows.map(r => r.stats.weekSessions));
+      setData(rows.map(r => ({
+        ...r,
+        isLeader: maxSessions > 0 && r.stats.weekSessions === maxSessions
+      })));
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [profiles]);
-
+  if (!data) return null;
   // No mostrar si nadie tiene datos aún
   const anyData = data.some(r => r.stats.weekSessions > 0 || r.stats.streak > 0);
   if (!anyData) return null;
@@ -4163,6 +4259,8 @@ const TodayScreen = ({
   today,
   routine,
   todaySession,
+  swappedFromDow,
+  onClearSwap,
   onStart,
   onUpdateExercise,
   onFinish,
@@ -4204,6 +4302,57 @@ const TodayScreen = ({
   const [addActOpen, setAddActOpen] = React.useState(false);
   const isRest = routine.rest;
   const isStarted = !!active;
+  const {
+    activeExMap,
+    allExercises,
+    doneCount,
+    cardio,
+    allActivities,
+    activeActMap,
+    actsDone,
+    totalItems,
+    allDone,
+    estimatedCals
+  } = React.useMemo(() => {
+    if (!active) {
+      return {
+        activeExMap: {},
+        allExercises: [],
+        doneCount: 0,
+        cardio: null,
+        allActivities: [],
+        activeActMap: {},
+        actsDone: 0,
+        totalItems: 0,
+        allDone: false,
+        estimatedCals: 0
+      };
+    }
+    const activeExMap = Object.fromEntries((active.exercises || []).map(e => [e.id, e]));
+    const addedExDefs = active.addedExDefs || [];
+    const allExercises = [...(routine.exercises || []), ...addedExDefs];
+    const doneCount = allExercises.filter(ex => activeExMap[ex.id]?.done).length;
+    const cardio = routine.cardio;
+    const addedActDefs = active.addedActDefs || [];
+    const allActivities = [...(routine.activities || []), ...addedActDefs];
+    const activeActMap = active.activities || {};
+    const actsDone = allActivities.filter(a => activeActMap[a.id]?.done).length;
+    const totalItems = allExercises.length + (cardio ? 1 : 0) + allActivities.length;
+    const allDone = doneCount === allExercises.length && (!cardio || active.cardioDone) && actsDone === allActivities.length;
+    const estimatedCals = estimateSessionCals(allExercises, activeExMap);
+    return {
+      activeExMap,
+      allExercises,
+      doneCount,
+      cardio,
+      allActivities,
+      activeActMap,
+      actsDone,
+      totalItems,
+      allDone,
+      estimatedCals
+    };
+  }, [active, routine]);
   if (isRest) {
     const restItem = REST_POOL[today.getDate() % REST_POOL.length];
     return /*#__PURE__*/React.createElement("div", {
@@ -4268,7 +4417,13 @@ const TodayScreen = ({
     }
     return /*#__PURE__*/React.createElement("div", {
       className: "today-intro"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, swappedFromDow != null && /*#__PURE__*/React.createElement("div", {
+      className: "swap-banner"
+    }, /*#__PURE__*/React.createElement("span", null, "\u2194 Solo por hoy: ", routine.title), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "swap-banner-clear",
+      onClick: onClearSwap
+    }, "Cancelar")), /*#__PURE__*/React.createElement("div", {
       className: "intro-eyebrow"
     }, "ENTRENAMIENTO DE HOY"), /*#__PURE__*/React.createElement("div", {
       className: "intro-title"
@@ -4323,43 +4478,6 @@ const TodayScreen = ({
       onClick: onEditRoutine
     }, "\u270E Editar rutina")));
   }
-  const {
-    activeExMap,
-    allExercises,
-    doneCount,
-    cardio,
-    allActivities,
-    activeActMap,
-    actsDone,
-    totalItems,
-    allDone,
-    estimatedCals
-  } = React.useMemo(() => {
-    const activeExMap = Object.fromEntries((active.exercises || []).map(e => [e.id, e]));
-    const addedExDefs = active.addedExDefs || [];
-    const allExercises = [...(routine.exercises || []), ...addedExDefs];
-    const doneCount = allExercises.filter(ex => activeExMap[ex.id]?.done).length;
-    const cardio = routine.cardio;
-    const addedActDefs = active.addedActDefs || [];
-    const allActivities = [...(routine.activities || []), ...addedActDefs];
-    const activeActMap = active.activities || {};
-    const actsDone = allActivities.filter(a => activeActMap[a.id]?.done).length;
-    const totalItems = allExercises.length + (cardio ? 1 : 0) + allActivities.length;
-    const allDone = doneCount === allExercises.length && (!cardio || active.cardioDone) && actsDone === allActivities.length;
-    const estimatedCals = estimateSessionCals(allExercises, activeExMap);
-    return {
-      activeExMap,
-      allExercises,
-      doneCount,
-      cardio,
-      allActivities,
-      activeActMap,
-      actsDone,
-      totalItems,
-      allDone,
-      estimatedCals
-    };
-  }, [active, routine]);
   return /*#__PURE__*/React.createElement("div", {
     className: "today-active"
   }, /*#__PURE__*/React.createElement("div", {
@@ -4852,6 +4970,10 @@ const ActivityCard = React.memo(({
   onChange
 }) => {
   const [val, setVal] = React.useState(state.value ?? activity.defaultVal ?? 10);
+  const [valStr, setValStr] = React.useState(() => String(state.value ?? activity.defaultVal ?? 10));
+  React.useEffect(() => {
+    setValStr(String(val));
+  }, [val]);
   const toggle = e => {
     e.stopPropagation();
     onChange(activity.id, {
@@ -4869,6 +4991,16 @@ const ActivityCard = React.memo(({
       value: newVal
     });
   };
+  const commitInput = () => {
+    const v = parseFloat(valStr);
+    const nv = !isNaN(v) && v > 0 ? Math.round(v * 10) / 10 : val;
+    setVal(nv);
+    setValStr(String(nv));
+    onChange(activity.id, {
+      ...state,
+      value: nv
+    });
+  };
   const calEst = activity.cal10 ? Math.round(val / 10 * activity.cal10) : null;
   return /*#__PURE__*/React.createElement("div", {
     className: `activity-card ${state.done ? 'is-done' : ''}`
@@ -4884,9 +5016,17 @@ const ActivityCard = React.memo(({
     type: "button",
     className: "cardio-time-btn",
     onClick: () => changeVal(-step)
-  }, "\u2212"), /*#__PURE__*/React.createElement("span", {
-    className: "cardio-time-val"
-  }, val, " ", activity.unit), /*#__PURE__*/React.createElement("button", {
+  }, "\u2212"), /*#__PURE__*/React.createElement("input", {
+    className: "activity-val-input",
+    type: "text",
+    inputMode: "decimal",
+    value: valStr,
+    onFocus: e => e.target.select(),
+    onChange: e => setValStr(e.target.value.replace(/[^0-9.]/g, '')),
+    onBlur: commitInput
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "activity-val-unit"
+  }, activity.unit), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cardio-time-btn",
     onClick: () => changeVal(step)
@@ -5060,12 +5200,12 @@ const CalendarScreen = ({
   }, /*#__PURE__*/React.createElement("div", {
     className: "cal-stat"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "cal-stat-dot completed"
-  }), completedCount, " completos"), /*#__PURE__*/React.createElement("div", {
+    className: "cal-stat-icon"
+  }, "\uD83D\uDD25"), completedCount, " completos"), /*#__PURE__*/React.createElement("div", {
     className: "cal-stat"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "cal-stat-dot partial"
-  }), partialCount, " parciales"), /*#__PURE__*/React.createElement("div", {
+    className: "cal-stat-icon"
+  }, "\uD83D\uDCAA"), partialCount, " parciales"), /*#__PURE__*/React.createElement("div", {
     className: "cal-stat"
   }, /*#__PURE__*/React.createElement("span", {
     className: "cal-stat-dot rest"
@@ -5090,6 +5230,14 @@ const CalendarScreen = ({
     const isRestDay = routineMap[dow]?.rest;
     let state = 'none';
     if (s?.completed) state = 'completed';else if (s) state = 'partial';else if (isRestDay) state = 'rest';else if (!isFuture) state = 'missed';
+
+    // Texto de progreso parcial: "3/5" ejercicios completados (solo si parcial con datos)
+    let partialLabel = null;
+    if (state === 'partial' && s) {
+      const doneEx = (s.exercises || []).filter(e => e.done).length;
+      const totalEx = (s.exercises || []).length;
+      if (totalEx > 0) partialLabel = `${doneEx}/${totalEx}`;
+    }
     return /*#__PURE__*/React.createElement("button", {
       key: i,
       className: `cal-cell state-${state} ${isToday ? 'is-today' : ''} ${isFuture ? 'is-future' : ''}`,
@@ -5098,12 +5246,14 @@ const CalendarScreen = ({
     }, /*#__PURE__*/React.createElement("div", {
       className: "cal-day-num"
     }, d), state === 'completed' && /*#__PURE__*/React.createElement("div", {
-      className: "cal-dot completed"
-    }), state === 'partial' && /*#__PURE__*/React.createElement("div", {
-      className: "cal-dot partial"
-    }), state === 'rest' && /*#__PURE__*/React.createElement("div", {
-      className: "cal-dot rest"
-    }), state === 'missed' && /*#__PURE__*/React.createElement("div", {
+      className: "cal-big-icon"
+    }, "\uD83D\uDD25"), state === 'partial' && /*#__PURE__*/React.createElement("div", {
+      className: "cal-big-icon partial"
+    }, "\uD83D\uDCAA"), partialLabel && /*#__PURE__*/React.createElement("div", {
+      className: "cal-partial-label"
+    }, partialLabel), state === 'rest' && /*#__PURE__*/React.createElement("div", {
+      className: "cal-rest-icon"
+    }, "\xB7"), state === 'missed' && /*#__PURE__*/React.createElement("div", {
       className: "cal-dot missed"
     }));
   })), /*#__PURE__*/React.createElement("div", {
@@ -6277,6 +6427,7 @@ const DayDetail = ({
     className: "detail-history"
   }, (s.exercises || []).map(e => {
     const meta = exMeta[e.id];
+    const partial = !e.done && e.sets > 0;
     return /*#__PURE__*/React.createElement("div", {
       key: e.id,
       className: "detail-row"
@@ -6292,9 +6443,13 @@ const DayDetail = ({
       }
     }, meta?.name || e.id), /*#__PURE__*/React.createElement("div", {
       className: "detail-row-meta"
-    }, e.weight > 0 ? `${e.weight} lb · ` : '', e.sets, "/", e.targetSets, "\xD7", e.reps)), /*#__PURE__*/React.createElement("div", {
-      className: `set-dot ${e.done ? 'is-done' : ''}`
-    }, e.done ? '✓' : '·'));
+    }, e.weight > 0 ? `${e.weight} lb · ` : '', e.sets, "/", e.targetSets, "\xD7", e.reps)), e.done ? /*#__PURE__*/React.createElement("div", {
+      className: "set-dot is-done"
+    }, "\u2713") : partial ? /*#__PURE__*/React.createElement("div", {
+      className: "set-chip-partial"
+    }, e.sets, "/", e.targetSets) : /*#__PURE__*/React.createElement("div", {
+      className: "set-dot"
+    }, "\xB7"));
   })), s.cardioDone && s.cardioMinutes && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "detail-section-title"
   }, "Cardio"), /*#__PURE__*/React.createElement("div", {
@@ -7038,14 +7193,12 @@ const AdminPanel = () => {
       window.GymStore.saveGroups(g);
       setGroups(window.GymStore.getGroups());
     }
-    // Update active profile key if it was the current one
-    const activeKey = localStorage.getItem('gym_active_profile_v1');
-    if (activeKey === editingProfile.original && editingProfile.original !== editingProfile.name) {
-      localStorage.setItem('gym_active_profile_v1', editingProfile.name);
+    // Si el perfil renombrado era el activo en este dispositivo, actualizar el
+    // puntero local (preferencia de dispositivo, no es dato compartido).
+    if (window.GymStore.getActiveProfile() === editingProfile.original && editingProfile.original !== editingProfile.name) {
+      window.GymStore.initProfile(editingProfile.name);
     }
-    const S3 = window.S3Store;
-    localStorage.setItem('gym_profiles_list_v1', JSON.stringify(list));
-    if (S3) S3.set('profiles', list);
+    window.GymStore.saveProfiles(list);
     setProfiles(list);
     setEditingProfile(null);
     showToast('Perfil actualizado ✓');
@@ -7386,7 +7539,13 @@ const App = ({
     };
   }, []);
   const [routineVer, setRoutineVer] = useState(0);
-  const routine = useMemo(() => window.GymStore.getRoutineFor(dow), [routineVer]);
+  // Swap ephemeral: solo para esta sesión, no modifica el horario semanal.
+  // Se descarta al recargar la app o al cambiar de día.
+  const [todaySwapDow, setTodaySwapDow] = useState(null);
+  const routine = useMemo(() => {
+    const effective = todaySwapDow != null ? todaySwapDow : dow;
+    return window.GymStore.getRoutineFor(effective);
+  }, [routineVer, dow, todaySwapDow]);
   const [editingRoutine, setEditingRoutine] = useState(false);
   const [editingDow, setEditingDow] = useState(dow);
   const openRoutineEditor = useCallback(d => {
@@ -7540,15 +7699,13 @@ const App = ({
       return next;
     });
   }, []);
+
+  // Swap solo para esta sesión: no persiste, no toca el horario semanal.
   const swapRoutine = useCallback(srcDow => {
-    const newRoutine = window.GymStore.getRoutineFor(srcDow);
-    window.GymStore.saveRoutineFor(dow, {
-      ...newRoutine
-    });
-    setRoutineVer(v => v + 1);
-    setRefresh(r => r + 1);
+    setTodaySwapDow(srcDow);
     setSwapOpen(false);
-  }, [dow]);
+  }, []);
+  const clearSwap = useCallback(() => setTodaySwapDow(null), []);
 
   // Lambdas estables para props
   const handleSetTab = useCallback(newTab => setTab(newTab), []);
@@ -7597,6 +7754,8 @@ const App = ({
     today: today,
     routine: routine,
     todaySession: todaySession,
+    swappedFromDow: todaySwapDow != null ? dow : null,
+    onClearSwap: clearSwap,
     onStart: () => setMoodOpen(true),
     onUpdateExercise: updateExercise,
     onToggleCardio: toggleCardio,
@@ -7785,9 +7944,18 @@ const GymAppLoader = () => {
     setDebugInfo('Seleccionado: ' + name);
   };
   const switchProfile = () => {
-    window.GymStore.clearActiveProfile();
-    setProfileName('');
-    setReady(false);
+    console.log('[DEBUG] switchProfile clicked');
+    try {
+      window.GymStore.clearActiveProfile();
+    } catch (e) {
+      console.warn(e);
+    }
+    try {
+      window.GymStore.clearActive();
+    } catch (e) {}
+    // Navegación a URL fresca con cache-bust: evita que iOS PWA/SW
+    // sirva un HTML viejo desde caché aun después del clear.
+    window.location.replace('/?_=' + Date.now());
   };
   useEffect(() => {
     if (!profileName) return;

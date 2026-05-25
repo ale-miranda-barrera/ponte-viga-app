@@ -117,14 +117,13 @@ const AdminPanel = () => {
       window.GymStore.saveGroups(g);
       setGroups(window.GymStore.getGroups());
     }
-    // Update active profile key if it was the current one
-    const activeKey = localStorage.getItem('gym_active_profile_v1');
-    if (activeKey === editingProfile.original && editingProfile.original !== editingProfile.name) {
-      localStorage.setItem('gym_active_profile_v1', editingProfile.name);
+    // Si el perfil renombrado era el activo en este dispositivo, actualizar el
+    // puntero local (preferencia de dispositivo, no es dato compartido).
+    if (window.GymStore.getActiveProfile() === editingProfile.original
+        && editingProfile.original !== editingProfile.name) {
+      window.GymStore.initProfile(editingProfile.name);
     }
-    const S3 = window.S3Store;
-    localStorage.setItem('gym_profiles_list_v1', JSON.stringify(list));
-    if (S3) S3.set('profiles', list);
+    window.GymStore.saveProfiles(list);
     setProfiles(list);
     setEditingProfile(null);
     showToast('Perfil actualizado ✓');

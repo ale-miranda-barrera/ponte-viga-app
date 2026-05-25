@@ -101,6 +101,9 @@ window.GymStore = (function() {
 
     saveGroups(groups) { _saveGlobal(KEY_GROUPS, 'groups', groups); },
 
+    // Reemplaza toda la lista de perfiles en memoria + servidor. Usado por admin.
+    saveProfiles(list) { _saveGlobal(KEY_PROFILES_LIST, 'profiles', list); },
+
     // Perfil activo: localStorage (preferencia de dispositivo, no dato de usuario)
     getActiveProfile() { return localStorage.getItem(KEY_ACTIVE_PROFILE) || ''; },
     clearActiveProfile() { localStorage.removeItem(KEY_ACTIVE_PROFILE); },
@@ -313,12 +316,20 @@ window.GymStore = (function() {
     },
 
     // ─── Estadísticas de perfil (para leaderboard, etc) ──────────────────
-    getProfileStats(profileName) {
-      let sessions = {};
-      try {
-        const raw = localStorage.getItem(`gym_sessions_v2_${profileName}`);
-        sessions = raw ? JSON.parse(raw) : {};
-      } catch(e) {}
+    // Async: lee las sesiones del servidor (S3/EC2). Cache simple para no
+    // re-pedir cada render del leaderboard.
+    _statsCache: {},
+    async getProfileStats(profileName) {
+      let sessions = this._statsCache[profileName];
+      if (!sessions) {
+        if (window.S3Store) {
+          const data = await window.S3Store.get(`${profileName}_sessions`);
+          sessions = data && typeof data === 'object' ? data : {};
+        } else {
+          sessions = {};
+        }
+        this._statsCache[profileName] = sessions;
+      }
 
       const toIso = (d) =>
         d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');

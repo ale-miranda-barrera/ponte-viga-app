@@ -65,7 +65,13 @@ const App = ({ onSwitchProfile }) => {
   }, []);
 
   const [routineVer, setRoutineVer] = useState(0);
-  const routine = useMemo(() => window.GymStore.getRoutineFor(dow), [routineVer]);
+  // Swap ephemeral: solo para esta sesión, no modifica el horario semanal.
+  // Se descarta al recargar la app o al cambiar de día.
+  const [todaySwapDow, setTodaySwapDow] = useState(null);
+  const routine = useMemo(() => {
+    const effective = todaySwapDow != null ? todaySwapDow : dow;
+    return window.GymStore.getRoutineFor(effective);
+  }, [routineVer, dow, todaySwapDow]);
 
   const [editingRoutine, setEditingRoutine] = useState(false);
   const [editingDow, setEditingDow] = useState(dow);
@@ -187,13 +193,13 @@ const App = ({ onSwitchProfile }) => {
     });
   }, []);
 
+  // Swap solo para esta sesión: no persiste, no toca el horario semanal.
   const swapRoutine = useCallback((srcDow) => {
-    const newRoutine = window.GymStore.getRoutineFor(srcDow);
-    window.GymStore.saveRoutineFor(dow, { ...newRoutine });
-    setRoutineVer(v => v + 1);
-    setRefresh(r => r + 1);
+    setTodaySwapDow(srcDow);
     setSwapOpen(false);
-  }, [dow]);
+  }, []);
+
+  const clearSwap = useCallback(() => setTodaySwapDow(null), []);
 
   // Lambdas estables para props
   const handleSetTab = useCallback((newTab) => setTab(newTab), []);
@@ -242,6 +248,8 @@ const App = ({ onSwitchProfile }) => {
             today={today}
             routine={routine}
             todaySession={todaySession}
+            swappedFromDow={todaySwapDow != null ? dow : null}
+            onClearSwap={clearSwap}
             onStart={() => setMoodOpen(true)}
             onUpdateExercise={updateExercise}
             onToggleCardio={toggleCardio}
@@ -398,9 +406,12 @@ const GymAppLoader = () => {
   };
 
   const switchProfile = () => {
-    window.GymStore.clearActiveProfile();
-    setProfileName('');
-    setReady(false);
+    console.log('[DEBUG] switchProfile clicked');
+    try { window.GymStore.clearActiveProfile(); } catch (e) { console.warn(e); }
+    try { window.GymStore.clearActive(); } catch (e) {}
+    // Navegación a URL fresca con cache-bust: evita que iOS PWA/SW
+    // sirva un HTML viejo desde caché aun después del clear.
+    window.location.replace('/?_=' + Date.now());
   };
 
   useEffect(() => {

@@ -3,7 +3,7 @@ window.S3Store = (() => {
   'use strict';
   const cfg = window.__AWS__ || {};
   if (!cfg.bucket || !cfg.accessKey || !cfg.secretKey) {
-    return { get: async () => null, set: () => {}, flush: async () => {} };
+    return { get: async () => null, set: () => Promise.resolve(), flush: async () => {} };
   }
 
   const { bucket, region, accessKey, secretKey } = cfg;
@@ -84,6 +84,7 @@ window.S3Store = (() => {
     queue[key] = data;
     clearTimeout(timers[key]);
     timers[key] = setTimeout(() => _flush(key), 1000);
+    return Promise.resolve();
   }
 
   async function flush() {

@@ -3,16 +3,23 @@ const PICKER_COLORS = ['#ec6032','#3498DB','#27AE60','#9B59B6','#1ABC9C','#E67E2
 
 // ─── Tabla de logros ──────────────────────────────────────────────────────────
 const Leaderboard = ({ profiles }) => {
-  const data = React.useMemo(() => {
-    const rows = profiles.map(p => ({ ...p, stats: window.GymStore.getProfileStats(p.name) }));
-    // Líder = más sesiones esta semana (en empate, mayor racha)
-    const maxSessions = Math.max(...rows.map(r => r.stats.weekSessions));
-    return rows.map(r => ({
-      ...r,
-      isLeader: maxSessions > 0 && r.stats.weekSessions === maxSessions,
-    }));
+  const [data, setData] = React.useState(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    Promise.all(profiles.map(p =>
+      window.GymStore.getProfileStats(p.name).then(stats => ({ ...p, stats }))
+    )).then(rows => {
+      if (cancelled) return;
+      const maxSessions = Math.max(0, ...rows.map(r => r.stats.weekSessions));
+      setData(rows.map(r => ({
+        ...r,
+        isLeader: maxSessions > 0 && r.stats.weekSessions === maxSessions,
+      })));
+    });
+    return () => { cancelled = true; };
   }, [profiles]);
 
+  if (!data) return null;
   // No mostrar si nadie tiene datos aún
   const anyData = data.some(r => r.stats.weekSessions > 0 || r.stats.streak > 0);
   if (!anyData) return null;
