@@ -30,11 +30,11 @@ const estimateSessionCals = (exercises, activeExMap) => {
   return kcal;
 };
 
-const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onClearSwap, onStart, onUpdateExercise, onFinish, onToggleCardio, onOpenExercise, onEditRoutine, onSwapRoutine, onUpdateActivity, onResume, onAddExercise, onAddActivity }) => {
+const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onClearSwap, onStart, onUpdateExercise, onFinish, onToggleCardio, onOpenExercise, onEditRoutine, onSwapRoutine, onUpdateActivity, onResume, onFinishDay, onAddExercise, onAddActivity }) => {
   const { pbMap, lastMap, lastRoutineSession } = React.useMemo(() => {
     const pb = {}, last = {};
     const todayIso = window.GymStore.iso(new Date());
-    const sorted = Object.values(window.GymStore.getAllSessions())
+    const sorted = window.GymStore.getAllSessionsFlat()
       .filter(s => s.date < todayIso)
       .sort((a, b) => b.date.localeCompare(a.date));
     sorted.forEach(s => {
@@ -89,55 +89,49 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
   }
 
   if (!isStarted) {
-    // Si ya hay sesión de hoy guardada, mostrar estado "ya entrenaste"
+    // Si hay sesión guardada del día, mostrar vista "done" con 1 card
     if (todaySession) {
-      const doneExs = (todaySession.exercises || []).filter(e => e.done).length;
-      const totalExs = (todaySession.exercises || []).length;
-      const dur = (todaySession.startTime && todaySession.endTime)
-        ? (() => {
-            const ms = todaySession.endTime - todaySession.startTime;
-            const totalMin = Math.round(ms / 60000);
-            if (totalMin < 1) return null;
-            if (totalMin < 60) return `${totalMin} min`;
-            const h = Math.floor(totalMin / 60);
-            const m = totalMin % 60;
-            return m > 0 ? `${h}h ${m}min` : `${h}h`;
-          })()
+      const s = todaySession;
+      const doneExs = (s.exercises || []).filter(e => e.done).length;
+      const totalExs = (s.exercises || []).length;
+      const ms = (s.startTime && s.endTime) ? (s.endTime - s.startTime) : 0;
+      const totalMin = ms > 0 ? Math.round(ms / 60000) : 0;
+      const dur = totalMin >= 1
+        ? (totalMin < 60 ? `${totalMin} min` : `${Math.floor(totalMin/60)}h${totalMin%60>0?' '+totalMin%60+'min':''}`)
         : null;
 
       const COMPLETE_MSGS = [
-        '¡Eres un crack! 💪',
-        '¡Maquinaaaaa! 🔥',
-        '¡Súper! Lo lograste 😎',
-        '¡Bestia! Eso es dedicación 🏆',
-        '¡Imparable! Así se hace 🚀',
+        '¡Eres un crack! 💪', '¡Maquinaaaaa! 🔥', '¡Súper! Lo lograste 😎',
+        '¡Bestia! Eso es dedicación 🏆', '¡Imparable! Así se hace 🚀',
       ];
       const PARTIAL_MSGS = [
-        'Algo es algo, sigue así 💪',
-        'Parcial pero presente 👊',
-        'Mañana lo terminás, crack',
+        'Algo es algo, sigue así 💪', 'Parcial pero presente 👊', 'Mañana lo terminás, crack',
       ];
-      const msgs = todaySession.completed ? COMPLETE_MSGS : PARTIAL_MSGS;
+      const msgs = s.completed ? COMPLETE_MSGS : PARTIAL_MSGS;
       const msg = msgs[today.getDate() % msgs.length];
 
       return (
         <div className="today-done">
-          <div className="done-trophy">{todaySession.completed ? '😎' : '🙌'}</div>
+          <div className="done-trophy">{s.completed ? '😎' : '🙌'}</div>
           <div className="done-msg">{msg}</div>
-          <div className="done-routine">{todaySession.title}</div>
-          <div className="done-stats">
-            <span className={todaySession.completed ? 'ok' : 'warn'}>
-              {todaySession.completed ? 'Completo ✓' : 'Parcial'}
-            </span>
-            <span className="dot-sep">·</span>
-            <span>{doneExs}/{totalExs} ejercicios</span>
-            {dur && <><span className="dot-sep">·</span><span>{dur}</span></>}
-          </div>
-          <button type="button" className="btn-outline done-add-btn" onClick={onResume}>
-            + Agregar ejercicios o actividades
-          </button>
-          <div className="intro-secondary-btns">
-            <button type="button" className="btn-link" onClick={onEditRoutine}>✎ Editar rutina</button>
+
+          <div className="done-sessions-list">
+            <div className="done-session-card">
+              <div className="done-session-label">{s.label || s.title}</div>
+              <div className="done-session-meta">
+                <span className={s.completed ? 'ok' : 'warn'}>{s.completed ? 'Completo ✓' : 'Parcial'}</span>
+                {totalExs > 0 && <><span className="dot-sep">·</span><span>{doneExs}/{totalExs} ejercicios</span></>}
+                {dur && <><span className="dot-sep">·</span><span>{dur}</span></>}
+              </div>
+              <button type="button" className="btn-primary" style={{marginTop:8}} onClick={onResume}>
+                Continuar entrenando
+              </button>
+              {!s.completed && (
+                <button type="button" className="btn-success" style={{marginTop:6}} onClick={onFinishDay}>
+                  Terminar entrenamiento
+                </button>
+              )}
+            </div>
           </div>
         </div>
       );
@@ -182,8 +176,8 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
         <button type="button" className="btn-primary" onClick={onStart}>Empezar entrenamiento</button>
         <div className="intro-secondary-btns">
           <button type="button" className="btn-link" onClick={onSwapRoutine}>↔ Cambiar entrenamiento del día</button>
-          <button type="button" className="btn-link" onClick={onEditRoutine}>✎ Editar rutina</button>
         </div>
+        <div className="hint-text">Para editar la rutina del día, ve a Semana.</div>
       </div>
     );
   }
@@ -266,6 +260,7 @@ const AddExerciseSheet = ({ currentExIds, onAdd, onClose }) => {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="detail-sheet" onClick={e => e.stopPropagation()}>
+        <button type="button" className="sheet-close" onClick={onClose}>✕</button>
         <div className="modal-handle" />
         <div className="detail-head">
           <div className="detail-tag">AGREGAR EJERCICIO</div>
@@ -275,6 +270,7 @@ const AddExerciseSheet = ({ currentExIds, onAdd, onClose }) => {
           className="add-search-input"
           placeholder="Buscar ejercicio..."
           value={search}
+          onFocus={e => e.target.select()}
           onChange={e => setSearch(e.target.value)}
           autoFocus
         />
@@ -296,30 +292,116 @@ const AddExerciseSheet = ({ currentExIds, onAdd, onClose }) => {
 };
 
 const AddActivitySheet = ({ currentActIds, onAdd, onClose }) => {
+  const [customMode, setCustomMode] = React.useState(false);
+
   const available = React.useMemo(() => {
     return window.GymStore.getActivities().filter(a => !currentActIds.has(a.id));
   }, [currentActIds]);
+
+  const actMetaLabel = (act) => {
+    if (act.type === 'bodyweight') return 'Peso corporal';
+    return `${act.defaultVal} ${act.unit}${act.kcalPerMin ? ` · ~${act.kcalPerMin} kcal/min` : ''}`;
+  };
+
+  // Formulario de actividad custom (inline, misma lógica que ActivityPickerModal)
+  const [customForm, setCustomForm] = React.useState({
+    name: '', icon: '🏃', type: 'time', unit: 'min', kcalPerMin: 5, defaultVal: 20
+  });
+
+  const handleTypeChange = (t) => {
+    if (t.key === 'bodyweight') {
+      setCustomForm(f => ({ ...f, type: t.key, unit: t.unit, defaultVal: 0, kcalPerMin: 0 }));
+    } else {
+      setCustomForm(f => ({ ...f, type: t.key, unit: t.unit }));
+    }
+  };
+
+  const saveCustom = () => {
+    if (!customForm.name.trim()) return;
+    const act = { ...customForm, id: 'custom_' + Date.now(), name: customForm.name.trim() };
+    window.GymStore.saveCustomActivity(act);
+    onAdd(act);
+  };
+
+  if (customMode) {
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="detail-sheet" onClick={e => e.stopPropagation()}>
+          <button type="button" className="sheet-close" onClick={onClose}>✕</button>
+          <div className="modal-handle" />
+          <div className="detail-head">
+            <div className="detail-tag">NUEVA ACTIVIDAD</div>
+            <div className="detail-name">Crear actividad</div>
+          </div>
+          <div className="picker-section-label">Nombre</div>
+          <input
+            className="picker-input"
+            placeholder="Ej: Calistenia, Box, Patines..."
+            value={customForm.name}
+            onFocus={e => e.target.select()}
+            onChange={e => setCustomForm(f => ({...f, name: e.target.value}))}
+            autoFocus
+          />
+          <div className="picker-section-label" style={{marginTop:12}}>Tipo de valor</div>
+          <div className="act-type-row">
+            {(window.ACTIVITY_VALUE_TYPES || []).map(t => (
+              <button key={t.key} className={`act-type-btn ${customForm.type === t.key ? 'on' : ''}`} onClick={() => handleTypeChange(t)}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {customForm.type !== 'bodyweight' && (
+            <div className="editor-nums" style={{marginTop:12}}>
+              <label>
+                <span>Valor defecto</span>
+                <input type="text" inputMode="decimal" value={customForm.defaultVal} onFocus={e=>e.target.select()} onChange={e => { const v=parseFloat(e.target.value); setCustomForm(f=>({...f, defaultVal: isNaN(v)?f.defaultVal:v})); }} />
+              </label>
+              <label>
+                <span>kcal/min</span>
+                <input type="text" inputMode="decimal" value={customForm.kcalPerMin} onFocus={e=>e.target.select()} onChange={e => { const v=parseFloat(e.target.value); setCustomForm(f=>({...f, kcalPerMin: isNaN(v)?f.kcalPerMin:v})); }} />
+              </label>
+            </div>
+          )}
+          <div className="picker-section-label" style={{marginTop:8}}>Ícono</div>
+          <div className="picker-emoji-row">
+            {['🏃','💃','🏊','🚴','🧘','⚡','🛼','🥊','⛷️','🏄','🤸','🤼','🧗'].map(ic => (
+              <button key={ic} className={`picker-emoji-btn ${customForm.icon === ic ? 'on' : ''}`} onClick={() => setCustomForm(f=>({...f, icon: ic}))}>{ic}</button>
+            ))}
+          </div>
+          <div className="picker-actions" style={{marginTop:12}}>
+            <button type="button" className="btn-primary" onClick={saveCustom} disabled={!customForm.name.trim()}>Crear y agregar</button>
+            <button type="button" className="btn-link" onClick={() => setCustomMode(false)}>← Volver al catálogo</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="detail-sheet" onClick={e => e.stopPropagation()}>
+        <button type="button" className="sheet-close" onClick={onClose}>✕</button>
         <div className="modal-handle" />
         <div className="detail-head">
           <div className="detail-tag">AGREGAR ACTIVIDAD</div>
           <div className="detail-name">Actividad física</div>
         </div>
         <div className="swap-list">
-          {available.length === 0 && <div className="empty">Ya tienes todas las actividades.</div>}
+          {available.length === 0 && <div className="empty">Ya tienes todas las actividades del catálogo.</div>}
           {available.map(act => (
             <button key={act.id} className="swap-option" onClick={() => onAdd(act)}>
               <div className="swap-option-day" style={{fontSize:22}}>{act.icon}</div>
               <div className="swap-option-info">
                 <div className="swap-option-title">{act.name}</div>
-                <div className="swap-option-sub">{act.defaultVal} {act.unit}{act.cal10 ? ` · ~${act.cal10} kcal/10${act.unit}` : ''}</div>
+                <div className="swap-option-sub">{actMetaLabel(act)}</div>
               </div>
               <div className="swap-arrow" style={{color:'var(--accent)', fontWeight:700}}>+</div>
             </button>
           ))}
         </div>
+        <button type="button" className="btn-secondary" style={{marginTop:8}} onClick={() => setCustomMode(true)}>
+          + Crear actividad nueva
+        </button>
       </div>
     </div>
   );
@@ -530,14 +612,16 @@ const CardioCard = React.memo(({ cardio, done, onToggle, savedMinutes, savedLaps
 
 // Tarjeta para actividades físicas (no basadas en peso)
 const ActivityCard = React.memo(({ activity, state, onChange }) => {
-  const [val, setVal] = React.useState(state.value ?? activity.defaultVal ?? 10);
-  const [valStr, setValStr] = React.useState(() => String(state.value ?? activity.defaultVal ?? 10));
+  const isBodyweight = activity.type === 'bodyweight';
+  const initVal = isBodyweight ? 0 : (state.value ?? activity.defaultVal ?? 10);
+  const [val, setVal] = React.useState(initVal);
+  const [valStr, setValStr] = React.useState(() => String(initVal));
 
-  React.useEffect(() => { setValStr(String(val)); }, [val]);
+  React.useEffect(() => { if (!isBodyweight) setValStr(String(val)); }, [val, isBodyweight]);
 
   const toggle = (e) => {
     e.stopPropagation();
-    onChange(activity.id, { ...state, done: !state.done, value: val });
+    onChange(activity.id, { ...state, done: !state.done, value: isBodyweight ? 0 : val });
   };
 
   const step = activity.unit === 'km' ? 0.5 : activity.unit === 's' ? 15 : 5;
@@ -555,28 +639,36 @@ const ActivityCard = React.memo(({ activity, state, onChange }) => {
     onChange(activity.id, { ...state, value: nv });
   };
 
-  const calEst = activity.cal10 ? Math.round((val / 10) * activity.cal10) : null;
+  // kcalPerMin × minutos (o valor equivalente). Fallback a cal10/10 para actividades guardadas con el campo viejo.
+  const kpm = activity.kcalPerMin ?? (activity.cal10 ? activity.cal10 / 10 : null);
+  const calEst = (!isBodyweight && kpm) ? Math.round(val * kpm) : null;
 
   return (
     <div className={`activity-card ${state.done ? 'is-done' : ''}`}>
       <div className="activity-icon">{activity.icon || '🏃'}</div>
       <div className="activity-info">
         <div className="activity-name">{activity.name}</div>
-        <div className="activity-val-row">
-          <button type="button" className="cardio-time-btn" onClick={() => changeVal(-step)}>−</button>
-          <input
-            className="activity-val-input"
-            type="text"
-            inputMode="decimal"
-            value={valStr}
-            onFocus={e => e.target.select()}
-            onChange={e => setValStr(e.target.value.replace(/[^0-9.]/g, ''))}
-            onBlur={commitInput}
-          />
-          <span className="activity-val-unit">{activity.unit}</span>
-          <button type="button" className="cardio-time-btn" onClick={() => changeVal(step)}>+</button>
-          {calEst != null && <span className="activity-cal">~{calEst} kcal</span>}
-        </div>
+        {isBodyweight ? (
+          <div className="bodyweight-label" style={{marginTop: 4, display:'inline-block', fontSize:12}}>
+            💪 Peso corporal
+          </div>
+        ) : (
+          <div className="activity-val-row">
+            <button type="button" className="cardio-time-btn" onClick={() => changeVal(-step)}>−</button>
+            <input
+              className="activity-val-input"
+              type="text"
+              inputMode="decimal"
+              value={valStr}
+              onFocus={e => e.target.select()}
+              onChange={e => setValStr(e.target.value.replace(/[^0-9.]/g, ''))}
+              onBlur={commitInput}
+            />
+            <span className="activity-val-unit">{activity.unit}</span>
+            <button type="button" className="cardio-time-btn" onClick={() => changeVal(step)}>+</button>
+            {calEst != null && <span className="activity-cal">~{calEst} kcal</span>}
+          </div>
+        )}
       </div>
       <button type="button" className={`ex-check ${state.done ? 'is-checked' : ''}`} onClick={toggle}>
         {state.done ? '✓' : ''}
@@ -591,6 +683,7 @@ const SwapRoutineModal = ({ currentDow, onClose, onSwap }) => {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="detail-sheet" onClick={e => e.stopPropagation()}>
+        <button type="button" className="sheet-close" onClick={onClose}>✕</button>
         <div className="modal-handle" />
         <div className="detail-head">
           <div className="detail-tag">HOY · {window.DAY_LONG[currentDow].toUpperCase()}</div>

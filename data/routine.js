@@ -113,23 +113,26 @@ window._allExMeta = Object.values(window.WEEK_ROUTINE)
   .reduce((m, e) => { m[e.id] = e; return m; }, {});
 
 // Catálogo de actividades físicas por defecto
+// kcalPerMin: gasto calórico por MINUTO para persona ~70 kg (basado en MET)
 window.DEFAULT_ACTIVITIES = [
-  { id: 'walk',   name: 'Caminar',       icon: '🚶', type: 'time',      unit: 'min',   cal10: 4,  defaultVal: 20 },
-  { id: 'run',    name: 'Trotar',         icon: '🏃', type: 'time',      unit: 'min',   cal10: 8,  defaultVal: 20 },
-  { id: 'dance',  name: 'Bailar',         icon: '💃', type: 'time',      unit: 'min',   cal10: 7,  defaultVal: 30 },
-  { id: 'bike',   name: 'Bicicleta',      icon: '🚴', type: 'time',      unit: 'min',   cal10: 6,  defaultVal: 30 },
-  { id: 'swim',   name: 'Nadar',          icon: '🏊', type: 'time',      unit: 'min',   cal10: 9,  defaultVal: 30 },
-  { id: 'jump',   name: 'Saltar cuerda',  icon: '🪢', type: 'time',      unit: 'min',   cal10: 10, defaultVal: 10 },
-  { id: 'yoga',   name: 'Yoga',           icon: '🧘', type: 'time',      unit: 'min',   cal10: 3,  defaultVal: 30 },
-  { id: 'plank',  name: 'Plank',          icon: '🏋️', type: 'sets_reps', unit: 's',     cal10: 4,  defaultVal: 30, sets: 3 },
-  { id: 'pushup', name: 'Lagartijas',     icon: '💪', type: 'sets_reps', unit: 'reps',  cal10: 6,  defaultVal: 15, sets: 3 },
-  { id: 'hiit',   name: 'HIIT',           icon: '⚡', type: 'rounds',    unit: 'rondas',cal10: 11, defaultVal: 4 },
+  { id: 'walk',   name: 'Caminar',       icon: '🚶', type: 'time',      unit: 'min',   kcalPerMin: 4,  defaultVal: 20 },
+  { id: 'run',    name: 'Trotar',         icon: '🏃', type: 'time',      unit: 'min',   kcalPerMin: 10, defaultVal: 20 },
+  { id: 'dance',  name: 'Bailar',         icon: '💃', type: 'time',      unit: 'min',   kcalPerMin: 7,  defaultVal: 30 },
+  { id: 'bike',   name: 'Bicicleta',      icon: '🚴', type: 'time',      unit: 'min',   kcalPerMin: 8,  defaultVal: 30 },
+  { id: 'swim',   name: 'Nadar',          icon: '🏊', type: 'time',      unit: 'min',   kcalPerMin: 9,  defaultVal: 30 },
+  { id: 'jump',   name: 'Saltar cuerda',  icon: '🪢', type: 'time',      unit: 'min',   kcalPerMin: 12, defaultVal: 10 },
+  { id: 'yoga',   name: 'Yoga',           icon: '🧘', type: 'time',      unit: 'min',   kcalPerMin: 3,  defaultVal: 30 },
+  { id: 'plank',  name: 'Plank',          icon: '🏋️', type: 'sets_reps', unit: 's',     kcalPerMin: 4,  defaultVal: 30, sets: 3 },
+  { id: 'pushup', name: 'Lagartijas',     icon: '💪', type: 'sets_reps', unit: 'reps',  kcalPerMin: 7,  defaultVal: 15, sets: 3 },
+  { id: 'hiit',   name: 'HIIT',           icon: '⚡', type: 'rounds',    unit: 'rondas',kcalPerMin: 12, defaultVal: 4 },
+  { id: 'skate',  name: 'Patinar',        icon: '🛼', type: 'time',      unit: 'min',   kcalPerMin: 7,  defaultVal: 30 },
 ];
 
 window.ACTIVITY_VALUE_TYPES = [
-  { key: 'time',      label: 'Tiempo',       unit: 'min'    },
-  { key: 'sets_reps', label: 'Series × Reps',unit: 'reps'   },
-  { key: 'rounds',    label: 'Rondas',       unit: 'rondas' },
-  { key: 'distance',  label: 'Distancia',    unit: 'km'     },
-  { key: 'sets_time', label: 'Series × Tiempo', unit: 's'   },
+  { key: 'time',       label: 'Tiempo',        unit: 'min'    },
+  { key: 'sets_reps',  label: 'Series × Reps', unit: 'reps'   },
+  { key: 'rounds',     label: 'Rondas',        unit: 'rondas' },
+  { key: 'distance',   label: 'Distancia',     unit: 'km'     },
+  { key: 'sets_time',  label: 'Series × Tiempo', unit: 's'    },
+  { key: 'bodyweight', label: 'Peso corporal', unit: 'bw'     },
 ];

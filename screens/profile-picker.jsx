@@ -195,6 +195,7 @@ const ProfilePicker = ({ onSelect }) => {
   if (mode === 'group') {
     return (
       <div className="picker-screen">
+        <button type="button" className="sheet-close" style={{position:'fixed', top:16, right:16}} onClick={() => onSelect(pendingProfile)}>✕</button>
         <div className="picker-logo">👥</div>
         <div className="picker-title">Únete a un grupo</div>
         <div className="picker-create">
@@ -203,24 +204,51 @@ const ProfilePicker = ({ onSelect }) => {
             <button type="button" className={`group-mode-tab ${groupSubmode === 'create' ? 'on' : ''}`} onClick={() => { setGroupSubmode('create'); setGroupError(''); }}>Crear grupo</button>
           </div>
 
-          {groupSubmode === 'join' && (
-            <>
-              <div className="picker-section-label">Código del grupo (ej: #miranda)</div>
-              <input
-                className={`picker-input${groupError ? ' picker-input-error' : ''}`}
-                placeholder="#codigo"
-                value={groupInput}
-                onChange={e => { setGroupInput(e.target.value); setGroupError(''); }}
-                onKeyDown={e => e.key === 'Enter' && handleGroupJoin()}
-                autoFocus
-              />
-              {groupError && <div className="picker-pin-error">{groupError}</div>}
-              <div className="picker-actions">
-                <button type="button" className="btn-primary" onClick={handleGroupJoin} disabled={!groupInput.trim()}>Unirse</button>
-                <button type="button" className="btn-link" onClick={() => onSelect(pendingProfile)}>Saltar por ahora</button>
-              </div>
-            </>
-          )}
+          {groupSubmode === 'join' && (() => {
+            const allGroups = Object.entries(window.GymStore.getGroups());
+            const topGroups = allGroups
+              .sort((a, b) => (b[1].members?.length || 0) - (a[1].members?.length || 0))
+              .slice(0, 8);
+            return (
+              <>
+                <div className="picker-section-label">Código del grupo (ej: #miranda)</div>
+                <input
+                  className={`picker-input${groupError ? ' picker-input-error' : ''}`}
+                  placeholder="#codigo"
+                  value={groupInput}
+                  onChange={e => { setGroupInput(e.target.value); setGroupError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleGroupJoin()}
+                  autoFocus
+                />
+                {groupError && <div className="picker-pin-error">{groupError}</div>}
+
+                {topGroups.length > 0 && (
+                  <div className="group-suggestions">
+                    <div className="group-suggestions-label">Grupos disponibles</div>
+                    <div className="group-suggestions-list">
+                      {topGroups.map(([code, g]) => (
+                        <button
+                          key={code}
+                          type="button"
+                          className="group-suggestion-chip"
+                          onClick={() => { setGroupInput(code); setGroupError(''); }}
+                        >
+                          <span className="gs-code">{code}</span>
+                          <span className="gs-name">{g.name}</span>
+                          <span className="gs-count">{g.members?.length || 0}👥</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="picker-actions">
+                  <button type="button" className="btn-primary" onClick={handleGroupJoin} disabled={!groupInput.trim()}>Unirse</button>
+                  <button type="button" className="btn-link" onClick={() => onSelect(pendingProfile)}>Saltar por ahora</button>
+                </div>
+              </>
+            );
+          })()}
 
           {groupSubmode === 'create' && (
             <>

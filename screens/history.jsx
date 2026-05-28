@@ -94,8 +94,11 @@ window.LineChart = LineChart;
 
 const HistoryScreen = ({ onSelectExercise, refresh, routineVer }) => {
   const [tab, setTab] = React.useState('sessions');
+  // getAllSessionsFlat: aplana arrays de múltiples sesiones por día + migra legacy
   const sessions = React.useMemo(
-    () => Object.values(window.GymStore.getAllSessions()).sort((a, b) => b.date.localeCompare(a.date)),
+    () => window.GymStore.getAllSessionsFlat().sort((a, b) =>
+      b.date !== a.date ? b.date.localeCompare(a.date) : ((b.startTime||0) - (a.startTime||0))
+    ),
     [refresh]
   );
   const exMap = React.useMemo(() => {
@@ -129,20 +132,24 @@ const HistoryScreen = ({ onSelectExercise, refresh, routineVer }) => {
       {tab === 'sessions' && (
         <div className="hist-sessions">
           {sessions.length === 0 && <div className="empty">Aún sin sesiones registradas.</div>}
-          {sessions.map(s => {
+          {sessions.map((s, idx) => {
             const [, mo, day] = s.date.split('-');
             const allExs = s.exercises || [];
             const doneExs = allExs.filter(e => e.done).length;
             const totalExs = allExs.length;
             const dur = (s.startTime && s.endTime) ? formatDuration(s.endTime - s.startTime) : null;
+            // Usar label si existe y difiere del título (sesión con nombre propio)
+            const displayTitle = (s.label && s.label !== s.title) ? s.label : s.title;
+            // Clave única: sessionId o fecha+índice
+            const key = s.sessionId || (s.date + '_' + idx);
             return (
-              <div key={s.date} className="hist-item">
+              <div key={key} className="hist-item">
                 <div className="hist-date">
                   <div className="hist-day">{day}</div>
                   <div className="hist-mo">{window.MONTH_LONG[parseInt(mo) - 1].slice(0, 3).toUpperCase()}</div>
                 </div>
                 <div className="hist-body">
-                  <div className="hist-title">{s.title}</div>
+                  <div className="hist-title">{displayTitle}</div>
                   <div className="hist-meta">
                     <span className={s.completed ? 'ok' : 'warn'}>{s.completed ? 'Completo' : 'Parcial'}</span>
                     <span className="dot-sep">·</span>

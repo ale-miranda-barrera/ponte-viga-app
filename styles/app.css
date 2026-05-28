@@ -1134,6 +1134,18 @@ body {
   backdrop-filter: blur(6px);
   animation: fadein 0.2s ease-out;
 }
+/* Backdrop fijo a la viewport — para modales dentro de contenedores scrolleables */
+.modal-backdrop-fixed {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  backdrop-filter: blur(6px);
+  animation: fadein 0.2s ease-out;
+}
 @keyframes fadein { from { opacity:0 } to { opacity:1 } }
 @keyframes slideup { from { transform: translateY(100%) } to { transform: translateY(0) } }
 .modal-sheet, .detail-sheet {
@@ -1151,6 +1163,26 @@ body {
   border-radius: 999px;
   margin: 6px auto 18px;
 }
+/* Botón X universal para cerrar modales */
+.sheet-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 0;
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.sheet-close:active { transform: scale(0.88); }
+/* Para que los sheets posicionen el X correctamente */
+.modal-sheet, .detail-sheet { position: relative; }
 .modal-title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
 .modal-sub { color: var(--text-3); font-size: 13px; margin-bottom: 20px; }
 .mood-grid {
@@ -1271,6 +1303,23 @@ body {
 .tweak-reset { background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--text); padding: 8px; border-radius: 8px; width: 100%; cursor: pointer; font-size: 12px; }
 
 /* ===== Buttons secondary / link ===== */
+.btn-success {
+  background: var(--good);
+  color: #051a08;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.1s, filter 0.2s;
+  touch-action: manipulation;
+}
+.btn-success:active { transform: scale(0.98); }
+.btn-success:hover { filter: brightness(1.08); }
+
 .btn-secondary {
   background: var(--surface-2);
   color: var(--text);
@@ -1689,6 +1738,36 @@ body {
 .picker-color-btn.on { border-color: var(--text); transform: scale(1.25); }
 .picker-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 
+/* Tabs para picker de ejercicios */
+.picker-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.picker-tab {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.picker-tab.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+/* Indicador de origen en pool de ejercicios */
+.pool-source {
+  color: var(--text-3);
+  font-size: 11px;
+  margin-left: 4px;
+}
+
 /* Leaderboard */
 .lb-wrap {
   margin-top: 24px;
@@ -1938,6 +2017,12 @@ body {
   align-items: center;
   margin-top: 4px;
 }
+.hint-text {
+  font-size: 12px;
+  color: var(--text-3);
+  text-align: center;
+  margin-top: 8px;
+}
 
 /* ===== Swap routine modal ===== */
 .swap-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
@@ -1996,6 +2081,7 @@ body {
   z-index: 300; animation: fadeIn .2s ease;
 }
 .completion-sheet {
+  position: relative;
   background: var(--surface); border-radius: 28px 28px 0 0;
   padding: 32px 24px 48px; width: 100%; max-width: 480px;
   text-align: center; animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
@@ -2011,6 +2097,19 @@ body {
 .completion-divider { width: 1px; height: 40px; background: var(--border); }
 .completion-pr { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-radius: 12px; padding: 8px 16px; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
 .completion-sub-msg { font-size: 13px; color: var(--text-3); margin-bottom: 20px; }
+
+/* ===== DaySummaryModal – comparaciones por ejercicio ===== */
+.summary-comparisons { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.summary-cmp-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface-2); border-radius: 10px; padding: 10px 14px;
+}
+.summary-cmp-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.summary-cmp-val { font-size: 13px; font-weight: 600; margin-left: 8px; white-space: nowrap; }
+.summary-cmp-new  { color: var(--accent); }
+.summary-cmp-up   { color: var(--good); }
+.summary-cmp-down { color: var(--bad); }
+.summary-cmp-same { color: var(--text-3); }
 
 /* ===== Progreso: banner demo ===== */
 .progress-demo-banner {
@@ -2041,6 +2140,15 @@ body {
 .group-mode-tab { flex: 1; padding: 8px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
 .group-mode-tab.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .group-code-preview { font-size: 13px; color: var(--text-2); margin-top: 8px; padding: 8px 12px; background: var(--surface-2); border-radius: 10px; text-align: center; }
+
+.group-suggestions { margin-top: 14px; }
+.group-suggestions-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.group-suggestions-list { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+.group-suggestion-chip { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-size: 12px; cursor: pointer; transition: all .12s; text-align: left; }
+.group-suggestion-chip:hover, .group-suggestion-chip:active { background: var(--accent-soft); border-color: var(--accent); }
+.gs-code { font-weight: 700; color: var(--accent); flex-shrink: 0; }
+.gs-name { color: var(--text-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-count { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
 
 /* ===== Routine editor - activities ===== */
 .editor-act-row { background: color-mix(in oklab, var(--accent) 8%, var(--surface-2)); }
@@ -2213,3 +2321,263 @@ body {
 .profile-extra-acts { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 0 4px; }
 
 .admin-toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,.4); pointer-events: none; }
+
+/* ===== Semana – tabs internos ===== */
+.week-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.week-tab {
+  background: transparent;
+  border: 0;
+  color: var(--text-3);
+  padding: 9px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.week-tab.on {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+/* ===== Catálogo de ejercicios ===== */
+.cat-group-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.cat-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.cat-group-head:active { background: var(--surface-2); }
+.cat-group-day {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.cat-group-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.cat-group-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 600;
+  white-space: nowrap;
+  margin-right: 6px;
+}
+.cat-group-arrow {
+  font-size: 12px;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+.cat-group-body {
+  border-top: 1px solid var(--border);
+  padding: 8px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cat-ex-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cat-ex-row:last-child { border-bottom: none; }
+.cat-ex-num {
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  width: 22px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.cat-ex-info { flex: 1; min-width: 0; }
+.cat-ex-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.cat-ex-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.cat-ex-spec {
+  font-size: 11px;
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.cat-ex-routine { color: var(--accent); }
+.cat-acts-label {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.cat-multi-info {
+  display: flex;
+  gap: 12px;
+  background: color-mix(in oklab, var(--accent) 8%, var(--surface-2));
+  border: 1px solid color-mix(in oklab, var(--accent) 20%, transparent);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 10px;
+}
+.cat-multi-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.cat-multi-body { flex: 1; }
+.cat-multi-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.cat-multi-sub { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+/* ===== Editor: toggle peso corporal ===== */
+.editor-bw-toggle {
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.editor-bw-toggle.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.editor-bw-badge {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 4px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ===== Múltiples sesiones por día ===== */
+
+/* Lista de sesiones del día en TodayScreen "done" */
+.done-sessions-list {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.done-session-card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+}
+.done-session-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.done-session-meta {
+  font-size: 13px;
+  color: var(--text-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Modal nueva sesión */
+.new-session-existing {
+  font-size: 13px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+.new-session-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.new-session-preset {
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 20px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 0.15s, color 0.15s;
+}
+.new-session-preset:active { border-color: var(--accent); color: var(--accent); }
+
+/* Badge "2x" en celda del calendario */
+.cal-multi-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 1px 3px;
+  line-height: 1.2;
+}
+
+/* Bloque de sesión en DayDetail (modo multi) */
+.day-session-block {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.day-session-header {
+  margin-bottom: 6px;
+}
+.day-session-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.day-session-meta {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+}

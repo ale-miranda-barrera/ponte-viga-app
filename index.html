@@ -1185,6 +1185,18 @@ body {
   backdrop-filter: blur(6px);
   animation: fadein 0.2s ease-out;
 }
+/* Backdrop fijo a la viewport — para modales dentro de contenedores scrolleables */
+.modal-backdrop-fixed {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  backdrop-filter: blur(6px);
+  animation: fadein 0.2s ease-out;
+}
 @keyframes fadein { from { opacity:0 } to { opacity:1 } }
 @keyframes slideup { from { transform: translateY(100%) } to { transform: translateY(0) } }
 .modal-sheet, .detail-sheet {
@@ -1202,6 +1214,26 @@ body {
   border-radius: 999px;
   margin: 6px auto 18px;
 }
+/* Botón X universal para cerrar modales */
+.sheet-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 0;
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.sheet-close:active { transform: scale(0.88); }
+/* Para que los sheets posicionen el X correctamente */
+.modal-sheet, .detail-sheet { position: relative; }
 .modal-title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
 .modal-sub { color: var(--text-3); font-size: 13px; margin-bottom: 20px; }
 .mood-grid {
@@ -1322,6 +1354,23 @@ body {
 .tweak-reset { background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--text); padding: 8px; border-radius: 8px; width: 100%; cursor: pointer; font-size: 12px; }
 
 /* ===== Buttons secondary / link ===== */
+.btn-success {
+  background: var(--good);
+  color: #051a08;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.1s, filter 0.2s;
+  touch-action: manipulation;
+}
+.btn-success:active { transform: scale(0.98); }
+.btn-success:hover { filter: brightness(1.08); }
+
 .btn-secondary {
   background: var(--surface-2);
   color: var(--text);
@@ -1740,6 +1789,36 @@ body {
 .picker-color-btn.on { border-color: var(--text); transform: scale(1.25); }
 .picker-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 
+/* Tabs para picker de ejercicios */
+.picker-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.picker-tab {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.picker-tab.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+/* Indicador de origen en pool de ejercicios */
+.pool-source {
+  color: var(--text-3);
+  font-size: 11px;
+  margin-left: 4px;
+}
+
 /* Leaderboard */
 .lb-wrap {
   margin-top: 24px;
@@ -1989,6 +2068,12 @@ body {
   align-items: center;
   margin-top: 4px;
 }
+.hint-text {
+  font-size: 12px;
+  color: var(--text-3);
+  text-align: center;
+  margin-top: 8px;
+}
 
 /* ===== Swap routine modal ===== */
 .swap-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
@@ -2047,6 +2132,7 @@ body {
   z-index: 300; animation: fadeIn .2s ease;
 }
 .completion-sheet {
+  position: relative;
   background: var(--surface); border-radius: 28px 28px 0 0;
   padding: 32px 24px 48px; width: 100%; max-width: 480px;
   text-align: center; animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
@@ -2062,6 +2148,19 @@ body {
 .completion-divider { width: 1px; height: 40px; background: var(--border); }
 .completion-pr { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-radius: 12px; padding: 8px 16px; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
 .completion-sub-msg { font-size: 13px; color: var(--text-3); margin-bottom: 20px; }
+
+/* ===== DaySummaryModal – comparaciones por ejercicio ===== */
+.summary-comparisons { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.summary-cmp-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface-2); border-radius: 10px; padding: 10px 14px;
+}
+.summary-cmp-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.summary-cmp-val { font-size: 13px; font-weight: 600; margin-left: 8px; white-space: nowrap; }
+.summary-cmp-new  { color: var(--accent); }
+.summary-cmp-up   { color: var(--good); }
+.summary-cmp-down { color: var(--bad); }
+.summary-cmp-same { color: var(--text-3); }
 
 /* ===== Progreso: banner demo ===== */
 .progress-demo-banner {
@@ -2092,6 +2191,15 @@ body {
 .group-mode-tab { flex: 1; padding: 8px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
 .group-mode-tab.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .group-code-preview { font-size: 13px; color: var(--text-2); margin-top: 8px; padding: 8px 12px; background: var(--surface-2); border-radius: 10px; text-align: center; }
+
+.group-suggestions { margin-top: 14px; }
+.group-suggestions-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.group-suggestions-list { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+.group-suggestion-chip { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-size: 12px; cursor: pointer; transition: all .12s; text-align: left; }
+.group-suggestion-chip:hover, .group-suggestion-chip:active { background: var(--accent-soft); border-color: var(--accent); }
+.gs-code { font-weight: 700; color: var(--accent); flex-shrink: 0; }
+.gs-name { color: var(--text-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-count { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
 
 /* ===== Routine editor - activities ===== */
 .editor-act-row { background: color-mix(in oklab, var(--accent) 8%, var(--surface-2)); }
@@ -2264,6 +2372,266 @@ body {
 .profile-extra-acts { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 0 4px; }
 
 .admin-toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,.4); pointer-events: none; }
+
+/* ===== Semana – tabs internos ===== */
+.week-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.week-tab {
+  background: transparent;
+  border: 0;
+  color: var(--text-3);
+  padding: 9px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.week-tab.on {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+/* ===== Catálogo de ejercicios ===== */
+.cat-group-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.cat-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.cat-group-head:active { background: var(--surface-2); }
+.cat-group-day {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.cat-group-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.cat-group-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 600;
+  white-space: nowrap;
+  margin-right: 6px;
+}
+.cat-group-arrow {
+  font-size: 12px;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+.cat-group-body {
+  border-top: 1px solid var(--border);
+  padding: 8px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cat-ex-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cat-ex-row:last-child { border-bottom: none; }
+.cat-ex-num {
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  width: 22px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.cat-ex-info { flex: 1; min-width: 0; }
+.cat-ex-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.cat-ex-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.cat-ex-spec {
+  font-size: 11px;
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.cat-ex-routine { color: var(--accent); }
+.cat-acts-label {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.cat-multi-info {
+  display: flex;
+  gap: 12px;
+  background: color-mix(in oklab, var(--accent) 8%, var(--surface-2));
+  border: 1px solid color-mix(in oklab, var(--accent) 20%, transparent);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 10px;
+}
+.cat-multi-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.cat-multi-body { flex: 1; }
+.cat-multi-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.cat-multi-sub { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+/* ===== Editor: toggle peso corporal ===== */
+.editor-bw-toggle {
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.editor-bw-toggle.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.editor-bw-badge {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 4px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ===== Múltiples sesiones por día ===== */
+
+/* Lista de sesiones del día en TodayScreen "done" */
+.done-sessions-list {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.done-session-card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+}
+.done-session-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.done-session-meta {
+  font-size: 13px;
+  color: var(--text-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Modal nueva sesión */
+.new-session-existing {
+  font-size: 13px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+.new-session-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.new-session-preset {
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 20px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 0.15s, color 0.15s;
+}
+.new-session-preset:active { border-color: var(--accent); color: var(--accent); }
+
+/* Badge "2x" en celda del calendario */
+.cal-multi-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 1px 3px;
+  line-height: 1.2;
+}
+
+/* Bloque de sesión en DayDetail (modo multi) */
+.day-session-block {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.day-session-header {
+  margin-bottom: 6px;
+}
+.day-session-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.day-session-meta {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
 
 </style>
 </head>
@@ -3104,13 +3472,14 @@ window._allExMeta = Object.values(window.WEEK_ROUTINE).flatMap(d => d.exercises 
 }, {});
 
 // Catálogo de actividades físicas por defecto
+// kcalPerMin: gasto calórico por MINUTO para persona ~70 kg (basado en MET)
 window.DEFAULT_ACTIVITIES = [{
   id: 'walk',
   name: 'Caminar',
   icon: '🚶',
   type: 'time',
   unit: 'min',
-  cal10: 4,
+  kcalPerMin: 4,
   defaultVal: 20
 }, {
   id: 'run',
@@ -3118,7 +3487,7 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '🏃',
   type: 'time',
   unit: 'min',
-  cal10: 8,
+  kcalPerMin: 10,
   defaultVal: 20
 }, {
   id: 'dance',
@@ -3126,7 +3495,7 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '💃',
   type: 'time',
   unit: 'min',
-  cal10: 7,
+  kcalPerMin: 7,
   defaultVal: 30
 }, {
   id: 'bike',
@@ -3134,7 +3503,7 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '🚴',
   type: 'time',
   unit: 'min',
-  cal10: 6,
+  kcalPerMin: 8,
   defaultVal: 30
 }, {
   id: 'swim',
@@ -3142,7 +3511,7 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '🏊',
   type: 'time',
   unit: 'min',
-  cal10: 9,
+  kcalPerMin: 9,
   defaultVal: 30
 }, {
   id: 'jump',
@@ -3150,7 +3519,7 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '🪢',
   type: 'time',
   unit: 'min',
-  cal10: 10,
+  kcalPerMin: 12,
   defaultVal: 10
 }, {
   id: 'yoga',
@@ -3158,7 +3527,7 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '🧘',
   type: 'time',
   unit: 'min',
-  cal10: 3,
+  kcalPerMin: 3,
   defaultVal: 30
 }, {
   id: 'plank',
@@ -3166,7 +3535,7 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '🏋️',
   type: 'sets_reps',
   unit: 's',
-  cal10: 4,
+  kcalPerMin: 4,
   defaultVal: 30,
   sets: 3
 }, {
@@ -3175,7 +3544,7 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '💪',
   type: 'sets_reps',
   unit: 'reps',
-  cal10: 6,
+  kcalPerMin: 7,
   defaultVal: 15,
   sets: 3
 }, {
@@ -3184,8 +3553,16 @@ window.DEFAULT_ACTIVITIES = [{
   icon: '⚡',
   type: 'rounds',
   unit: 'rondas',
-  cal10: 11,
+  kcalPerMin: 12,
   defaultVal: 4
+}, {
+  id: 'skate',
+  name: 'Patinar',
+  icon: '🛼',
+  type: 'time',
+  unit: 'min',
+  kcalPerMin: 7,
+  defaultVal: 30
 }];
 window.ACTIVITY_VALUE_TYPES = [{
   key: 'time',
@@ -3207,6 +3584,10 @@ window.ACTIVITY_VALUE_TYPES = [{
   key: 'sets_time',
   label: 'Series × Tiempo',
   unit: 's'
+}, {
+  key: 'bodyweight',
+  label: 'Peso corporal',
+  unit: 'bw'
 }];
 
 // === data/seed-history.js ===
@@ -3518,20 +3899,98 @@ window.GymStore = function () {
       } catch (e) {}
     },
     // ─── Sesiones ────────────────────────────────────────────────────────
+    // Migración defensiva: una entrada puede ser un objeto legacy (una sola
+    // sesión) o un array (múltiples sesiones por día). Siempre normalizar a
+    // array internamente para simplificar el resto del código.
+    _normDay(entry) {
+      if (!entry) return [];
+      if (Array.isArray(entry)) return entry;
+      return [entry]; // objeto legacy → array de 1
+    },
     getAllSessions() {
       return _load(KEY_SESSIONS, {});
     },
-    getSession(dateIso) {
-      return this.getAllSessions()[dateIso] || null;
+    // Lista plana de todas las sesiones (útil para historial, progreso, PB, etc.)
+    getAllSessionsFlat() {
+      const result = [];
+      Object.values(this.getAllSessions()).forEach(entry => {
+        if (Array.isArray(entry)) entry.forEach(s => result.push(s));else if (entry && entry.date) result.push(entry);
+      });
+      return result;
     },
+    // Devuelve SIEMPRE un array de sesiones del día (vacío si no hay ninguna)
+    getDaySessions(dateIso) {
+      return this._normDay(this.getAllSessions()[dateIso]);
+    },
+    // Compatibilidad: devuelve la primera sesión del día o null (legacy API).
+    // Internamente ya usamos getDaySessions en la mayoría de los lugares.
+    getSession(dateIso) {
+      const arr = this.getDaySessions(dateIso);
+      return arr.length > 0 ? arr[0] : null;
+    },
+    // Nueva API singular para la vista de HOY: devuelve la sesión activa del día
+    // (la última si es array legacy, el objeto si ya es objeto, null si no hay nada).
+    // NO elimina los anteriores del array — los preserva en storage.
+    getDaySession(dateIso) {
+      const arr = this.getDaySessions(dateIso);
+      return arr.length > 0 ? arr[arr.length - 1] : null;
+    },
+    // Guarda/actualiza una sesión. Si tiene sessionId la actualiza en su
+    // posición; si no, la añade al array del día.
+    // También persiste dailyTotals[date] para uso futuro (retro-compatible: campo opcional).
     saveSession(s) {
       const all = this.getAllSessions();
-      all[s.date] = s;
+      const arr = this._normDay(all[s.date]);
+      const idx = s.sessionId ? arr.findIndex(x => x.sessionId === s.sessionId) : -1;
+      if (idx >= 0) {
+        arr[idx] = s;
+      } else {
+        arr.push(s);
+      }
+      all[s.date] = arr;
       _save(KEY_SESSIONS, all);
+
+      // Actualizar totales diarios (estimación: 5 kcal/set con peso, 3 sin peso, actividades x kcalPerMin)
+      this._updateDailyTotals(s.date, arr);
+    },
+    // Recalcula y persiste dailyTotals para un día dado. Retro-compatible: si no existe
+    // el campo en cargas antiguas, se calcula al vuelo cuando se llama saveSession.
+    _updateDailyTotals(dateIso, daySessions) {
+      const profile = _load(KEY_STATS, {});
+      if (!profile.dailyTotals) profile.dailyTotals = {};
+      let totalKcal = 0,
+        totalExercises = 0;
+      daySessions.forEach(s => {
+        const exDone = (s.exercises || []).filter(e => e.done);
+        totalExercises += exDone.length;
+        exDone.forEach(ex => {
+          totalKcal += ex.sets * (ex.weight > 0 ? 5 : 3);
+        });
+        if (s.cardioDone && s.cardioMinutes) totalKcal += Math.round(s.cardioMinutes * 5);
+        Object.values(s.activities || {}).forEach(a => {
+          if (!a.done || !a.value) return;
+          const def = (window.DEFAULT_ACTIVITIES || []).find(x => x.id === a.id);
+          const kpm = def?.kcalPerMin ?? (def?.cal10 ? def.cal10 / 10 : 4);
+          totalKcal += Math.round(a.value * kpm);
+        });
+      });
+      profile.dailyTotals[dateIso] = {
+        kcal: totalKcal,
+        exercises: totalExercises,
+        sessionsCount: daySessions.length
+      };
+      _save(KEY_STATS, profile);
     },
     deleteSession(dateIso) {
       const all = this.getAllSessions();
       delete all[dateIso];
+      _save(KEY_SESSIONS, all);
+    },
+    // Elimina una sesión específica del día por sessionId
+    deleteDaySession(dateIso, sessionId) {
+      const all = this.getAllSessions();
+      const arr = this._normDay(all[dateIso]).filter(s => s.sessionId !== sessionId);
+      if (arr.length === 0) delete all[dateIso];else all[dateIso] = arr;
       _save(KEY_SESSIONS, all);
     },
     // ─── Medidas ─────────────────────────────────────────────────────────
@@ -3595,21 +4054,20 @@ window.GymStore = function () {
     },
     // ─── Racha ───────────────────────────────────────────────────────────
     computeStreak() {
-      const all = this.getAllSessions();
       const overrides = _load(KEY_ROUTINE, {});
       const getDay = dow => overrides[dow] || window.WEEK_ROUTINE[dow];
       let streak = 0;
       const today = new Date();
       const todayDow = today.getDay();
       const todayR = getDay(todayDow);
-      if (todayR && !todayR.rest && all[iso(today)]) streak++;
+      if (todayR && !todayR.rest && this.getDaySessions(iso(today)).length > 0) streak++;
       for (let i = 1; i < 120; i++) {
         const d = new Date(today.getTime() - i * 86400000);
         const dow = d.getDay();
         const r = getDay(dow);
         if (!r || r.rest) continue;
         const key = iso(d);
-        if (all[key]) streak++;else break;
+        if (this.getDaySessions(key).length > 0) streak++;else break;
       }
       return streak;
     },
@@ -3657,6 +4115,14 @@ window.GymStore = function () {
         name: g.name
       }));
     },
+    // Devuelve las últimas N sesiones (planas, desc por fecha) que contengan ejerciseName.
+    // excludeSessionId: excluye la sesión actual para no comparar contra sí misma.
+    // Compara por nombre normalizado (lowercase, sin espacios extra).
+    getExerciseHistory(exerciseName, excludeSessionId, limit = 2) {
+      const norm = n => n.toLowerCase().trim();
+      const target = norm(exerciseName);
+      return this.getAllSessionsFlat().filter(s => s.sessionId !== excludeSessionId && (s.exercises || []).some(e => norm(e.name || '') === target)).sort((a, b) => b.date.localeCompare(a.date) || (b.startTime || 0) - (a.startTime || 0)).slice(0, limit);
+    },
     getGroupFriends(profileName) {
       const myGroups = this.getProfileGroups(profileName);
       const friendNames = new Set();
@@ -3679,6 +4145,57 @@ window.GymStore = function () {
         id: 'custom_' + Date.now()
       });
       _save(KEY_ACTS, custom);
+    },
+    // ─── Pool global de ejercicios ────────────────────────────────────────
+    // Reúne ejercicios de TODOS los días de la rutina del perfil actual + resto de perfiles del grupo.
+    // Deduplica por (name+sub) normalizados. Excluye IDs ya en el draft (currentExIds).
+    getGlobalExercisePool(currentExIds) {
+      const seen = new Set();
+      const result = [];
+      const currentProfile = this.getActiveProfile();
+
+      // Helper: agrega ejercicios de un perfil (desde su rutina de los 7 días)
+      const addFromRoutineOverrides = (overrides, defaultWeekRoutine, sourceProfile) => {
+        for (let d = 0; d <= 6; d++) {
+          const r = overrides && overrides[d] || defaultWeekRoutine && defaultWeekRoutine[d];
+          if (!r || r.rest) continue;
+          (r.exercises || []).forEach(ex => {
+            if (currentExIds && currentExIds.has(ex.id)) return;
+            const key = (ex.name + '|' + (ex.sub || '')).toLowerCase().trim();
+            if (seen.has(key)) return;
+            seen.add(key);
+            result.push({
+              ...ex,
+              sourceProfile
+            });
+          });
+        }
+      };
+
+      // 1. Ejercicios del perfil actual (todos los días, no solo el editado)
+      const myOverrides = _load(KEY_ROUTINE, {});
+      addFromRoutineOverrides(myOverrides, window.WEEK_ROUTINE, null);
+
+      // 2. Ejercicios de otros perfiles del grupo (asíncrono no disponible aquí;
+      //    usamos solo los datos en memoria — suficiente si el perfil fue activo antes)
+      const groups = this.getGroups();
+      const myGroups = Object.entries(groups).filter(([, g]) => g.members.includes(currentProfile)).map(([code]) => code);
+      const profiles = this.getProfiles();
+      profiles.forEach(p => {
+        if (p.name === currentProfile) return;
+        // Solo incluir si comparte grupo con el perfil actual
+        const inSameGroup = myGroups.some(code => {
+          const g = groups[code];
+          return g && g.members.includes(p.name);
+        });
+        if (!inSameGroup) return;
+
+        // Intentar obtener rutinas del perfil desde memoria (si estuvo activo en esta sesión)
+        const otherRoutineKey = `gym_routine_overrides_v2_${p.name}`;
+        const otherOverrides = _load(otherRoutineKey, null);
+        addFromRoutineOverrides(otherOverrides, window.WEEK_ROUTINE, p.name);
+      });
+      return result;
     },
     // ─── Estadísticas de perfil (para leaderboard, etc) ──────────────────
     // Async: lee las sesiones del servidor (S3/EC2). Cache simple para no
@@ -3709,7 +4226,13 @@ window.GymStore = function () {
       let maxCardioWeek = 0;
       const prevBest = {};
       const weekBest = {};
-      Object.values(sessions).forEach(s => {
+
+      // Aplanar: cada día puede ser objeto legacy o array de sesiones
+      const flatSessions = [];
+      Object.values(sessions).forEach(entry => {
+        if (Array.isArray(entry)) entry.forEach(s => flatSessions.push(s));else if (entry && entry.date) flatSessions.push(entry);
+      });
+      flatSessions.forEach(s => {
         if (!s.completed) return;
         const sDate = new Date(s.date + 'T12:00:00');
         const isThisWeek = sDate >= weekStart && s.date <= todayStr;
@@ -3726,15 +4249,22 @@ window.GymStore = function () {
         });
       });
 
-      // Racha: días consecutivos con sesión completada
+      // Racha: días consecutivos con al menos una sesión completada
+      // Normaliza entrada del día a array defensivamente
+      const dayHasCompleted = dStr => {
+        const entry = sessions[dStr];
+        if (!entry) return false;
+        if (Array.isArray(entry)) return entry.some(s => s.completed);
+        return !!entry.completed;
+      };
       let streak = 0;
-      if (sessions[todayStr]?.completed) streak++;
+      if (dayHasCompleted(todayStr)) streak++;
       for (let i = 1; i < 120; i++) {
         const d = new Date(today.getTime() - i * 86400000);
         const dStr = toIso(d);
         const routineDay = window.WEEK_ROUTINE?.[d.getDay()];
         if (routineDay?.rest) continue;
-        if (sessions[dStr]?.completed) streak++;else break;
+        if (dayHasCompleted(dStr)) streak++;else break;
       }
 
       // PR: subió peso esta semana vs antes
@@ -4011,7 +4541,16 @@ const ProfilePicker = ({
   if (mode === 'group') {
     return /*#__PURE__*/React.createElement("div", {
       className: "picker-screen"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "sheet-close",
+      style: {
+        position: 'fixed',
+        top: 16,
+        right: 16
+      },
+      onClick: () => onSelect(pendingProfile)
+    }, "\u2715"), /*#__PURE__*/React.createElement("div", {
       className: "picker-logo"
     }, "\uD83D\uDC65"), /*#__PURE__*/React.createElement("div", {
       className: "picker-title"
@@ -4033,32 +4572,56 @@ const ProfilePicker = ({
         setGroupSubmode('create');
         setGroupError('');
       }
-    }, "Crear grupo")), groupSubmode === 'join' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-      className: "picker-section-label"
-    }, "C\xF3digo del grupo (ej: #miranda)"), /*#__PURE__*/React.createElement("input", {
-      className: `picker-input${groupError ? ' picker-input-error' : ''}`,
-      placeholder: "#codigo",
-      value: groupInput,
-      onChange: e => {
-        setGroupInput(e.target.value);
-        setGroupError('');
-      },
-      onKeyDown: e => e.key === 'Enter' && handleGroupJoin(),
-      autoFocus: true
-    }), groupError && /*#__PURE__*/React.createElement("div", {
-      className: "picker-pin-error"
-    }, groupError), /*#__PURE__*/React.createElement("div", {
-      className: "picker-actions"
-    }, /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "btn-primary",
-      onClick: handleGroupJoin,
-      disabled: !groupInput.trim()
-    }, "Unirse"), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "btn-link",
-      onClick: () => onSelect(pendingProfile)
-    }, "Saltar por ahora"))), groupSubmode === 'create' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, "Crear grupo")), groupSubmode === 'join' && (() => {
+      const allGroups = Object.entries(window.GymStore.getGroups());
+      const topGroups = allGroups.sort((a, b) => (b[1].members?.length || 0) - (a[1].members?.length || 0)).slice(0, 8);
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        className: "picker-section-label"
+      }, "C\xF3digo del grupo (ej: #miranda)"), /*#__PURE__*/React.createElement("input", {
+        className: `picker-input${groupError ? ' picker-input-error' : ''}`,
+        placeholder: "#codigo",
+        value: groupInput,
+        onChange: e => {
+          setGroupInput(e.target.value);
+          setGroupError('');
+        },
+        onKeyDown: e => e.key === 'Enter' && handleGroupJoin(),
+        autoFocus: true
+      }), groupError && /*#__PURE__*/React.createElement("div", {
+        className: "picker-pin-error"
+      }, groupError), topGroups.length > 0 && /*#__PURE__*/React.createElement("div", {
+        className: "group-suggestions"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "group-suggestions-label"
+      }, "Grupos disponibles"), /*#__PURE__*/React.createElement("div", {
+        className: "group-suggestions-list"
+      }, topGroups.map(([code, g]) => /*#__PURE__*/React.createElement("button", {
+        key: code,
+        type: "button",
+        className: "group-suggestion-chip",
+        onClick: () => {
+          setGroupInput(code);
+          setGroupError('');
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "gs-code"
+      }, code), /*#__PURE__*/React.createElement("span", {
+        className: "gs-name"
+      }, g.name), /*#__PURE__*/React.createElement("span", {
+        className: "gs-count"
+      }, g.members?.length || 0, "\uD83D\uDC65"))))), /*#__PURE__*/React.createElement("div", {
+        className: "picker-actions"
+      }, /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        className: "btn-primary",
+        onClick: handleGroupJoin,
+        disabled: !groupInput.trim()
+      }, "Unirse"), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        className: "btn-link",
+        onClick: () => onSelect(pendingProfile)
+      }, "Saltar por ahora")));
+    })(), groupSubmode === 'create' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "picker-section-label"
     }, "Nombre del grupo"), /*#__PURE__*/React.createElement("input", {
       className: "picker-input",
@@ -4270,6 +4833,7 @@ const TodayScreen = ({
   onSwapRoutine,
   onUpdateActivity,
   onResume,
+  onFinishDay,
   onAddExercise,
   onAddActivity
 }) => {
@@ -4281,7 +4845,7 @@ const TodayScreen = ({
     const pb = {},
       last = {};
     const todayIso = window.GymStore.iso(new Date());
-    const sorted = Object.values(window.GymStore.getAllSessions()).filter(s => s.date < todayIso).sort((a, b) => b.date.localeCompare(a.date));
+    const sorted = window.GymStore.getAllSessionsFlat().filter(s => s.date < todayIso).sort((a, b) => b.date.localeCompare(a.date));
     sorted.forEach(s => {
       (s.exercises || []).forEach(e => {
         if (e.weight > 0 && (pb[e.id] == null || e.weight > pb[e.id])) pb[e.id] = e.weight;
@@ -4370,50 +4934,53 @@ const TodayScreen = ({
     }, line, i === 0 && /*#__PURE__*/React.createElement("br", null)))));
   }
   if (!isStarted) {
-    // Si ya hay sesión de hoy guardada, mostrar estado "ya entrenaste"
+    // Si hay sesión guardada del día, mostrar vista "done" con 1 card
     if (todaySession) {
-      const doneExs = (todaySession.exercises || []).filter(e => e.done).length;
-      const totalExs = (todaySession.exercises || []).length;
-      const dur = todaySession.startTime && todaySession.endTime ? (() => {
-        const ms = todaySession.endTime - todaySession.startTime;
-        const totalMin = Math.round(ms / 60000);
-        if (totalMin < 1) return null;
-        if (totalMin < 60) return `${totalMin} min`;
-        const h = Math.floor(totalMin / 60);
-        const m = totalMin % 60;
-        return m > 0 ? `${h}h ${m}min` : `${h}h`;
-      })() : null;
+      const s = todaySession;
+      const doneExs = (s.exercises || []).filter(e => e.done).length;
+      const totalExs = (s.exercises || []).length;
+      const ms = s.startTime && s.endTime ? s.endTime - s.startTime : 0;
+      const totalMin = ms > 0 ? Math.round(ms / 60000) : 0;
+      const dur = totalMin >= 1 ? totalMin < 60 ? `${totalMin} min` : `${Math.floor(totalMin / 60)}h${totalMin % 60 > 0 ? ' ' + totalMin % 60 + 'min' : ''}` : null;
       const COMPLETE_MSGS = ['¡Eres un crack! 💪', '¡Maquinaaaaa! 🔥', '¡Súper! Lo lograste 😎', '¡Bestia! Eso es dedicación 🏆', '¡Imparable! Así se hace 🚀'];
       const PARTIAL_MSGS = ['Algo es algo, sigue así 💪', 'Parcial pero presente 👊', 'Mañana lo terminás, crack'];
-      const msgs = todaySession.completed ? COMPLETE_MSGS : PARTIAL_MSGS;
+      const msgs = s.completed ? COMPLETE_MSGS : PARTIAL_MSGS;
       const msg = msgs[today.getDate() % msgs.length];
       return /*#__PURE__*/React.createElement("div", {
         className: "today-done"
       }, /*#__PURE__*/React.createElement("div", {
         className: "done-trophy"
-      }, todaySession.completed ? '😎' : '🙌'), /*#__PURE__*/React.createElement("div", {
+      }, s.completed ? '😎' : '🙌'), /*#__PURE__*/React.createElement("div", {
         className: "done-msg"
       }, msg), /*#__PURE__*/React.createElement("div", {
-        className: "done-routine"
-      }, todaySession.title), /*#__PURE__*/React.createElement("div", {
-        className: "done-stats"
+        className: "done-sessions-list"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "done-session-card"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "done-session-label"
+      }, s.label || s.title), /*#__PURE__*/React.createElement("div", {
+        className: "done-session-meta"
       }, /*#__PURE__*/React.createElement("span", {
-        className: todaySession.completed ? 'ok' : 'warn'
-      }, todaySession.completed ? 'Completo ✓' : 'Parcial'), /*#__PURE__*/React.createElement("span", {
+        className: s.completed ? 'ok' : 'warn'
+      }, s.completed ? 'Completo ✓' : 'Parcial'), totalExs > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
         className: "dot-sep"
-      }, "\xB7"), /*#__PURE__*/React.createElement("span", null, doneExs, "/", totalExs, " ejercicios"), dur && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      }, "\xB7"), /*#__PURE__*/React.createElement("span", null, doneExs, "/", totalExs, " ejercicios")), dur && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
         className: "dot-sep"
       }, "\xB7"), /*#__PURE__*/React.createElement("span", null, dur))), /*#__PURE__*/React.createElement("button", {
         type: "button",
-        className: "btn-outline done-add-btn",
+        className: "btn-primary",
+        style: {
+          marginTop: 8
+        },
         onClick: onResume
-      }, "+ Agregar ejercicios o actividades"), /*#__PURE__*/React.createElement("div", {
-        className: "intro-secondary-btns"
-      }, /*#__PURE__*/React.createElement("button", {
+      }, "Continuar entrenando"), !s.completed && /*#__PURE__*/React.createElement("button", {
         type: "button",
-        className: "btn-link",
-        onClick: onEditRoutine
-      }, "\u270E Editar rutina")));
+        className: "btn-success",
+        style: {
+          marginTop: 6
+        },
+        onClick: onFinishDay
+      }, "Terminar entrenamiento"))));
     }
     return /*#__PURE__*/React.createElement("div", {
       className: "today-intro"
@@ -4472,11 +5039,9 @@ const TodayScreen = ({
       type: "button",
       className: "btn-link",
       onClick: onSwapRoutine
-    }, "\u2194 Cambiar entrenamiento del d\xEDa"), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "btn-link",
-      onClick: onEditRoutine
-    }, "\u270E Editar rutina")));
+    }, "\u2194 Cambiar entrenamiento del d\xEDa")), /*#__PURE__*/React.createElement("div", {
+      className: "hint-text"
+    }, "Para editar la rutina del d\xEDa, ve a Semana."));
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "today-active"
@@ -4599,7 +5164,11 @@ const AddExerciseSheet = ({
   }, /*#__PURE__*/React.createElement("div", {
     className: "detail-sheet",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
     className: "modal-handle"
   }), /*#__PURE__*/React.createElement("div", {
     className: "detail-head"
@@ -4611,6 +5180,7 @@ const AddExerciseSheet = ({
     className: "add-search-input",
     placeholder: "Buscar ejercicio...",
     value: search,
+    onFocus: e => e.target.select(),
     onChange: e => setSearch(e.target.value),
     autoFocus: true
   }), /*#__PURE__*/React.createElement("div", {
@@ -4640,16 +5210,163 @@ const AddActivitySheet = ({
   onAdd,
   onClose
 }) => {
+  const [customMode, setCustomMode] = React.useState(false);
   const available = React.useMemo(() => {
     return window.GymStore.getActivities().filter(a => !currentActIds.has(a.id));
   }, [currentActIds]);
+  const actMetaLabel = act => {
+    if (act.type === 'bodyweight') return 'Peso corporal';
+    return `${act.defaultVal} ${act.unit}${act.kcalPerMin ? ` · ~${act.kcalPerMin} kcal/min` : ''}`;
+  };
+
+  // Formulario de actividad custom (inline, misma lógica que ActivityPickerModal)
+  const [customForm, setCustomForm] = React.useState({
+    name: '',
+    icon: '🏃',
+    type: 'time',
+    unit: 'min',
+    kcalPerMin: 5,
+    defaultVal: 20
+  });
+  const handleTypeChange = t => {
+    if (t.key === 'bodyweight') {
+      setCustomForm(f => ({
+        ...f,
+        type: t.key,
+        unit: t.unit,
+        defaultVal: 0,
+        kcalPerMin: 0
+      }));
+    } else {
+      setCustomForm(f => ({
+        ...f,
+        type: t.key,
+        unit: t.unit
+      }));
+    }
+  };
+  const saveCustom = () => {
+    if (!customForm.name.trim()) return;
+    const act = {
+      ...customForm,
+      id: 'custom_' + Date.now(),
+      name: customForm.name.trim()
+    };
+    window.GymStore.saveCustomActivity(act);
+    onAdd(act);
+  };
+  if (customMode) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "modal-backdrop",
+      onClick: onClose
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "detail-sheet",
+      onClick: e => e.stopPropagation()
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "sheet-close",
+      onClick: onClose
+    }, "\u2715"), /*#__PURE__*/React.createElement("div", {
+      className: "modal-handle"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "detail-head"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "detail-tag"
+    }, "NUEVA ACTIVIDAD"), /*#__PURE__*/React.createElement("div", {
+      className: "detail-name"
+    }, "Crear actividad")), /*#__PURE__*/React.createElement("div", {
+      className: "picker-section-label"
+    }, "Nombre"), /*#__PURE__*/React.createElement("input", {
+      className: "picker-input",
+      placeholder: "Ej: Calistenia, Box, Patines...",
+      value: customForm.name,
+      onFocus: e => e.target.select(),
+      onChange: e => setCustomForm(f => ({
+        ...f,
+        name: e.target.value
+      })),
+      autoFocus: true
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "picker-section-label",
+      style: {
+        marginTop: 12
+      }
+    }, "Tipo de valor"), /*#__PURE__*/React.createElement("div", {
+      className: "act-type-row"
+    }, (window.ACTIVITY_VALUE_TYPES || []).map(t => /*#__PURE__*/React.createElement("button", {
+      key: t.key,
+      className: `act-type-btn ${customForm.type === t.key ? 'on' : ''}`,
+      onClick: () => handleTypeChange(t)
+    }, t.label))), customForm.type !== 'bodyweight' && /*#__PURE__*/React.createElement("div", {
+      className: "editor-nums",
+      style: {
+        marginTop: 12
+      }
+    }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Valor defecto"), /*#__PURE__*/React.createElement("input", {
+      type: "text",
+      inputMode: "decimal",
+      value: customForm.defaultVal,
+      onFocus: e => e.target.select(),
+      onChange: e => {
+        const v = parseFloat(e.target.value);
+        setCustomForm(f => ({
+          ...f,
+          defaultVal: isNaN(v) ? f.defaultVal : v
+        }));
+      }
+    })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "kcal/min"), /*#__PURE__*/React.createElement("input", {
+      type: "text",
+      inputMode: "decimal",
+      value: customForm.kcalPerMin,
+      onFocus: e => e.target.select(),
+      onChange: e => {
+        const v = parseFloat(e.target.value);
+        setCustomForm(f => ({
+          ...f,
+          kcalPerMin: isNaN(v) ? f.kcalPerMin : v
+        }));
+      }
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "picker-section-label",
+      style: {
+        marginTop: 8
+      }
+    }, "\xCDcono"), /*#__PURE__*/React.createElement("div", {
+      className: "picker-emoji-row"
+    }, ['🏃', '💃', '🏊', '🚴', '🧘', '⚡', '🛼', '🥊', '⛷️', '🏄', '🤸', '🤼', '🧗'].map(ic => /*#__PURE__*/React.createElement("button", {
+      key: ic,
+      className: `picker-emoji-btn ${customForm.icon === ic ? 'on' : ''}`,
+      onClick: () => setCustomForm(f => ({
+        ...f,
+        icon: ic
+      }))
+    }, ic))), /*#__PURE__*/React.createElement("div", {
+      className: "picker-actions",
+      style: {
+        marginTop: 12
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-primary",
+      onClick: saveCustom,
+      disabled: !customForm.name.trim()
+    }, "Crear y agregar"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn-link",
+      onClick: () => setCustomMode(false)
+    }, "\u2190 Volver al cat\xE1logo"))));
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "modal-backdrop",
     onClick: onClose
   }, /*#__PURE__*/React.createElement("div", {
     className: "detail-sheet",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
     className: "modal-handle"
   }), /*#__PURE__*/React.createElement("div", {
     className: "detail-head"
@@ -4661,7 +5378,7 @@ const AddActivitySheet = ({
     className: "swap-list"
   }, available.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "empty"
-  }, "Ya tienes todas las actividades."), available.map(act => /*#__PURE__*/React.createElement("button", {
+  }, "Ya tienes todas las actividades del cat\xE1logo."), available.map(act => /*#__PURE__*/React.createElement("button", {
     key: act.id,
     className: "swap-option",
     onClick: () => onAdd(act)
@@ -4676,13 +5393,20 @@ const AddActivitySheet = ({
     className: "swap-option-title"
   }, act.name), /*#__PURE__*/React.createElement("div", {
     className: "swap-option-sub"
-  }, act.defaultVal, " ", act.unit, act.cal10 ? ` · ~${act.cal10} kcal/10${act.unit}` : '')), /*#__PURE__*/React.createElement("div", {
+  }, actMetaLabel(act))), /*#__PURE__*/React.createElement("div", {
     className: "swap-arrow",
     style: {
       color: 'var(--accent)',
       fontWeight: 700
     }
-  }, "+"))))));
+  }, "+")))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn-secondary",
+    style: {
+      marginTop: 8
+    },
+    onClick: () => setCustomMode(true)
+  }, "+ Crear actividad nueva")));
 };
 const MOOD_META = {
   sick: {
@@ -4969,17 +5693,19 @@ const ActivityCard = React.memo(({
   state,
   onChange
 }) => {
-  const [val, setVal] = React.useState(state.value ?? activity.defaultVal ?? 10);
-  const [valStr, setValStr] = React.useState(() => String(state.value ?? activity.defaultVal ?? 10));
+  const isBodyweight = activity.type === 'bodyweight';
+  const initVal = isBodyweight ? 0 : state.value ?? activity.defaultVal ?? 10;
+  const [val, setVal] = React.useState(initVal);
+  const [valStr, setValStr] = React.useState(() => String(initVal));
   React.useEffect(() => {
-    setValStr(String(val));
-  }, [val]);
+    if (!isBodyweight) setValStr(String(val));
+  }, [val, isBodyweight]);
   const toggle = e => {
     e.stopPropagation();
     onChange(activity.id, {
       ...state,
       done: !state.done,
-      value: val
+      value: isBodyweight ? 0 : val
     });
   };
   const step = activity.unit === 'km' ? 0.5 : activity.unit === 's' ? 15 : 5;
@@ -5001,7 +5727,10 @@ const ActivityCard = React.memo(({
       value: nv
     });
   };
-  const calEst = activity.cal10 ? Math.round(val / 10 * activity.cal10) : null;
+
+  // kcalPerMin × minutos (o valor equivalente). Fallback a cal10/10 para actividades guardadas con el campo viejo.
+  const kpm = activity.kcalPerMin ?? (activity.cal10 ? activity.cal10 / 10 : null);
+  const calEst = !isBodyweight && kpm ? Math.round(val * kpm) : null;
   return /*#__PURE__*/React.createElement("div", {
     className: `activity-card ${state.done ? 'is-done' : ''}`
   }, /*#__PURE__*/React.createElement("div", {
@@ -5010,7 +5739,14 @@ const ActivityCard = React.memo(({
     className: "activity-info"
   }, /*#__PURE__*/React.createElement("div", {
     className: "activity-name"
-  }, activity.name), /*#__PURE__*/React.createElement("div", {
+  }, activity.name), isBodyweight ? /*#__PURE__*/React.createElement("div", {
+    className: "bodyweight-label",
+    style: {
+      marginTop: 4,
+      display: 'inline-block',
+      fontSize: 12
+    }
+  }, "\uD83D\uDCAA Peso corporal") : /*#__PURE__*/React.createElement("div", {
     className: "activity-val-row"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -5052,7 +5788,11 @@ const SwapRoutineModal = ({
   }, /*#__PURE__*/React.createElement("div", {
     className: "detail-sheet",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
     className: "modal-handle"
   }), /*#__PURE__*/React.createElement("div", {
     className: "detail-head"
@@ -5118,9 +5858,20 @@ const CalendarScreen = ({
     for (let d = 0; d <= 6; d++) m[d] = window.GymStore.getRoutineFor(d);
     return m;
   }, [routineVer]);
-  const monthSessions = Object.values(sessions).filter(s => s.date.startsWith(cursor.y + '-' + String(cursor.m + 1).padStart(2, '0')));
-  const completedCount = monthSessions.filter(s => s.completed).length;
-  const partialCount = monthSessions.filter(s => !s.completed).length;
+
+  // monthFlat: lista plana de sesiones del mes (migración: cada entrada puede ser objeto o array)
+  const monthPrefix = cursor.y + '-' + String(cursor.m + 1).padStart(2, '0');
+  const monthFlat = Object.entries(sessions).filter(([k]) => k.startsWith(monthPrefix)).flatMap(([, v]) => Array.isArray(v) ? v : v && v.date ? [v] : []);
+  // Para "días completos" contamos días donde TODAS las sesiones están completas
+  const monthDayKeys = Object.keys(sessions).filter(k => k.startsWith(monthPrefix));
+  const completedCount = monthDayKeys.filter(k => {
+    const arr = Array.isArray(sessions[k]) ? sessions[k] : [sessions[k]];
+    return arr.length > 0 && arr.every(s => s.completed);
+  }).length;
+  const partialCount = monthDayKeys.filter(k => {
+    const arr = Array.isArray(sessions[k]) ? sessions[k] : [sessions[k]];
+    return arr.some(s => !s.completed);
+  }).length;
 
   // Días de gym que ya pasaron este mes (excluye días de descanso y días futuros)
   const isCurrentMonth = cursor.y === today.getFullYear() && cursor.m === today.getMonth();
@@ -5140,9 +5891,18 @@ const CalendarScreen = ({
     const monday = new Date(d);
     monday.setDate(d.getDate() - daysFromMonday);
     const mondayIso = window.GymStore.iso(monday);
-    const allSessions = Object.values(sessions);
-    const weekDone = allSessions.filter(s => s.date >= mondayIso && s.date <= todayIso && s.completed).length;
-    const weekPartial = allSessions.filter(s => s.date >= mondayIso && s.date <= todayIso && !s.completed).length;
+
+    // weekDone/Partial a nivel de DÍA (no sesión): un día completo = todas sus sesiones completas
+    let weekDone = 0,
+      weekPartial = 0;
+    for (let i = 0; i <= daysFromMonday; i++) {
+      const dd = new Date(monday);
+      dd.setDate(monday.getDate() + i);
+      const dIso = window.GymStore.iso(dd);
+      const arr = window.GymStore.getDaySessions(dIso);
+      if (arr.length === 0) continue;
+      if (arr.every(s => s.completed)) weekDone++;else weekPartial++;
+    }
     let weekGymDays = 0;
     for (let i = 0; i <= daysFromMonday; i++) {
       const dd = new Date(monday);
@@ -5226,14 +5986,28 @@ const CalendarScreen = ({
     const dow = dateObj.getDay();
     const isToday = iso === todayIso;
     const isFuture = iso > todayIso;
-    const s = sessions[iso];
+    const daySessions = window.GymStore.getDaySessions(iso);
+    const hasSession = daySessions.length > 0;
     const isRestDay = routineMap[dow]?.rest;
-    let state = 'none';
-    if (s?.completed) state = 'completed';else if (s) state = 'partial';else if (isRestDay) state = 'rest';else if (!isFuture) state = 'missed';
 
-    // Texto de progreso parcial: "3/5" ejercicios completados (solo si parcial con datos)
+    // Estado del día: completed solo si TODAS las sesiones están completas
+    let state = 'none';
+    if (hasSession) {
+      const allDone = daySessions.every(s => s.completed);
+      state = allDone ? 'completed' : 'partial';
+    } else if (isRestDay) {
+      state = 'rest';
+    } else if (!isFuture) {
+      state = 'missed';
+    }
+
+    // Badge múltiples sesiones
+    const multiCount = daySessions.length > 1 ? daySessions.length : null;
+
+    // Label parcial: ejercicios completados de la primera sesión
     let partialLabel = null;
-    if (state === 'partial' && s) {
+    if (state === 'partial' && daySessions.length === 1) {
+      const s = daySessions[0];
       const doneEx = (s.exercises || []).filter(e => e.done).length;
       const totalEx = (s.exercises || []).length;
       if (totalEx > 0) partialLabel = `${doneEx}/${totalEx}`;
@@ -5241,7 +6015,7 @@ const CalendarScreen = ({
     return /*#__PURE__*/React.createElement("button", {
       key: i,
       className: `cal-cell state-${state} ${isToday ? 'is-today' : ''} ${isFuture ? 'is-future' : ''}`,
-      disabled: !s,
+      disabled: !hasSession,
       onClick: () => onPickDate(iso)
     }, /*#__PURE__*/React.createElement("div", {
       className: "cal-day-num"
@@ -5251,7 +6025,9 @@ const CalendarScreen = ({
       className: "cal-big-icon partial"
     }, "\uD83D\uDCAA"), partialLabel && /*#__PURE__*/React.createElement("div", {
       className: "cal-partial-label"
-    }, partialLabel), state === 'rest' && /*#__PURE__*/React.createElement("div", {
+    }, partialLabel), multiCount && /*#__PURE__*/React.createElement("div", {
+      className: "cal-multi-badge"
+    }, multiCount, "x"), state === 'rest' && /*#__PURE__*/React.createElement("div", {
       className: "cal-rest-icon"
     }, "\xB7"), state === 'missed' && /*#__PURE__*/React.createElement("div", {
       className: "cal-dot missed"
@@ -5431,7 +6207,8 @@ const HistoryScreen = ({
   routineVer
 }) => {
   const [tab, setTab] = React.useState('sessions');
-  const sessions = React.useMemo(() => Object.values(window.GymStore.getAllSessions()).sort((a, b) => b.date.localeCompare(a.date)), [refresh]);
+  // getAllSessionsFlat: aplana arrays de múltiples sesiones por día + migra legacy
+  const sessions = React.useMemo(() => window.GymStore.getAllSessionsFlat().sort((a, b) => b.date !== a.date ? b.date.localeCompare(a.date) : (b.startTime || 0) - (a.startTime || 0)), [refresh]);
   const exMap = React.useMemo(() => {
     const m = {};
     sessions.forEach(s => (s.exercises || []).forEach(e => {
@@ -5475,14 +6252,18 @@ const HistoryScreen = ({
     className: "hist-sessions"
   }, sessions.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "empty"
-  }, "A\xFAn sin sesiones registradas."), sessions.map(s => {
+  }, "A\xFAn sin sesiones registradas."), sessions.map((s, idx) => {
     const [, mo, day] = s.date.split('-');
     const allExs = s.exercises || [];
     const doneExs = allExs.filter(e => e.done).length;
     const totalExs = allExs.length;
     const dur = s.startTime && s.endTime ? formatDuration(s.endTime - s.startTime) : null;
+    // Usar label si existe y difiere del título (sesión con nombre propio)
+    const displayTitle = s.label && s.label !== s.title ? s.label : s.title;
+    // Clave única: sessionId o fecha+índice
+    const key = s.sessionId || s.date + '_' + idx;
     return /*#__PURE__*/React.createElement("div", {
-      key: s.date,
+      key: key,
       className: "hist-item"
     }, /*#__PURE__*/React.createElement("div", {
       className: "hist-date"
@@ -5494,7 +6275,7 @@ const HistoryScreen = ({
       className: "hist-body"
     }, /*#__PURE__*/React.createElement("div", {
       className: "hist-title"
-    }, s.title), /*#__PURE__*/React.createElement("div", {
+    }, displayTitle), /*#__PURE__*/React.createElement("div", {
       className: "hist-meta"
     }, /*#__PURE__*/React.createElement("span", {
       className: s.completed ? 'ok' : 'warn'
@@ -6274,7 +7055,11 @@ const MoodModal = ({
   }, /*#__PURE__*/React.createElement("div", {
     className: "modal-sheet",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
     className: "modal-handle"
   }), /*#__PURE__*/React.createElement("div", {
     className: "modal-title"
@@ -6323,8 +7108,8 @@ const ExerciseDetail = ({
 }) => {
   if (!ex) return null;
 
-  // Todos los registros: orden cronológico para el gráfico
-  const allSessions = React.useMemo(() => Object.values(window.GymStore.getAllSessions()).filter(s => (s.exercises || []).some(e => e.id === ex.id)).sort((a, b) => a.date.localeCompare(b.date)), [ex.id]);
+  // Todos los registros: orden cronológico para el gráfico (aplana arrays multi-sesión)
+  const allSessions = React.useMemo(() => window.GymStore.getAllSessionsFlat().filter(s => (s.exercises || []).some(e => e.id === ex.id)).sort((a, b) => a.date.localeCompare(b.date)), [ex.id]);
   const chartPoints = allSessions.map(s => ({
     date: s.date,
     weight: s.exercises.find(e => e.id === ex.id)?.weight ?? 0
@@ -6340,7 +7125,11 @@ const ExerciseDetail = ({
   }, /*#__PURE__*/React.createElement("div", {
     className: "detail-sheet",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
     className: "modal-handle"
   }), /*#__PURE__*/React.createElement("div", {
     className: "detail-head"
@@ -6385,16 +7174,12 @@ const ExerciseDetail = ({
   }))));
 };
 
-// Detalle de día (desde calendario)
-const DayDetail = ({
-  dateIso,
-  onClose
+// Render de una sola sesión dentro del DayDetail
+const DaySessionBlock = ({
+  s,
+  exMeta,
+  showTitle
 }) => {
-  if (!dateIso) return null;
-  const s = window.GymStore.getSession(dateIso);
-  if (!s) return null;
-  const d = new Date(dateIso + 'T00:00:00');
-  const exMeta = window._allExMeta;
   const dur = s.startTime && s.endTime ? (() => {
     const ms = s.endTime - s.startTime;
     const totalMin = Math.round(ms / 60000);
@@ -6405,24 +7190,23 @@ const DayDetail = ({
     return m > 0 ? `${h}h ${m}min` : `${h}h`;
   })() : null;
   const doneActs = Object.values(s.activities || {}).filter(a => a.done);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "modal-backdrop",
-    onClick: onClose
+  const displayTitle = s.label && s.label !== s.title ? s.label : s.title;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, showTitle && /*#__PURE__*/React.createElement("div", {
+    className: "day-session-header"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "detail-sheet",
-    onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "modal-handle"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "detail-head"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "detail-tag"
-  }, window.DAY_LONG[d.getDay()], " \xB7 ", d.getDate(), " ", window.MONTH_LONG[d.getMonth()]), /*#__PURE__*/React.createElement("div", {
-    className: "detail-name"
-  }, s.title), /*#__PURE__*/React.createElement("div", {
-    className: "detail-sub"
-  }, DETAIL_MOOD_META[s.mood] || '🙂', " \xB7 ", s.completed ? 'Completo' : 'Parcial', dur && ` · ${dur}`)), /*#__PURE__*/React.createElement("div", {
-    className: "detail-section-title"
+    className: "day-session-title"
+  }, displayTitle), /*#__PURE__*/React.createElement("div", {
+    className: "day-session-meta"
+  }, DETAIL_MOOD_META[s.mood] || '🙂', " \xB7 ", s.completed ? 'Completo' : 'Parcial', dur && ` · ${dur}`)), !showTitle && /*#__PURE__*/React.createElement("div", {
+    className: "detail-sub",
+    style: {
+      marginBottom: 8
+    }
+  }, DETAIL_MOOD_META[s.mood] || '🙂', " \xB7 ", s.completed ? 'Completo' : 'Parcial', dur && ` · ${dur}`), (s.exercises || []).length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, showTitle && /*#__PURE__*/React.createElement("div", {
+    className: "detail-section-title",
+    style: {
+      marginTop: 4
+    }
   }, "Ejercicios"), /*#__PURE__*/React.createElement("div", {
     className: "detail-history"
   }, (s.exercises || []).map(e => {
@@ -6450,7 +7234,7 @@ const DayDetail = ({
     }, e.sets, "/", e.targetSets) : /*#__PURE__*/React.createElement("div", {
       className: "set-dot"
     }, "\xB7"));
-  })), s.cardioDone && s.cardioMinutes && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }))), s.cardioDone && s.cardioMinutes && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "detail-section-title"
   }, "Cardio"), /*#__PURE__*/React.createElement("div", {
     className: "detail-history"
@@ -6494,7 +7278,75 @@ const DayDetail = ({
     }, a.value, " ", actDef?.unit || '')), /*#__PURE__*/React.createElement("div", {
       className: "set-dot is-done"
     }, "\u2713"));
-  })))));
+  }))));
+};
+
+// Detalle de día (desde calendario) — soporta múltiples sesiones por día
+const DayDetail = ({
+  dateIso,
+  onClose
+}) => {
+  if (!dateIso) return null;
+  const daySessions = window.GymStore.getDaySessions(dateIso);
+  if (daySessions.length === 0) return null;
+  const d = new Date(dateIso + 'T00:00:00');
+  const exMeta = window._allExMeta;
+  const multi = daySessions.length > 1;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "modal-backdrop",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
+    className: "modal-handle"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "detail-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-tag"
+  }, window.DAY_LONG[d.getDay()], " \xB7 ", d.getDate(), " ", window.MONTH_LONG[d.getMonth()]), !multi && /*#__PURE__*/React.createElement("div", {
+    className: "detail-name"
+  }, daySessions[0].label || daySessions[0].title), multi && /*#__PURE__*/React.createElement("div", {
+    className: "detail-name"
+  }, daySessions.length, " sesiones")), !multi && /*#__PURE__*/React.createElement(DaySessionBlock, {
+    s: daySessions[0],
+    exMeta: exMeta,
+    showTitle: false
+  }), multi && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "detail-section-title"
+  }, "Sesiones del d\xEDa"), daySessions.map((s, idx) => /*#__PURE__*/React.createElement("div", {
+    key: s.sessionId || idx,
+    className: "day-session-block"
+  }, /*#__PURE__*/React.createElement(DaySessionBlock, {
+    s: s,
+    exMeta: exMeta,
+    showTitle: true
+  }))))));
+};
+
+// Calcula kcal de una sesión:
+// - Ejercicios con peso: 5 kcal/set (estimación basada en esfuerzo por set de fuerza ~70kg).
+// - Ejercicios sin peso (bodyweight): 3 kcal/set.
+// - Actividades: val * kcalPerMin (minutos por tasa metabólica). Fallback cal10/10 para registros viejos.
+// - Cardio: minutos * 5 kcal/min (estimación caminadora/trote ligero, ~70kg).
+const calcSessionKcal = s => {
+  let kcal = 0;
+  (s.exercises || []).forEach(ex => {
+    if (ex.done) kcal += ex.sets * (ex.weight > 0 ? 5 : 3);
+  });
+  Object.values(s.activities || {}).forEach(a => {
+    if (!a.done || !a.value) return;
+    // Busca la definición en catálogo para obtener kcalPerMin
+    const def = (window.DEFAULT_ACTIVITIES || []).find(x => x.id === a.id);
+    const kpm = def?.kcalPerMin ?? (def?.cal10 ? def.cal10 / 10 : 4);
+    kcal += Math.round(a.value * kpm);
+  });
+  if (s.cardioDone && s.cardioMinutes) kcal += Math.round(s.cardioMinutes * 5);
+  return kcal;
 };
 const CompletionModal = ({
   session,
@@ -6502,16 +7354,26 @@ const CompletionModal = ({
 }) => {
   const doneCount = (session.exercises || []).filter(e => e.done).length;
   const setsTotal = (session.exercises || []).reduce((s, e) => s + (e.sets || 0), 0);
-  const hasPR = React.useMemo(() => {
-    const allSessions = Object.values(window.GymStore.getAllSessions());
-    const before = allSessions.filter(s => s.date < session.date);
-    return (session.exercises || []).some(ex => {
+  const {
+    hasPR,
+    dayKcal
+  } = React.useMemo(() => {
+    const allSessions = window.GymStore.getAllSessionsFlat();
+    const before = allSessions.filter(s => s.date < session.date || s.date === session.date && s.sessionId !== session.sessionId);
+    const pr = (session.exercises || []).some(ex => {
       const pastBest = before.reduce((max, s) => {
         const found = (s.exercises || []).find(e => e.id === ex.id);
         return found ? Math.max(max, found.weight) : max;
       }, 0);
       return ex.weight > pastBest && pastBest > 0;
     });
+    // Suma kcal de TODAS las sesiones del día (incluye la actual que ya fue guardada)
+    const todaySessions = window.GymStore.getDaySessions(session.date);
+    const totalKcal = todaySessions.reduce((sum, s) => sum + calcSessionKcal(s), 0);
+    return {
+      hasPR: pr,
+      dayKcal: totalKcal
+    };
   }, [session]);
   const MSGS = ['¡Buen trabajo!', '¡Lo lograste!', '¡Excelente sesión!', '¡Sigue así!'];
   const [msg] = React.useState(() => MSGS[Math.floor(Math.random() * MSGS.length)]);
@@ -6521,7 +7383,11 @@ const CompletionModal = ({
   }, /*#__PURE__*/React.createElement("div", {
     className: "completion-sheet",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
     className: "completion-trophy"
   }, "\uD83C\uDFC6"), /*#__PURE__*/React.createElement("div", {
     className: "completion-title"
@@ -6551,7 +7417,15 @@ const CompletionModal = ({
     className: "completion-stat-num"
   }, session.cardioMinutes), /*#__PURE__*/React.createElement("div", {
     className: "completion-stat-label"
-  }, "min cardio")))), hasPR && /*#__PURE__*/React.createElement("div", {
+  }, "min cardio"))), dayKcal > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "completion-divider"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-num"
+  }, "~", dayKcal), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-label"
+  }, "kcal hoy")))), hasPR && /*#__PURE__*/React.createElement("div", {
     className: "completion-pr"
   }, "\u2B06\uFE0F \xA1Nuevo r\xE9cord personal!"), /*#__PURE__*/React.createElement("div", {
     className: "completion-sub-msg"
@@ -6561,14 +7435,171 @@ const CompletionModal = ({
     onClick: onClose
   }, "Ver calendario \u2192")));
 };
+
+// Modal de resumen al terminar entrenamiento desde la vista "done" (sin pasar por activo).
+// Muestra: ejercicios completados, kcal, y comparación por ejercicio vs sesión anterior.
+const DaySummaryModal = ({
+  session,
+  onClose
+}) => {
+  const doneExs = (session.exercises || []).filter(e => e.done);
+  const kcal = calcSessionKcal(session);
+
+  // Comparaciones: para cada ejercicio completado, busca la sesión anterior con ese ejercicio
+  const comparisons = React.useMemo(() => {
+    const exMeta = window._allExMeta || {};
+    return doneExs.map(ex => {
+      // Nombre del ejercicio: usar metadatos de rutina si están disponibles
+      const meta = exMeta[ex.id];
+      const name = meta?.name || ex.id;
+      const isBodyweight = ex.weight === 0;
+
+      // Busca la sesión anterior que tenga este ejercicio (excluye la actual)
+      const [prevSession] = window.GymStore.getExerciseHistory(name, session.sessionId, 1);
+      if (!prevSession) {
+        return {
+          name,
+          diff: 'primera'
+        };
+      }
+      const prevEx = (prevSession.exercises || []).find(e => {
+        const pMeta = exMeta[e.id];
+        const pName = pMeta?.name || e.id;
+        return pName.toLowerCase().trim() === name.toLowerCase().trim();
+      });
+      if (!prevEx) return {
+        name,
+        diff: 'primera'
+      };
+      if (isBodyweight) {
+        // Comparar reps totales (sets completados × reps)
+        const currReps = ex.sets * (ex.reps || 0);
+        const prevReps = prevEx.sets * (prevEx.reps || 0);
+        const delta = currReps - prevReps;
+        return {
+          name,
+          diff: 'reps',
+          curr: currReps,
+          prev: prevReps,
+          delta
+        };
+      } else {
+        // Comparar peso
+        const delta = Math.round((ex.weight - prevEx.weight) * 10) / 10;
+        return {
+          name,
+          diff: 'weight',
+          curr: ex.weight,
+          prev: prevEx.weight,
+          delta
+        };
+      }
+    });
+  }, [session.sessionId]);
+  const MSGS = ['¡Buen trabajo!', '¡Lo lograste!', '¡Excelente sesión!', '¡Sigue así!'];
+  const [msg] = React.useState(() => MSGS[Math.floor(Math.random() * MSGS.length)]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "completion-backdrop",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
+    className: "completion-trophy"
+  }, "\u2705"), /*#__PURE__*/React.createElement("div", {
+    className: "completion-title"
+  }, msg), /*#__PURE__*/React.createElement("div", {
+    className: "completion-routine"
+  }, session.title), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stats"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-num"
+  }, doneExs.length), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-label"
+  }, "ejercicios")), kcal > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "completion-divider"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-num"
+  }, "~", kcal), /*#__PURE__*/React.createElement("div", {
+    className: "completion-stat-label"
+  }, "kcal")))), comparisons.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "detail-section-title",
+    style: {
+      marginTop: 16,
+      marginBottom: 8
+    }
+  }, "Comparaci\xF3n con \xFAltima vez"), /*#__PURE__*/React.createElement("div", {
+    className: "summary-comparisons"
+  }, comparisons.map((c, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "summary-cmp-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "summary-cmp-name"
+  }, c.name), /*#__PURE__*/React.createElement("div", {
+    className: "summary-cmp-val"
+  }, c.diff === 'primera' && /*#__PURE__*/React.createElement("span", {
+    className: "summary-cmp-new"
+  }, "Primera vez"), c.diff === 'weight' && /*#__PURE__*/React.createElement("span", {
+    className: c.delta > 0 ? 'summary-cmp-up' : c.delta < 0 ? 'summary-cmp-down' : 'summary-cmp-same'
+  }, c.prev, " \u2192 ", c.curr, " lb", c.delta > 0 ? ` (+${c.delta})` : c.delta < 0 ? ` (${c.delta})` : ' (=)'), c.diff === 'reps' && /*#__PURE__*/React.createElement("span", {
+    className: c.delta > 0 ? 'summary-cmp-up' : c.delta < 0 ? 'summary-cmp-down' : 'summary-cmp-same'
+  }, c.prev, " \u2192 ", c.curr, " reps", c.delta > 0 ? ` (+${c.delta})` : c.delta < 0 ? ` (${c.delta})` : ' (=)')))))), /*#__PURE__*/React.createElement("div", {
+    className: "completion-sub-msg",
+    style: {
+      marginTop: 16
+    }
+  }, "Entrenamiento guardado. \xA1Descansa bien!"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn-primary",
+    onClick: onClose
+  }, "Ver progreso \u2192")));
+};
 window.MoodModal = MoodModal;
 window.ExerciseDetail = ExerciseDetail;
 window.DayDetail = DayDetail;
 window.CompletionModal = CompletionModal;
+window.DaySummaryModal = DaySummaryModal;
 
 // === screens/routine-editor.jsx ===
 // Editor de rutina del día
 let _idCtr = Date.now();
+
+// Input numérico con select-all en focus y parse en blur (pattern del peso editable)
+// Evita el bug de iOS donde type="number" no hace select-all correctamente.
+const NumInput = ({
+  value,
+  min = 0,
+  step = 1,
+  onChange,
+  className
+}) => {
+  const [str, setStr] = React.useState(() => String(value));
+  React.useEffect(() => {
+    setStr(String(value));
+  }, [value]);
+  return /*#__PURE__*/React.createElement("input", {
+    className: className,
+    type: "text",
+    inputMode: "decimal",
+    value: str,
+    onFocus: e => e.target.select(),
+    onChange: e => setStr(e.target.value.replace(/[^0-9.]/g, '')),
+    onBlur: () => {
+      const v = parseFloat(str);
+      const result = !isNaN(v) && v >= min ? step < 1 ? Math.round(v * 10) / 10 : Math.round(v) : value;
+      onChange(result);
+      setStr(String(result));
+    }
+  });
+};
 const RoutineEditor = ({
   dow,
   routine,
@@ -6586,6 +7617,8 @@ const RoutineEditor = ({
     }))
   }));
   const [showActivityPicker, setShowActivityPicker] = React.useState(false);
+  // null = cerrado, 'pool' = picker de pool, 'new' = crear nuevo inline
+  const [addExMode, setAddExMode] = React.useState(null);
   const updateEx = (idx, patch) => {
     setDraft(d => ({
       ...d,
@@ -6609,7 +7642,7 @@ const RoutineEditor = ({
       exercises: next
     };
   });
-  const addEx = () => {
+  const addExBlank = () => {
     setDraft(d => ({
       ...d,
       exercises: [...d.exercises, {
@@ -6624,6 +7657,20 @@ const RoutineEditor = ({
         target: '3×10'
       }]
     }));
+    setAddExMode(null);
+  };
+  const addExFromPool = ex => {
+    // Deep copy con nuevo id para no compartir referencia con otro perfil
+    setDraft(d => ({
+      ...d,
+      exercises: [...d.exercises, {
+        ...ex,
+        id: 'ex_' + ++_idCtr,
+        _source: undefined,
+        sourceProfile: undefined
+      }]
+    }));
+    setAddExMode(null);
   };
   const addActivity = activity => {
     setDraft(d => ({
@@ -6653,7 +7700,7 @@ const RoutineEditor = ({
       ...draft,
       exercises: draft.exercises.map(e => ({
         ...e,
-        target: `${e.sets}×${e.reps} @ ${e.weight} ${e.unit}`
+        target: `${e.sets}×${e.reps} @ ${e.weight > 0 ? e.weight + ' ' + e.unit : 'Peso corporal'}`
       })),
       activities: draft.activities || []
     });
@@ -6665,7 +7712,11 @@ const RoutineEditor = ({
   }, /*#__PURE__*/React.createElement("div", {
     className: "detail-sheet editor-sheet",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
     className: "modal-handle"
   }), /*#__PURE__*/React.createElement("div", {
     className: "editor-head"
@@ -6674,6 +7725,7 @@ const RoutineEditor = ({
   }, "EDITAR \xB7 ", window.DAY_LONG[dow]), /*#__PURE__*/React.createElement("input", {
     className: "editor-title-input",
     value: draft.title,
+    onFocus: e => e.target.select(),
     onChange: e => setDraft({
       ...draft,
       title: e.target.value
@@ -6682,6 +7734,7 @@ const RoutineEditor = ({
     className: "editor-sub-input",
     value: draft.subtitle || '',
     placeholder: "Subt\xEDtulo",
+    onFocus: e => e.target.select(),
     onChange: e => setDraft({
       ...draft,
       subtitle: e.target.value
@@ -6690,78 +7743,18 @@ const RoutineEditor = ({
     className: "detail-section-title"
   }, "Ejercicios (", draft.exercises.length, ")"), /*#__PURE__*/React.createElement("div", {
     className: "editor-list"
-  }, draft.exercises.map((ex, i) => /*#__PURE__*/React.createElement("div", {
+  }, draft.exercises.map((ex, i) => /*#__PURE__*/React.createElement(ExerciseEditorRow, {
     key: ex.id,
-    className: "editor-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "editor-row-top"
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "editor-ex-name",
-    value: ex.name,
-    onChange: e => updateEx(i, {
-      name: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "editor-rm",
-    onClick: () => removeEx(i)
-  }, "\u2715")), /*#__PURE__*/React.createElement("input", {
-    className: "editor-ex-sub",
-    placeholder: "Descripci\xF3n (opcional)",
-    value: ex.sub || '',
-    onChange: e => updateEx(i, {
-      sub: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "editor-nums"
-  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Sets"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: ex.sets,
-    min: "1",
-    onFocus: e => e.target.select(),
-    onChange: e => updateEx(i, {
-      sets: parseInt(e.target.value) || 1
-    })
-  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Reps"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: ex.reps,
-    min: "1",
-    onFocus: e => e.target.select(),
-    onChange: e => updateEx(i, {
-      reps: parseInt(e.target.value) || 1
-    })
-  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Peso"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: ex.weight,
-    step: "2.5",
-    min: "0",
-    onFocus: e => e.target.select(),
-    onChange: e => updateEx(i, {
-      weight: Math.max(0, parseFloat(e.target.value) || 0)
-    })
-  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Unid"), /*#__PURE__*/React.createElement("select", {
-    value: ex.unit,
-    onChange: e => updateEx(i, {
-      unit: e.target.value
-    })
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "lb"
-  }, "lb"), /*#__PURE__*/React.createElement("option", {
-    value: "kg"
-  }, "kg"), /*#__PURE__*/React.createElement("option", {
-    value: "s"
-  }, "s")))), /*#__PURE__*/React.createElement("div", {
-    className: "editor-move"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => moveEx(i, -1),
-    disabled: i === 0
-  }, "\u2191"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => moveEx(i, 1),
-    disabled: i === draft.exercises.length - 1
-  }, "\u2193"))))), /*#__PURE__*/React.createElement("button", {
+    ex: ex,
+    isFirst: i === 0,
+    isLast: i === draft.exercises.length - 1,
+    onUpdate: patch => updateEx(i, patch),
+    onRemove: () => removeEx(i),
+    onMove: dir => moveEx(i, dir)
+  }))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "btn-secondary",
-    onClick: addEx
+    onClick: () => setAddExMode('pick')
   }, "+ Agregar ejercicio"), /*#__PURE__*/React.createElement("div", {
     className: "detail-section-title",
     style: {
@@ -6782,27 +7775,23 @@ const RoutineEditor = ({
     type: "button",
     className: "editor-rm",
     onClick: () => removeAct(i)
-  }, "\u2715")), /*#__PURE__*/React.createElement("div", {
+  }, "\u2715")), act.type !== 'bodyweight' && /*#__PURE__*/React.createElement("div", {
     className: "editor-act-vals"
   }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Valor por defecto"), /*#__PURE__*/React.createElement("div", {
     className: "editor-act-input-row"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "number",
+  }, /*#__PURE__*/React.createElement(NumInput, {
     value: act.defaultVal,
-    min: "1",
-    onFocus: e => e.target.select(),
-    onChange: e => updateAct(i, {
-      defaultVal: parseInt(e.target.value) || 1
+    min: 1,
+    onChange: v => updateAct(i, {
+      defaultVal: v
     })
   }), /*#__PURE__*/React.createElement("span", {
     className: "editor-act-unit"
-  }, act.unit))), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Cal/10 min"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: act.cal10 || 4,
-    min: "1",
-    onFocus: e => e.target.select(),
-    onChange: e => updateAct(i, {
-      cal10: parseInt(e.target.value) || 4
+  }, act.unit))), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "kcal/min"), /*#__PURE__*/React.createElement(NumInput, {
+    value: act.kcalPerMin ?? (act.cal10 ? act.cal10 / 10 : 5),
+    min: 1,
+    onChange: v => updateAct(i, {
+      kcalPerMin: v
     })
   })))))), /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -6830,8 +7819,121 @@ const RoutineEditor = ({
       addActivity(act);
       setShowActivityPicker(false);
     }
+  }), addExMode && /*#__PURE__*/React.createElement(AddExercisePickerSheet, {
+    currentExIds: new Set(draft.exercises.map(e => e.id)),
+    onCreateNew: addExBlank,
+    onSelectFromPool: addExFromPool,
+    onClose: () => setAddExMode(null)
   })));
 };
+
+// Sub-componente para editar un ejercicio. Usa NumInput para evitar bug iOS select-all.
+const ExerciseEditorRow = React.memo(({
+  ex,
+  isFirst,
+  isLast,
+  onUpdate,
+  onRemove,
+  onMove
+}) => {
+  const isBodyweight = ex.weight === 0 && ex.unit === 'lb';
+  const [bwToggle, setBwToggle] = React.useState(() => ex.weight === 0 && ex.unit === 'lb' && !ex._hasWeight);
+
+  // Actualizar toggle si el peso se edita externamente
+  React.useEffect(() => {
+    setBwToggle(ex.weight === 0 && !ex._hasWeight);
+  }, [ex.weight, ex._hasWeight]);
+  const toggleBodyweight = () => {
+    if (bwToggle) {
+      // Desactivar peso corporal: poner peso 0 pero marcar que tiene peso
+      onUpdate({
+        weight: 0,
+        unit: 'lb',
+        _hasWeight: true
+      });
+      setBwToggle(false);
+    } else {
+      // Activar peso corporal
+      onUpdate({
+        weight: 0,
+        unit: 'lb',
+        _hasWeight: false
+      });
+      setBwToggle(true);
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "editor-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "editor-row-top"
+  }, /*#__PURE__*/React.createElement("input", {
+    className: "editor-ex-name",
+    value: ex.name,
+    onFocus: e => e.target.select(),
+    onChange: e => onUpdate({
+      name: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "editor-rm",
+    onClick: onRemove
+  }, "\u2715")), /*#__PURE__*/React.createElement("input", {
+    className: "editor-ex-sub",
+    placeholder: "Descripci\xF3n (opcional)",
+    value: ex.sub || '',
+    onFocus: e => e.target.select(),
+    onChange: e => onUpdate({
+      sub: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "editor-nums"
+  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Sets"), /*#__PURE__*/React.createElement(NumInput, {
+    value: ex.sets,
+    min: 1,
+    onChange: v => onUpdate({
+      sets: v
+    })
+  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Reps"), /*#__PURE__*/React.createElement(NumInput, {
+    value: ex.reps,
+    min: 1,
+    onChange: v => onUpdate({
+      reps: v
+    })
+  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Peso"), bwToggle ? /*#__PURE__*/React.createElement("div", {
+    className: "editor-bw-badge"
+  }, "Corporal") : /*#__PURE__*/React.createElement(NumInput, {
+    value: ex.weight,
+    min: 0,
+    step: 0.5,
+    onChange: v => onUpdate({
+      weight: v,
+      _hasWeight: v > 0
+    })
+  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Unid"), /*#__PURE__*/React.createElement("select", {
+    value: ex.unit,
+    onChange: e => onUpdate({
+      unit: e.target.value
+    })
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "lb"
+  }, "lb"), /*#__PURE__*/React.createElement("option", {
+    value: "kg"
+  }, "kg"), /*#__PURE__*/React.createElement("option", {
+    value: "s"
+  }, "s")))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: `editor-bw-toggle ${bwToggle ? 'on' : ''}`,
+    onClick: toggleBodyweight
+  }, bwToggle ? '💪 Peso corporal activado' : 'Usar peso corporal'), /*#__PURE__*/React.createElement("div", {
+    className: "editor-move"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => onMove(-1),
+    disabled: isFirst
+  }, "\u2191"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => onMove(1),
+    disabled: isLast
+  }, "\u2193")));
+});
 
 // Modal para elegir actividad del catálogo
 const ActivityPickerModal = ({
@@ -6844,7 +7946,7 @@ const ActivityPickerModal = ({
     icon: '🏃',
     type: 'time',
     unit: 'min',
-    cal10: 4,
+    kcalPerMin: 5,
     defaultVal: 20
   });
   const catalog = window.GymStore.getActivities();
@@ -6858,13 +7960,41 @@ const ActivityPickerModal = ({
     window.GymStore.saveCustomActivity(act);
     onSelect(act);
   };
+  const handleTypeChange = t => {
+    // bodyweight no tiene valor numérico
+    if (t.key === 'bodyweight') {
+      setCustomForm(f => ({
+        ...f,
+        type: t.key,
+        unit: t.unit,
+        defaultVal: 0,
+        kcalPerMin: 5
+      }));
+    } else {
+      setCustomForm(f => ({
+        ...f,
+        type: t.key,
+        unit: t.unit
+      }));
+    }
+  };
+  const actMetaLabel = act => {
+    if (act.type === 'bodyweight') return 'Peso corporal';
+    // Soporta tanto campo nuevo (kcalPerMin) como el viejo (cal10) para compatibilidad
+    const kpm = act.kcalPerMin ?? (act.cal10 ? act.cal10 / 10 : null);
+    return `${act.defaultVal} ${act.unit}${kpm ? ` · ~${kpm} kcal/min` : ''}`;
+  };
   return /*#__PURE__*/React.createElement("div", {
-    className: "modal-backdrop",
+    className: "modal-backdrop-fixed",
     onClick: onClose
   }, /*#__PURE__*/React.createElement("div", {
     className: "detail-sheet",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
     className: "modal-handle"
   }), /*#__PURE__*/React.createElement("div", {
     className: "detail-head"
@@ -6886,7 +8016,7 @@ const ActivityPickerModal = ({
     className: "act-cat-name"
   }, act.name), /*#__PURE__*/React.createElement("div", {
     className: "act-cat-meta"
-  }, act.defaultVal, " ", act.unit, " \xB7 ~", act.cal10, " kcal/10min"))))), /*#__PURE__*/React.createElement("button", {
+  }, actMetaLabel(act)))))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "btn-secondary",
     onClick: () => setCustomMode(true)
@@ -6902,6 +8032,7 @@ const ActivityPickerModal = ({
     className: "picker-input",
     placeholder: "Ej: Aer\xF3bicos, Box, Patines...",
     value: customForm.name,
+    onFocus: e => e.target.select(),
     onChange: e => setCustomForm(f => ({
       ...f,
       name: e.target.value
@@ -6917,33 +8048,25 @@ const ActivityPickerModal = ({
   }, (window.ACTIVITY_VALUE_TYPES || []).map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
     className: `act-type-btn ${customForm.type === t.key ? 'on' : ''}`,
-    onClick: () => setCustomForm(f => ({
-      ...f,
-      type: t.key,
-      unit: t.unit
-    }))
-  }, t.label))), /*#__PURE__*/React.createElement("div", {
+    onClick: () => handleTypeChange(t)
+  }, t.label))), customForm.type !== 'bodyweight' && /*#__PURE__*/React.createElement("div", {
     className: "editor-nums",
     style: {
       marginTop: 12
     }
-  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Valor defecto"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
+  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Valor defecto"), /*#__PURE__*/React.createElement(NumInput, {
     value: customForm.defaultVal,
-    min: "1",
-    onFocus: e => e.target.select(),
-    onChange: e => setCustomForm(f => ({
+    min: 1,
+    onChange: v => setCustomForm(f => ({
       ...f,
-      defaultVal: parseInt(e.target.value) || 1
+      defaultVal: v
     }))
-  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "Cal/10 min"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: customForm.cal10,
-    min: "1",
-    onFocus: e => e.target.select(),
-    onChange: e => setCustomForm(f => ({
+  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", null, "kcal/min"), /*#__PURE__*/React.createElement(NumInput, {
+    value: customForm.kcalPerMin,
+    min: 1,
+    onChange: v => setCustomForm(f => ({
       ...f,
-      cal10: parseInt(e.target.value) || 4
+      kcalPerMin: v
     }))
   }))), /*#__PURE__*/React.createElement("div", {
     className: "picker-section-label",
@@ -6952,7 +8075,7 @@ const ActivityPickerModal = ({
     }
   }, "\xCDcono"), /*#__PURE__*/React.createElement("div", {
     className: "picker-emoji-row"
-  }, ['🏃', '💃', '🏊', '🚴', '🧘', '⚡', '🥊', '⛷️', '🏄', '🤸'].map(ic => /*#__PURE__*/React.createElement("button", {
+  }, ['🏃', '💃', '🏊', '🚴', '🧘', '⚡', '🛼', '🥊', '⛷️', '🏄', '🤸'].map(ic => /*#__PURE__*/React.createElement("button", {
     key: ic,
     className: `picker-emoji-btn ${customForm.icon === ic ? 'on' : ''}`,
     onClick: () => setCustomForm(f => ({
@@ -6975,10 +8098,91 @@ const ActivityPickerModal = ({
     onClick: () => setCustomMode(false)
   }, "\u2190 Volver al cat\xE1logo"))))));
 };
+
+// Sheet para agregar ejercicio al editor: elige del pool global o crea uno nuevo
+const AddExercisePickerSheet = ({
+  currentExIds,
+  onCreateNew,
+  onSelectFromPool,
+  onClose
+}) => {
+  const [tab, setTab] = React.useState('pool'); // 'pool' | 'new'
+  const [search, setSearch] = React.useState('');
+  const pool = React.useMemo(() => window.GymStore.getGlobalExercisePool(currentExIds), [currentExIds]);
+  const filtered = pool.filter(ex => search === '' || ex.name.toLowerCase().includes(search.toLowerCase()) || (ex.sub || '').toLowerCase().includes(search.toLowerCase()));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "modal-backdrop-fixed",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sheet-close",
+    onClick: onClose
+  }, "\u2715"), /*#__PURE__*/React.createElement("div", {
+    className: "modal-handle"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "detail-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-name"
+  }, "Agregar ejercicio")), /*#__PURE__*/React.createElement("div", {
+    className: "picker-tabs"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: `picker-tab ${tab === 'pool' ? 'on' : ''}`,
+    onClick: () => setTab('pool')
+  }, "Pool de ejercicios"), /*#__PURE__*/React.createElement("button", {
+    className: `picker-tab ${tab === 'new' ? 'on' : ''}`,
+    onClick: () => setTab('new')
+  }, "Crear nuevo")), tab === 'pool' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("input", {
+    className: "add-search-input",
+    placeholder: "Buscar ejercicio...",
+    value: search,
+    onFocus: e => e.target.select(),
+    onChange: e => setSearch(e.target.value)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "swap-list"
+  }, filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, pool.length === 0 ? 'No hay ejercicios de otros perfiles disponibles.' : 'Sin resultados para esa búsqueda.'), filtered.map((ex, i) => /*#__PURE__*/React.createElement("button", {
+    key: ex.id + '_' + i,
+    className: "swap-option",
+    onClick: () => onSelectFromPool(ex)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-title"
+  }, ex.name), /*#__PURE__*/React.createElement("div", {
+    className: "swap-option-sub"
+  }, ex.sub ? ex.sub + ' · ' : '', ex.sets, "\xD7", ex.reps, " \xB7 ", ex.weight > 0 ? ex.weight + ' lb' : 'Peso corporal', ex.sourceProfile ? /*#__PURE__*/React.createElement("span", {
+    className: "pool-source"
+  }, " de ", ex.sourceProfile) : null)), /*#__PURE__*/React.createElement("div", {
+    className: "swap-arrow",
+    style: {
+      color: 'var(--accent)',
+      fontWeight: 700
+    }
+  }, "+"))))) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '16px 0'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "detail-sub"
+  }, "Se a\xF1adir\xE1 un ejercicio en blanco al final de la lista."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn-primary",
+    style: {
+      marginTop: 12
+    },
+    onClick: onCreateNew
+  }, "Crear ejercicio en blanco"))));
+};
 window.RoutineEditor = RoutineEditor;
+window.ActivityPickerModal = ActivityPickerModal;
 
 // === screens/week.jsx ===
 // Vista semanal: muestra los 7 días con opción de editar cualquier día
+// + Apartado "Ejercicios" con catálogo global de ejercicios
 const WeekScreen = ({
   onEditDay,
   routineVer
@@ -6987,6 +8191,8 @@ const WeekScreen = ({
   const todayDow = today.getDay();
   const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Lun → Dom
 
+  // Tab interno: semana | ejercicios
+  const [tab, setTab] = React.useState('semana');
   const routineMap = React.useMemo(() => {
     const map = {};
     for (let d of WEEK_ORDER) {
@@ -6997,6 +8203,31 @@ const WeekScreen = ({
   return /*#__PURE__*/React.createElement("div", {
     className: "week-screen"
   }, /*#__PURE__*/React.createElement("div", {
+    className: "week-tabs"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: `week-tab ${tab === 'semana' ? 'on' : ''}`,
+    onClick: () => setTab('semana')
+  }, "Semana"), /*#__PURE__*/React.createElement("button", {
+    className: `week-tab ${tab === 'ejercicios' ? 'on' : ''}`,
+    onClick: () => setTab('ejercicios')
+  }, "Ejercicios")), tab === 'semana' ? /*#__PURE__*/React.createElement(WeekRoutineView, {
+    routineMap: routineMap,
+    todayDow: todayDow,
+    onEditDay: onEditDay
+  }) : /*#__PURE__*/React.createElement(ExerciseCatalogView, {
+    routineMap: routineMap,
+    routineVer: routineVer
+  }));
+};
+
+// ─── Vista de rutina semanal (igual que antes) ────────────────────────────────
+const WeekRoutineView = ({
+  routineMap,
+  todayDow,
+  onEditDay
+}) => {
+  const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "week-eyebrow"
   }, "Rutina Semanal"), WEEK_ORDER.map(dow => {
     const routine = routineMap[dow];
@@ -7038,7 +8269,7 @@ const WeekScreen = ({
       className: "week-ex-name"
     }, ex.name), /*#__PURE__*/React.createElement("span", {
       className: "week-ex-spec"
-    }, ex.sets, "\xD7", ex.reps, " \xB7 ", ex.weight, ex.unit !== 'lb' ? ex.unit : 'lb'))), routine.cardio && /*#__PURE__*/React.createElement("div", {
+    }, ex.sets, "\xD7", ex.reps, " \xB7 ", ex.weight > 0 ? ex.weight + (ex.unit !== 'lb' ? ex.unit : 'lb') : 'Corporal'))), routine.cardio && /*#__PURE__*/React.createElement("div", {
       className: "week-ex-row week-cardio-row"
     }, /*#__PURE__*/React.createElement("span", {
       className: "week-ex-i"
@@ -7055,7 +8286,7 @@ const WeekScreen = ({
       className: "week-ex-name"
     }, act.name), /*#__PURE__*/React.createElement("span", {
       className: "week-ex-spec"
-    }, act.defaultVal, " ", act.unit)))), /*#__PURE__*/React.createElement("div", {
+    }, act.type === 'bodyweight' ? 'Peso corporal' : `${act.defaultVal} ${act.unit}`)))), /*#__PURE__*/React.createElement("div", {
       className: "week-card-stats"
     }, /*#__PURE__*/React.createElement("span", null, (routine.exercises || []).length, " ejercicios"), /*#__PURE__*/React.createElement("span", {
       className: "dot-sep"
@@ -7065,6 +8296,146 @@ const WeekScreen = ({
       className: "week-rest-body"
     }, "D\xEDa de descanso \xB7 Recupera y disfruta"));
   }));
+};
+
+// ─── Vista de catálogo de ejercicios ─────────────────────────────────────────
+// Muestra todos los ejercicios de todas las rutinas, agrupados por rutina.
+// Permite ver en qué día(s) aparece cada ejercicio.
+// Permite agregar grupos de ejercicios extras a un día (para cuando hay
+// múltiples actividades ese día, ej: gym + calistenia).
+const ExerciseCatalogView = ({
+  routineMap,
+  routineVer
+}) => {
+  const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+  const [search, setSearch] = React.useState('');
+  const [expandedGroup, setExpandedGroup] = React.useState(null);
+
+  // Construir catálogo global: un entry por grupo (rutina de cada día)
+  const groups = React.useMemo(() => {
+    return WEEK_ORDER.map(dow => ({
+      dow,
+      routine: routineMap[dow]
+    })).filter(({
+      routine
+    }) => !routine.rest && (routine.exercises || []).length > 0);
+  }, [routineMap]);
+
+  // Lista plana de todos los ejercicios para búsqueda
+  const allExercises = React.useMemo(() => {
+    const seen = new Set();
+    const result = [];
+    for (const {
+      dow,
+      routine
+    } of groups) {
+      for (const ex of routine.exercises || []) {
+        if (!seen.has(ex.id)) {
+          seen.add(ex.id);
+          result.push({
+            ...ex,
+            routineTitle: routine.title,
+            dow
+          });
+        }
+      }
+    }
+    return result;
+  }, [groups]);
+  const filtered = search.trim() ? allExercises.filter(ex => ex.name.toLowerCase().includes(search.toLowerCase()) || (ex.sub || '').toLowerCase().includes(search.toLowerCase()) || ex.routineTitle.toLowerCase().includes(search.toLowerCase())) : null; // null = no hay búsqueda activa, mostrar por grupos
+
+  const exSpec = ex => `${ex.sets}×${ex.reps} · ${ex.weight > 0 ? ex.weight + (ex.unit !== 'lb' ? ex.unit : ' lb') : 'Peso corporal'}`;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "week-eyebrow"
+  }, "Ejercicios"), /*#__PURE__*/React.createElement("input", {
+    className: "add-search-input",
+    placeholder: "Buscar ejercicio...",
+    value: search,
+    onFocus: e => e.target.select(),
+    onChange: e => setSearch(e.target.value)
+  }), filtered ?
+  /*#__PURE__*/
+  // Vista de búsqueda: lista plana
+  React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, "No se encontraron ejercicios."), filtered.map(ex => /*#__PURE__*/React.createElement("div", {
+    key: ex.id,
+    className: "cat-ex-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cat-ex-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cat-ex-name"
+  }, ex.name), /*#__PURE__*/React.createElement("div", {
+    className: "cat-ex-sub"
+  }, ex.sub), /*#__PURE__*/React.createElement("div", {
+    className: "cat-ex-spec"
+  }, exSpec(ex), " \xB7 ", /*#__PURE__*/React.createElement("span", {
+    className: "cat-ex-routine"
+  }, ex.routineTitle)))))) :
+  /*#__PURE__*/
+  // Vista agrupada por rutina
+  React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10
+    }
+  }, groups.map(({
+    dow,
+    routine
+  }) => {
+    const isExpanded = expandedGroup === dow;
+    return /*#__PURE__*/React.createElement("div", {
+      key: dow,
+      className: "cat-group-card"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "cat-group-head",
+      onClick: () => setExpandedGroup(isExpanded ? null : dow)
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "cat-group-day"
+    }, window.DAY_LONG[dow]), /*#__PURE__*/React.createElement("div", {
+      className: "cat-group-title"
+    }, routine.title)), /*#__PURE__*/React.createElement("div", {
+      className: "cat-group-count"
+    }, (routine.exercises || []).length, " ejercicios"), /*#__PURE__*/React.createElement("div", {
+      className: "cat-group-arrow"
+    }, isExpanded ? '∧' : '∨')), isExpanded && /*#__PURE__*/React.createElement("div", {
+      className: "cat-group-body"
+    }, (routine.exercises || []).map((ex, i) => /*#__PURE__*/React.createElement("div", {
+      key: ex.id,
+      className: "cat-ex-row"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cat-ex-num"
+    }, String(i + 1).padStart(2, '0')), /*#__PURE__*/React.createElement("div", {
+      className: "cat-ex-info"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "cat-ex-name"
+    }, ex.name), ex.sub && /*#__PURE__*/React.createElement("div", {
+      className: "cat-ex-sub"
+    }, ex.sub), /*#__PURE__*/React.createElement("div", {
+      className: "cat-ex-spec"
+    }, exSpec(ex))))), (routine.activities || []).length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "cat-acts-label"
+    }, "Actividades"), (routine.activities || []).map(act => /*#__PURE__*/React.createElement("div", {
+      key: act.id,
+      className: "cat-ex-row"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cat-ex-num"
+    }, act.icon || '🏃'), /*#__PURE__*/React.createElement("div", {
+      className: "cat-ex-info"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "cat-ex-name"
+    }, act.name), /*#__PURE__*/React.createElement("div", {
+      className: "cat-ex-spec"
+    }, act.type === 'bodyweight' ? 'Peso corporal' : `${act.defaultVal} ${act.unit}`)))))));
+  })));
 };
 window.WeekScreen = WeekScreen;
 
@@ -7520,6 +8891,7 @@ const App = ({
   const [refresh, setRefresh] = useState(0);
   const [swapOpen, setSwapOpen] = useState(false);
   const [completionData, setCompletionData] = useState(null);
+  const [daySummaryData, setDaySummaryData] = useState(null);
   const today = new Date();
   const dow = today.getDay();
 
@@ -7554,7 +8926,9 @@ const App = ({
   }, [dow]);
   const streak = useMemo(() => window.GymStore.computeStreak(), [refresh]);
   const todayIso = window.GymStore.iso(today);
-  const todaySession = useMemo(() => window.GymStore.getSession(todayIso), [refresh]);
+  // Sesión activa del día: la última si era array legacy, o el objeto, o null.
+  // getDaySessions sigue disponible para calendar/history que leen arrays históricos.
+  const todaySession = useMemo(() => window.GymStore.getDaySession(todayIso), [refresh]);
   const profileInfo = useMemo(() => {
     const name = window.GymStore.getActiveProfile();
     return window.GymStore.getProfiles().find(p => p.name === name) || null;
@@ -7566,14 +8940,16 @@ const App = ({
   const startWorkout = useCallback(mood => {
     // Peso inteligente: usar máximo histórico por ejercicio como punto de partida
     const pb = {};
-    Object.values(window.GymStore.getAllSessions()).filter(s => s.date < todayIso).forEach(s => (s.exercises || []).forEach(e => {
+    window.GymStore.getAllSessionsFlat().filter(s => s.date < todayIso).forEach(s => (s.exercises || []).forEach(e => {
       if (e.weight > 0 && (pb[e.id] == null || e.weight > pb[e.id])) pb[e.id] = e.weight;
     }));
     const session = {
+      sessionId: 'sid_' + Date.now(),
       date: todayIso,
       dow,
       title: routine.title,
       mood,
+      label: routine.title,
       startTime: Date.now(),
       exercises: (routine.exercises || []).map(ex => ({
         id: ex.id,
@@ -7633,8 +9009,11 @@ const App = ({
   const finish = useCallback(isComplete => {
     setActive(prev => {
       if (!prev) return null;
+      // Asegurar sessionId (migración: sesiones reanudadas pueden no tenerlo)
+      const sid = prev.sessionId || 'sid_' + Date.now();
       const final = {
         ...prev,
+        sessionId: sid,
         completed: !!isComplete,
         endTime: Date.now()
       };
@@ -7645,12 +9024,28 @@ const App = ({
     });
     setRefresh(r => r + 1);
   }, []);
+
+  // Marca la sesión del día como completada directamente desde la vista "done"
+  // (sin pasar por la vista activa). Abre DaySummaryModal con comparaciones.
+  const finishDay = useCallback(() => {
+    const s = window.GymStore.getDaySession(todayIso);
+    if (!s) return;
+    const completed = {
+      ...s,
+      completed: true
+    };
+    window.GymStore.saveSession(completed);
+    setDaySummaryData(completed);
+    setRefresh(r => r + 1);
+  }, [todayIso]);
   const resumeSession = useCallback(() => {
-    const saved = window.GymStore.getSession(window.GymStore.iso(new Date()));
-    if (!saved) {
+    // Reanuda la última sesión del día (la más reciente si hay varias)
+    const daySessions = window.GymStore.getDaySessions(window.GymStore.iso(new Date()));
+    if (daySessions.length === 0) {
       window.location.reload();
       return;
     }
+    const saved = daySessions[daySessions.length - 1];
     window.GymStore.setActive(saved);
     setActive(saved);
   }, []);
@@ -7721,6 +9116,7 @@ const App = ({
     setCompletionData(null);
     setTab('calendar');
   }, []);
+  const handleCloseDaySummary = useCallback(() => setDaySummaryData(null), []);
   return /*#__PURE__*/React.createElement("div", {
     className: "app-root"
   }, /*#__PURE__*/React.createElement("header", {
@@ -7765,6 +9161,7 @@ const App = ({
     onSwapRoutine: () => setSwapOpen(true),
     onUpdateActivity: updateActivity,
     onResume: resumeSession,
+    onFinishDay: finishDay,
     onAddExercise: addExerciseToSession,
     onAddActivity: addActivityToSession
   }), tab === 'calendar' && /*#__PURE__*/React.createElement(CalendarScreen, {
@@ -7837,6 +9234,9 @@ const App = ({
   }), completionData && /*#__PURE__*/React.createElement(CompletionModal, {
     session: completionData,
     onClose: handleCloseCompletion
+  }), daySummaryData && /*#__PURE__*/React.createElement(DaySummaryModal, {
+    session: daySummaryData,
+    onClose: handleCloseDaySummary
   }), showTweaks && /*#__PURE__*/React.createElement("div", {
     className: "tweaks-panel"
   }, /*#__PURE__*/React.createElement("div", {

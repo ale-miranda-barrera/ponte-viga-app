@@ -182,16 +182,106 @@ window.GymStore = (function() {
     },
 
     // ─── Sesiones ────────────────────────────────────────────────────────
-    getAllSessions()     { return _load(KEY_SESSIONS, {}); },
-    getSession(dateIso) { return this.getAllSessions()[dateIso] || null; },
+    // Migración defensiva: una entrada puede ser un objeto legacy (una sola
+    // sesión) o un array (múltiples sesiones por día). Siempre normalizar a
+    // array internamente para simplificar el resto del código.
+    _normDay(entry) {
+      if (!entry) return [];
+      if (Array.isArray(entry)) return entry;
+      return [entry]; // objeto legacy → array de 1
+    },
+
+    getAllSessions() { return _load(KEY_SESSIONS, {}); },
+
+    // Lista plana de todas las sesiones (útil para historial, progreso, PB, etc.)
+    getAllSessionsFlat() {
+      const result = [];
+      Object.values(this.getAllSessions()).forEach(entry => {
+        if (Array.isArray(entry)) entry.forEach(s => result.push(s));
+        else if (entry && entry.date) result.push(entry);
+      });
+      return result;
+    },
+
+    // Devuelve SIEMPRE un array de sesiones del día (vacío si no hay ninguna)
+    getDaySessions(dateIso) {
+      return this._normDay(this.getAllSessions()[dateIso]);
+    },
+
+    // Compatibilidad: devuelve la primera sesión del día o null (legacy API).
+    // Internamente ya usamos getDaySessions en la mayoría de los lugares.
+    getSession(dateIso) {
+      const arr = this.getDaySessions(dateIso);
+      return arr.length > 0 ? arr[0] : null;
+    },
+
+    // Nueva API singular para la vista de HOY: devuelve la sesión activa del día
+    // (la última si es array legacy, el objeto si ya es objeto, null si no hay nada).
+    // NO elimina los anteriores del array — los preserva en storage.
+    getDaySession(dateIso) {
+      const arr = this.getDaySessions(dateIso);
+      return arr.length > 0 ? arr[arr.length - 1] : null;
+    },
+
+    // Guarda/actualiza una sesión. Si tiene sessionId la actualiza en su
+    // posición; si no, la añade al array del día.
+    // También persiste dailyTotals[date] para uso futuro (retro-compatible: campo opcional).
     saveSession(s) {
       const all = this.getAllSessions();
-      all[s.date] = s;
+      const arr = this._normDay(all[s.date]);
+      const idx = s.sessionId ? arr.findIndex(x => x.sessionId === s.sessionId) : -1;
+      if (idx >= 0) {
+        arr[idx] = s;
+      } else {
+        arr.push(s);
+      }
+      all[s.date] = arr;
       _save(KEY_SESSIONS, all);
+
+      // Actualizar totales diarios (estimación: 5 kcal/set con peso, 3 sin peso, actividades x kcalPerMin)
+      this._updateDailyTotals(s.date, arr);
     },
+
+    // Recalcula y persiste dailyTotals para un día dado. Retro-compatible: si no existe
+    // el campo en cargas antiguas, se calcula al vuelo cuando se llama saveSession.
+    _updateDailyTotals(dateIso, daySessions) {
+      const profile = _load(KEY_STATS, {});
+      if (!profile.dailyTotals) profile.dailyTotals = {};
+
+      let totalKcal = 0, totalExercises = 0;
+      daySessions.forEach(s => {
+        const exDone = (s.exercises || []).filter(e => e.done);
+        totalExercises += exDone.length;
+        exDone.forEach(ex => { totalKcal += ex.sets * (ex.weight > 0 ? 5 : 3); });
+        if (s.cardioDone && s.cardioMinutes) totalKcal += Math.round(s.cardioMinutes * 5);
+        Object.values(s.activities || {}).forEach(a => {
+          if (!a.done || !a.value) return;
+          const def = (window.DEFAULT_ACTIVITIES || []).find(x => x.id === a.id);
+          const kpm = def?.kcalPerMin ?? (def?.cal10 ? def.cal10 / 10 : 4);
+          totalKcal += Math.round(a.value * kpm);
+        });
+      });
+
+      profile.dailyTotals[dateIso] = {
+        kcal: totalKcal,
+        exercises: totalExercises,
+        sessionsCount: daySessions.length,
+      };
+      _save(KEY_STATS, profile);
+    },
+
     deleteSession(dateIso) {
       const all = this.getAllSessions();
       delete all[dateIso];
+      _save(KEY_SESSIONS, all);
+    },
+
+    // Elimina una sesión específica del día por sessionId
+    deleteDaySession(dateIso, sessionId) {
+      const all = this.getAllSessions();
+      const arr = this._normDay(all[dateIso]).filter(s => s.sessionId !== sessionId);
+      if (arr.length === 0) delete all[dateIso];
+      else all[dateIso] = arr;
       _save(KEY_SESSIONS, all);
     },
 
@@ -231,7 +321,6 @@ window.GymStore = (function() {
 
     // ─── Racha ───────────────────────────────────────────────────────────
     computeStreak() {
-      const all = this.getAllSessions();
       const overrides = _load(KEY_ROUTINE, {});
       const getDay = (dow) => overrides[dow] || window.WEEK_ROUTINE[dow];
       let streak = 0;
@@ -239,7 +328,7 @@ window.GymStore = (function() {
 
       const todayDow = today.getDay();
       const todayR = getDay(todayDow);
-      if (todayR && !todayR.rest && all[iso(today)]) streak++;
+      if (todayR && !todayR.rest && this.getDaySessions(iso(today)).length > 0) streak++;
 
       for (let i = 1; i < 120; i++) {
         const d = new Date(today.getTime() - i*86400000);
@@ -247,7 +336,7 @@ window.GymStore = (function() {
         const r = getDay(dow);
         if (!r || r.rest) continue;
         const key = iso(d);
-        if (all[key]) streak++;
+        if (this.getDaySessions(key).length > 0) streak++;
         else break;
       }
       return streak;
@@ -294,6 +383,18 @@ window.GymStore = (function() {
         .map(([code, g]) => ({ code, name: g.name }));
     },
 
+    // Devuelve las últimas N sesiones (planas, desc por fecha) que contengan ejerciseName.
+    // excludeSessionId: excluye la sesión actual para no comparar contra sí misma.
+    // Compara por nombre normalizado (lowercase, sin espacios extra).
+    getExerciseHistory(exerciseName, excludeSessionId, limit = 2) {
+      const norm = (n) => n.toLowerCase().trim();
+      const target = norm(exerciseName);
+      return this.getAllSessionsFlat()
+        .filter(s => s.sessionId !== excludeSessionId && (s.exercises || []).some(e => norm(e.name || '') === target))
+        .sort((a, b) => b.date.localeCompare(a.date) || ((b.startTime||0) - (a.startTime||0)))
+        .slice(0, limit);
+    },
+
     getGroupFriends(profileName) {
       const myGroups = this.getProfileGroups(profileName);
       const friendNames = new Set();
@@ -313,6 +414,59 @@ window.GymStore = (function() {
       const custom = _load(KEY_ACTS, []);
       custom.push({ ...a, id: 'custom_' + Date.now() });
       _save(KEY_ACTS, custom);
+    },
+
+    // ─── Pool global de ejercicios ────────────────────────────────────────
+    // Reúne ejercicios de TODOS los días de la rutina del perfil actual + resto de perfiles del grupo.
+    // Deduplica por (name+sub) normalizados. Excluye IDs ya en el draft (currentExIds).
+    getGlobalExercisePool(currentExIds) {
+      const seen = new Set();
+      const result = [];
+      const currentProfile = this.getActiveProfile();
+
+      // Helper: agrega ejercicios de un perfil (desde su rutina de los 7 días)
+      const addFromRoutineOverrides = (overrides, defaultWeekRoutine, sourceProfile) => {
+        for (let d = 0; d <= 6; d++) {
+          const r = (overrides && overrides[d]) || (defaultWeekRoutine && defaultWeekRoutine[d]);
+          if (!r || r.rest) continue;
+          (r.exercises || []).forEach(ex => {
+            if (currentExIds && currentExIds.has(ex.id)) return;
+            const key = (ex.name + '|' + (ex.sub || '')).toLowerCase().trim();
+            if (seen.has(key)) return;
+            seen.add(key);
+            result.push({ ...ex, sourceProfile });
+          });
+        }
+      };
+
+      // 1. Ejercicios del perfil actual (todos los días, no solo el editado)
+      const myOverrides = _load(KEY_ROUTINE, {});
+      addFromRoutineOverrides(myOverrides, window.WEEK_ROUTINE, null);
+
+      // 2. Ejercicios de otros perfiles del grupo (asíncrono no disponible aquí;
+      //    usamos solo los datos en memoria — suficiente si el perfil fue activo antes)
+      const groups = this.getGroups();
+      const myGroups = Object.entries(groups)
+        .filter(([, g]) => g.members.includes(currentProfile))
+        .map(([code]) => code);
+
+      const profiles = this.getProfiles();
+      profiles.forEach(p => {
+        if (p.name === currentProfile) return;
+        // Solo incluir si comparte grupo con el perfil actual
+        const inSameGroup = myGroups.some(code => {
+          const g = groups[code];
+          return g && g.members.includes(p.name);
+        });
+        if (!inSameGroup) return;
+
+        // Intentar obtener rutinas del perfil desde memoria (si estuvo activo en esta sesión)
+        const otherRoutineKey = `gym_routine_overrides_v2_${p.name}`;
+        const otherOverrides = _load(otherRoutineKey, null);
+        addFromRoutineOverrides(otherOverrides, window.WEEK_ROUTINE, p.name);
+      });
+
+      return result;
     },
 
     // ─── Estadísticas de perfil (para leaderboard, etc) ──────────────────
@@ -349,7 +503,14 @@ window.GymStore = (function() {
       const prevBest = {};
       const weekBest = {};
 
-      Object.values(sessions).forEach(s => {
+      // Aplanar: cada día puede ser objeto legacy o array de sesiones
+      const flatSessions = [];
+      Object.values(sessions).forEach(entry => {
+        if (Array.isArray(entry)) entry.forEach(s => flatSessions.push(s));
+        else if (entry && entry.date) flatSessions.push(entry);
+      });
+
+      flatSessions.forEach(s => {
         if (!s.completed) return;
         const sDate = new Date(s.date + 'T12:00:00');
         const isThisWeek = sDate >= weekStart && s.date <= todayStr;
@@ -368,15 +529,22 @@ window.GymStore = (function() {
         });
       });
 
-      // Racha: días consecutivos con sesión completada
+      // Racha: días consecutivos con al menos una sesión completada
+      // Normaliza entrada del día a array defensivamente
+      const dayHasCompleted = (dStr) => {
+        const entry = sessions[dStr];
+        if (!entry) return false;
+        if (Array.isArray(entry)) return entry.some(s => s.completed);
+        return !!entry.completed;
+      };
       let streak = 0;
-      if (sessions[todayStr]?.completed) streak++;
+      if (dayHasCompleted(todayStr)) streak++;
       for (let i = 1; i < 120; i++) {
         const d = new Date(today.getTime() - i * 86400000);
         const dStr = toIso(d);
         const routineDay = window.WEEK_ROUTINE?.[d.getDay()];
         if (routineDay?.rest) continue;
-        if (sessions[dStr]?.completed) streak++;
+        if (dayHasCompleted(dStr)) streak++;
         else break;
       }
 

@@ -44,6 +44,7 @@ const App = ({ onSwitchProfile }) => {
   const [refresh, setRefresh] = useState(0);
   const [swapOpen, setSwapOpen] = useState(false);
   const [completionData, setCompletionData] = useState(null);
+  const [daySummaryData, setDaySummaryData] = useState(null);
 
   const today = new Date();
   const dow = today.getDay();
@@ -83,7 +84,9 @@ const App = ({ onSwitchProfile }) => {
 
   const streak = useMemo(() => window.GymStore.computeStreak(), [refresh]);
   const todayIso = window.GymStore.iso(today);
-  const todaySession = useMemo(() => window.GymStore.getSession(todayIso), [refresh]);
+  // Sesión activa del día: la última si era array legacy, o el objeto, o null.
+  // getDaySessions sigue disponible para calendar/history que leen arrays históricos.
+  const todaySession = useMemo(() => window.GymStore.getDaySession(todayIso), [refresh]);
 
   const profileInfo = useMemo(() => {
     const name = window.GymStore.getActiveProfile();
@@ -98,14 +101,16 @@ const App = ({ onSwitchProfile }) => {
   const startWorkout = useCallback((mood) => {
     // Peso inteligente: usar máximo histórico por ejercicio como punto de partida
     const pb = {};
-    Object.values(window.GymStore.getAllSessions())
+    window.GymStore.getAllSessionsFlat()
       .filter(s => s.date < todayIso)
       .forEach(s => (s.exercises || []).forEach(e => {
         if (e.weight > 0 && (pb[e.id] == null || e.weight > pb[e.id])) pb[e.id] = e.weight;
       }));
 
     const session = {
+      sessionId: 'sid_' + Date.now(),
       date: todayIso, dow, title: routine.title, mood,
+      label: routine.title,
       startTime: Date.now(),
       exercises: (routine.exercises || []).map(ex => ({
         id: ex.id,
@@ -149,7 +154,9 @@ const App = ({ onSwitchProfile }) => {
   const finish = useCallback((isComplete) => {
     setActive(prev => {
       if (!prev) return null;
-      const final = { ...prev, completed: !!isComplete, endTime: Date.now() };
+      // Asegurar sessionId (migración: sesiones reanudadas pueden no tenerlo)
+      const sid = prev.sessionId || ('sid_' + Date.now());
+      const final = { ...prev, sessionId: sid, completed: !!isComplete, endTime: Date.now() };
       window.GymStore.saveSession(final);
       window.GymStore.clearActive();
       if (isComplete) setCompletionData(final);
@@ -158,12 +165,25 @@ const App = ({ onSwitchProfile }) => {
     setRefresh(r => r + 1);
   }, []);
 
+  // Marca la sesión del día como completada directamente desde la vista "done"
+  // (sin pasar por la vista activa). Abre DaySummaryModal con comparaciones.
+  const finishDay = useCallback(() => {
+    const s = window.GymStore.getDaySession(todayIso);
+    if (!s) return;
+    const completed = { ...s, completed: true };
+    window.GymStore.saveSession(completed);
+    setDaySummaryData(completed);
+    setRefresh(r => r + 1);
+  }, [todayIso]);
+
   const resumeSession = useCallback(() => {
-    const saved = window.GymStore.getSession(window.GymStore.iso(new Date()));
-    if (!saved) {
+    // Reanuda la última sesión del día (la más reciente si hay varias)
+    const daySessions = window.GymStore.getDaySessions(window.GymStore.iso(new Date()));
+    if (daySessions.length === 0) {
       window.location.reload();
       return;
     }
+    const saved = daySessions[daySessions.length - 1];
     window.GymStore.setActive(saved);
     setActive(saved);
   }, []);
@@ -212,6 +232,7 @@ const App = ({ onSwitchProfile }) => {
   const handleCloseEditingRoutine = useCallback(() => setEditingRoutine(false), []);
   const handleCloseSwapOpen = useCallback(() => setSwapOpen(false), []);
   const handleCloseCompletion = useCallback(() => { setCompletionData(null); setTab('calendar'); }, []);
+  const handleCloseDaySummary = useCallback(() => setDaySummaryData(null), []);
 
   return (
     <div className="app-root">
@@ -259,6 +280,7 @@ const App = ({ onSwitchProfile }) => {
             onSwapRoutine={() => setSwapOpen(true)}
             onUpdateActivity={updateActivity}
             onResume={resumeSession}
+            onFinishDay={finishDay}
             onAddExercise={addExerciseToSession}
             onAddActivity={addActivityToSession}
           />
@@ -286,7 +308,6 @@ const App = ({ onSwitchProfile }) => {
       <MoodModal open={moodOpen} onClose={handleCloseMoodOpen} onPick={startWorkout} />
       <ExerciseDetail ex={exerciseDetail} onClose={handleCloseExerciseDetail} />
       <DayDetail dateIso={dayDetail} onClose={handleCloseDayDetail} />
-
       {editingRoutine && (
         <RoutineEditor
           dow={editingDow}
@@ -309,6 +330,13 @@ const App = ({ onSwitchProfile }) => {
         <CompletionModal
           session={completionData}
           onClose={handleCloseCompletion}
+        />
+      )}
+
+      {daySummaryData && (
+        <DaySummaryModal
+          session={daySummaryData}
+          onClose={handleCloseDaySummary}
         />
       )}
 

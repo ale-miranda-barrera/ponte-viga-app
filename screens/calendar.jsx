@@ -23,11 +23,21 @@ const CalendarScreen = ({ onPickDate, streak, refresh, routineVer }) => {
     return m;
   }, [routineVer]);
 
-  const monthSessions = Object.values(sessions).filter(s => s.date.startsWith(
-    cursor.y + '-' + String(cursor.m+1).padStart(2,'0')
-  ));
-  const completedCount = monthSessions.filter(s => s.completed).length;
-  const partialCount = monthSessions.filter(s => !s.completed).length;
+  // monthFlat: lista plana de sesiones del mes (migración: cada entrada puede ser objeto o array)
+  const monthPrefix = cursor.y + '-' + String(cursor.m+1).padStart(2,'0');
+  const monthFlat = Object.entries(sessions)
+    .filter(([k]) => k.startsWith(monthPrefix))
+    .flatMap(([, v]) => Array.isArray(v) ? v : (v && v.date ? [v] : []));
+  // Para "días completos" contamos días donde TODAS las sesiones están completas
+  const monthDayKeys = Object.keys(sessions).filter(k => k.startsWith(monthPrefix));
+  const completedCount = monthDayKeys.filter(k => {
+    const arr = Array.isArray(sessions[k]) ? sessions[k] : [sessions[k]];
+    return arr.length > 0 && arr.every(s => s.completed);
+  }).length;
+  const partialCount = monthDayKeys.filter(k => {
+    const arr = Array.isArray(sessions[k]) ? sessions[k] : [sessions[k]];
+    return arr.some(s => !s.completed);
+  }).length;
 
   // Días de gym que ya pasaron este mes (excluye días de descanso y días futuros)
   const isCurrentMonth = cursor.y === today.getFullYear() && cursor.m === today.getMonth();
@@ -48,9 +58,17 @@ const CalendarScreen = ({ onPickDate, streak, refresh, routineVer }) => {
     monday.setDate(d.getDate() - daysFromMonday);
     const mondayIso = window.GymStore.iso(monday);
 
-    const allSessions = Object.values(sessions);
-    const weekDone = allSessions.filter(s => s.date >= mondayIso && s.date <= todayIso && s.completed).length;
-    const weekPartial = allSessions.filter(s => s.date >= mondayIso && s.date <= todayIso && !s.completed).length;
+    // weekDone/Partial a nivel de DÍA (no sesión): un día completo = todas sus sesiones completas
+    let weekDone = 0, weekPartial = 0;
+    for (let i = 0; i <= daysFromMonday; i++) {
+      const dd = new Date(monday);
+      dd.setDate(monday.getDate() + i);
+      const dIso = window.GymStore.iso(dd);
+      const arr = window.GymStore.getDaySessions(dIso);
+      if (arr.length === 0) continue;
+      if (arr.every(s => s.completed)) weekDone++;
+      else weekPartial++;
+    }
 
     let weekGymDays = 0;
     for (let i = 0; i <= daysFromMonday; i++) {
@@ -99,17 +117,28 @@ const CalendarScreen = ({ onPickDate, streak, refresh, routineVer }) => {
           const dow = dateObj.getDay();
           const isToday = iso === todayIso;
           const isFuture = iso > todayIso;
-          const s = sessions[iso];
+          const daySessions = window.GymStore.getDaySessions(iso);
+          const hasSession = daySessions.length > 0;
           const isRestDay = routineMap[dow]?.rest;
-          let state = 'none';
-          if (s?.completed) state = 'completed';
-          else if (s) state = 'partial';
-          else if (isRestDay) state = 'rest';
-          else if (!isFuture) state = 'missed';
 
-          // Texto de progreso parcial: "3/5" ejercicios completados (solo si parcial con datos)
+          // Estado del día: completed solo si TODAS las sesiones están completas
+          let state = 'none';
+          if (hasSession) {
+            const allDone = daySessions.every(s => s.completed);
+            state = allDone ? 'completed' : 'partial';
+          } else if (isRestDay) {
+            state = 'rest';
+          } else if (!isFuture) {
+            state = 'missed';
+          }
+
+          // Badge múltiples sesiones
+          const multiCount = daySessions.length > 1 ? daySessions.length : null;
+
+          // Label parcial: ejercicios completados de la primera sesión
           let partialLabel = null;
-          if (state === 'partial' && s) {
+          if (state === 'partial' && daySessions.length === 1) {
+            const s = daySessions[0];
             const doneEx = (s.exercises || []).filter(e => e.done).length;
             const totalEx = (s.exercises || []).length;
             if (totalEx > 0) partialLabel = `${doneEx}/${totalEx}`;
@@ -117,12 +146,13 @@ const CalendarScreen = ({ onPickDate, streak, refresh, routineVer }) => {
 
           return (
             <button key={i} className={`cal-cell state-${state} ${isToday ? 'is-today' : ''} ${isFuture?'is-future':''}`}
-              disabled={!s}
+              disabled={!hasSession}
               onClick={() => onPickDate(iso)}>
               <div className="cal-day-num">{d}</div>
               {state === 'completed' && <div className="cal-big-icon">🔥</div>}
               {state === 'partial' && <div className="cal-big-icon partial">💪</div>}
               {partialLabel && <div className="cal-partial-label">{partialLabel}</div>}
+              {multiCount && <div className="cal-multi-badge">{multiCount}x</div>}
               {state === 'rest' && <div className="cal-rest-icon">·</div>}
               {state === 'missed' && <div className="cal-dot missed"></div>}
             </button>
