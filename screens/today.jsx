@@ -1,3 +1,9 @@
+// Wrapper local para envolver hijos en SafeBoundary si está disponible.
+const Safe = ({ children }) => {
+  const SB = window.SafeBoundary;
+  return SB ? <SB>{children}</SB> : <>{children}</>;
+};
+
 const REST_POOL = [
   { sub: 'Recupera. Hidrata. Lee.',         quote: '"Las mentes fuertes sufren sin quejarse,\nlas débiles se quejan sin sufrir."' },
   { sub: 'El descanso es parte del plan.',  quote: '"No hay campeón que no haya descansado\ncomo si su vida dependiera de ello."' },
@@ -20,17 +26,19 @@ const formatLastDate = (isoDate) => {
   return `${d.getDate()} ${window.MONTH_LONG[d.getMonth()].slice(0, 3).toLowerCase()}`;
 };
 
-const estimateSessionCals = (exercises, activeExMap) => {
-  let kcal = 0;
-  (exercises || []).forEach(ex => {
-    const doneSets = activeExMap[ex.id]?.sets || 0;
-    if (doneSets === 0) return;
-    kcal += doneSets * (ex.weight > 0 ? 5 : 3);
-  });
-  return kcal;
+// Estimador para sesión activa (tiempo real, incluye parciales).
+// Comparte convención con GymStore.calcSessionKcal.
+const estimateSessionCals = (exercises, activeExMap, activities, activeActMap, cardio, cardioDone, cardioMinutes) => {
+  const virtualSession = {
+    exercises: (exercises || []).map(ex => ({ ...ex, ...(activeExMap[ex.id] || {}) })),
+    activities: activeActMap || {},
+    cardioDone,
+    cardioMinutes,
+  };
+  return window.GymStore.calcSessionKcal(virtualSession);
 };
 
-const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onClearSwap, onStart, onUpdateExercise, onFinish, onToggleCardio, onOpenExercise, onEditRoutine, onSwapRoutine, onUpdateActivity, onResume, onFinishDay, onAddExercise, onAddActivity }) => {
+const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onClearSwap, onStart, onQuickStart, onUpdateExercise, onFinish, onToggleCardio, onOpenExercise, onEditRoutine, onSwapRoutine, onUpdateActivity, onResume, onFinishDay, onAddExercise, onAddActivity, onRemoveExercise, onRemoveActivity, onChangeMood }) => {
   const { pbMap, lastMap, lastRoutineSession } = React.useMemo(() => {
     const pb = {}, last = {};
     const todayIso = window.GymStore.iso(new Date());
@@ -59,18 +67,24 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
     }
     const activeExMap = Object.fromEntries((active.exercises || []).map(e => [e.id, e]));
     const addedExDefs = active.addedExDefs || [];
-    const allExercises = [...(routine.exercises || []), ...addedExDefs];
+    // Filtrar los IDs que el usuario quitó de la sesión (X en card).
+    // Son ejercicios de la routine que ya no queremos mostrar en la sesión activa.
+    const skippedExIds = new Set(active._skippedExIds || []);
+    const allExercises = [...(routine.exercises || []), ...addedExDefs]
+      .filter(ex => !skippedExIds.has(ex.id));
     const doneCount = allExercises.filter(ex => activeExMap[ex.id]?.done).length;
     const cardio = routine.cardio;
     const addedActDefs = active.addedActDefs || [];
-    const allActivities = [...(routine.activities || []), ...addedActDefs];
+    const skippedActIds = new Set(active._skippedActIds || []);
+    const allActivities = [...(routine.activities || []), ...addedActDefs]
+      .filter(a => !skippedActIds.has(a.id));
     const activeActMap = active.activities || {};
     const actsDone = allActivities.filter(a => activeActMap[a.id]?.done).length;
     const totalItems = allExercises.length + (cardio ? 1 : 0) + allActivities.length;
     const allDone = doneCount === allExercises.length
       && (!cardio || active.cardioDone)
       && actsDone === allActivities.length;
-    const estimatedCals = estimateSessionCals(allExercises, activeExMap);
+    const estimatedCals = estimateSessionCals(allExercises, activeExMap, allActivities, activeActMap, cardio, active.cardioDone, active.cardioMinutes);
     return { activeExMap, allExercises, doneCount, cardio, allActivities, activeActMap, actsDone, totalItems, allDone, estimatedCals };
   }, [active, routine]);
 
@@ -87,6 +101,9 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
       </div>
     );
   }
+
+  const todayIso = window.GymStore.iso(today);
+  const DailySummaryComp = window.DailySummary;
 
   if (!isStarted) {
     // Si hay sesión guardada del día, mostrar vista "done" con 1 card
@@ -112,6 +129,7 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
 
       return (
         <div className="today-done">
+          <Safe>{DailySummaryComp && <DailySummaryComp dateIso={todayIso} />}</Safe>
           <div className="done-trophy">{s.completed ? '😎' : '🙌'}</div>
           <div className="done-msg">{msg}</div>
 
@@ -137,8 +155,11 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
       );
     }
 
+    const CoachComp = window.CoachPanel;
     return (
       <div className="today-intro">
+        <Safe>{DailySummaryComp && <DailySummaryComp dateIso={todayIso} />}</Safe>
+        {CoachComp && <CoachComp routine={routine} dateIso={todayIso} />}
         {swappedFromDow != null && (
           <div className="swap-banner">
             <span>↔ Solo por hoy: {routine.title}</span>
@@ -174,16 +195,19 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
           </div>
         )}
         <button type="button" className="btn-primary" onClick={onStart}>Empezar entrenamiento</button>
+        <button type="button" className="btn-secondary" style={{marginTop:8}} onClick={() => onQuickStart && onQuickStart()}>⚡ Empezar rápido (sin mood)</button>
         <div className="intro-secondary-btns">
           <button type="button" className="btn-link" onClick={onSwapRoutine}>↔ Cambiar entrenamiento del día</button>
+          <button type="button" className="btn-link" onClick={onEditRoutine}>✎ Editar rutina de hoy</button>
         </div>
-        <div className="hint-text">Para editar la rutina del día, ve a Semana.</div>
+        <div className="hint-text">Puedes agregar o quitar ejercicios en cualquier momento con las X y el botón +.</div>
       </div>
     );
   }
 
   return (
     <div className="today-active">
+      {DailySummaryComp && <DailySummaryComp dateIso={todayIso} refreshKey={doneCount + actsDone + (active.cardioDone ? 1 : 0)} />}
       <div className="active-header">
         <div>
           <div className="intro-eyebrow">HOY · {window.DAY_LONG[today.getDay()].toUpperCase()}</div>
@@ -191,7 +215,7 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
         </div>
         <div style={{display:'flex', gap:6, alignItems:'center'}}>
           <button type="button" className="icon-btn" onClick={onEditRoutine} title="Editar rutina">✎</button>
-          <MoodBadge mood={active.mood} />
+          <MoodBadge mood={active.mood} onChange={onChangeMood} />
         </div>
       </div>
 
@@ -203,7 +227,7 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
       <div className="exercise-list">
         {allExercises.map((ex, i) => {
           const state = activeExMap[ex.id] || { id: ex.id, weight: ex.weight, sets: 0, targetSets: ex.sets, reps: ex.reps, done: false };
-          return <ExerciseCard key={ex.id} index={i+1} ex={ex} state={state} pb={pbMap[ex.id] ?? null} last={lastMap[ex.id] ?? null} onChange={onUpdateExercise} onOpen={()=>onOpenExercise(ex)} />;
+          return <ExerciseCard key={ex.id} index={i+1} ex={ex} state={state} pb={pbMap[ex.id] ?? null} last={lastMap[ex.id] ?? null} onChange={onUpdateExercise} onOpen={()=>onOpenExercise(ex)} onRemove={onRemoveExercise ? () => onRemoveExercise(ex.id) : null} />;
         })}
         <button type="button" className="add-item-btn" onClick={() => setAddExOpen(true)}>+ Agregar ejercicio</button>
 
@@ -212,7 +236,7 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
         )}
         {allActivities.map(act => {
           const state = activeActMap[act.id] || { id: act.id, done: false, value: act.defaultVal || 10 };
-          return <ActivityCard key={act.id} activity={act} state={state} onChange={onUpdateActivity} />;
+          return <ActivityCard key={act.id} activity={act} state={state} onChange={onUpdateActivity} onRemove={onRemoveActivity ? () => onRemoveActivity(act.id) : null} />;
         })}
         <button type="button" className="add-item-btn" onClick={() => setAddActOpen(true)}>+ Agregar actividad</button>
       </div>
@@ -224,7 +248,9 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
       {addExOpen && (
         <AddExerciseSheet
           currentExIds={new Set(allExercises.map(e => e.id))}
+          currentActIds={new Set(allActivities.map(a => a.id))}
           onAdd={(ex) => { onAddExercise(ex); setAddExOpen(false); }}
+          onAddActivity={(act) => { onAddActivity(act); setAddExOpen(false); }}
           onClose={() => setAddExOpen(false)}
         />
       )}
@@ -239,7 +265,7 @@ const TodayScreen = ({ active, today, routine, todaySession, swappedFromDow, onC
   );
 };
 
-const AddExerciseSheet = ({ currentExIds, onAdd, onClose }) => {
+const AddExerciseSheet = ({ currentExIds, currentActIds, onAdd, onAddActivity, onClose }) => {
   const [search, setSearch] = React.useState('');
   const allExs = React.useMemo(() => {
     const seen = new Set();
@@ -252,6 +278,11 @@ const AddExerciseSheet = ({ currentExIds, onAdd, onClose }) => {
       }
     }
     return result;
+  }, []);
+  const featured = React.useMemo(() => {
+    const ids = window.FEATURED_ACTIVITY_IDS || [];
+    const all = window.DEFAULT_ACTIVITIES || [];
+    return ids.map(id => all.find(a => a.id === id)).filter(Boolean);
   }, []);
   const filtered = allExs.filter(ex =>
     !currentExIds.has(ex.id) &&
@@ -266,13 +297,37 @@ const AddExerciseSheet = ({ currentExIds, onAdd, onClose }) => {
           <div className="detail-tag">AGREGAR EJERCICIO</div>
           <div className="detail-name">Elige de tu rutina</div>
         </div>
+
+        {featured.length > 0 && onAddActivity && (
+          <>
+            <div className="featured-cardio-label">Cardio rápido</div>
+            <div className="featured-cardio-row">
+              {featured.map(act => {
+                const already = currentActIds?.has(act.id);
+                return (
+                  <button
+                    key={act.id}
+                    className={`featured-cardio-btn${already ? ' is-in' : ''}`}
+                    disabled={already}
+                    onClick={() => onAddActivity(act)}
+                    title={`${act.name} · ~${act.kcalPerMin} kcal/min`}
+                  >
+                    <span className="featured-cardio-icon">{act.icon}</span>
+                    <span className="featured-cardio-name">{act.name}</span>
+                    <span className="featured-cardio-kpm">~{act.kcalPerMin} kcal/min</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
         <input
           className="add-search-input"
           placeholder="Buscar ejercicio..."
           value={search}
           onFocus={e => e.target.select()}
           onChange={e => setSearch(e.target.value)}
-          autoFocus
         />
         <div className="swap-list">
           {filtered.length === 0 && <div className="empty">No hay más ejercicios disponibles.</div>}
@@ -413,9 +468,44 @@ const MOOD_META = {
   strong: { icon: '💪', label: 'Fuerte', cls: 'mood-strong' },
 };
 
-const MoodBadge = ({ mood }) => {
+const MoodBadge = ({ mood, onChange }) => {
+  const [open, setOpen] = React.useState(false);
   const m = MOOD_META[mood] || MOOD_META.normal;
-  return <div className={`mood-badge ${m.cls}`}><span>{m.icon}</span>{m.label}</div>;
+  if (!onChange) {
+    return <div className={`mood-badge ${m.cls}`}><span>{m.icon}</span>{m.label}</div>;
+  }
+  return (
+    <>
+      <button type="button" className={`mood-badge ${m.cls}`} onClick={() => setOpen(true)} title="Cambiar cómo te sientes">
+        <span>{m.icon}</span>{m.label}
+      </button>
+      {open && (
+        <div className="modal-backdrop" onClick={() => setOpen(false)}>
+          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+            <button type="button" className="sheet-close" onClick={() => setOpen(false)}>✕</button>
+            <div className="modal-handle" />
+            <div className="modal-title">Actualizar cómo te sientes</div>
+            <div className="modal-sub">Puedes cambiarlo en cualquier momento</div>
+            <div className="mood-grid">
+              {Object.keys(MOOD_META).map(key => {
+                const opt = MOOD_META[key];
+                return (
+                  <button
+                    key={key}
+                    className={`mood-opt mood-${key} ${mood === key ? 'is-selected' : ''}`}
+                    onClick={() => { window.hapticTap && window.hapticTap(8); onChange(key); setOpen(false); }}
+                  >
+                    <div className="mood-icon">{opt.icon}</div>
+                    <div className="mood-label">{opt.label}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 const ProgressBar = React.memo(({ done, total }) => {
@@ -438,7 +528,7 @@ const TAG_META = {
   sick:   { icon: '🤧', label: 'Bajado' },
 };
 
-const ExerciseCard = React.memo(({ index, ex, state, pb, last, onChange, onOpen }) => {
+const ExerciseCard = React.memo(({ index, ex, state, pb, last, onChange, onOpen, onRemove }) => {
   const [justCompleted, setJustCompleted] = React.useState(false);
   const [weightStr, setWeightStr] = React.useState(() => String(state.weight));
   const isBodyweight = ex.weight === 0 && ex.unit === 'lb' && state.weight === 0;
@@ -468,17 +558,18 @@ const ExerciseCard = React.memo(({ index, ex, state, pb, last, onChange, onOpen 
     const newSets = state.sets === n ? n - 1 : n;
     const done = newSets >= ex.sets;
     onChange(ex.id, { ...state, sets: newSets, done });
-    if (done && !state.done) {
-      setJustCompleted(true);
-    }
+    window.hapticTap && window.hapticTap(done && !state.done ? 25 : 6);
+    if (done && !state.done) setJustCompleted(true);
   };
 
   const toggleComplete = (e) => {
     e.stopPropagation();
     if (state.done) {
       onChange(ex.id, { ...state, sets: 0, done: false });
+      window.hapticTap && window.hapticTap(6);
     } else {
       onChange(ex.id, { ...state, sets: ex.sets, done: true });
+      window.hapticTap && window.hapticTap([15, 40, 15]);
       setJustCompleted(true);
     }
   };
@@ -505,6 +596,25 @@ const ExerciseCard = React.memo(({ index, ex, state, pb, last, onChange, onOpen 
         <button type="button" className={`ex-check ${state.done ? 'is-checked' : ''}`} onClick={toggleComplete}>
           {state.done ? '✓' : ''}
         </button>
+        {onRemove && (
+          <button
+            type="button"
+            className="ex-remove"
+            title="Quitar de esta sesión"
+            onClick={async (e) => {
+              e.stopPropagation();
+              const confirm = window.useConfirm ? window.useConfirm() : null;
+              if (!confirm) { onRemove(); return; }
+              const ok = await confirm({
+                title: 'Quitar ejercicio',
+                body: `¿Quitar "${ex.name}" de la sesión de hoy? No cambia tu rutina semanal.`,
+                danger: true,
+                confirmLabel: 'Quitar',
+              });
+              if (ok) { window.hapticTap && window.hapticTap(20); onRemove(); }
+            }}
+          >✕</button>
+        )}
       </div>
 
       <div className="ex-body">
@@ -611,7 +721,7 @@ const CardioCard = React.memo(({ cardio, done, onToggle, savedMinutes, savedLaps
 });
 
 // Tarjeta para actividades físicas (no basadas en peso)
-const ActivityCard = React.memo(({ activity, state, onChange }) => {
+const ActivityCard = React.memo(({ activity, state, onChange, onRemove }) => {
   const isBodyweight = activity.type === 'bodyweight';
   const initVal = isBodyweight ? 0 : (state.value ?? activity.defaultVal ?? 10);
   const [val, setVal] = React.useState(initVal);
@@ -673,6 +783,25 @@ const ActivityCard = React.memo(({ activity, state, onChange }) => {
       <button type="button" className={`ex-check ${state.done ? 'is-checked' : ''}`} onClick={toggle}>
         {state.done ? '✓' : ''}
       </button>
+      {onRemove && (
+        <button
+          type="button"
+          className="ex-remove"
+          title="Quitar de esta sesión"
+          onClick={async (e) => {
+            e.stopPropagation();
+            const confirm = window.useConfirm ? window.useConfirm() : null;
+            if (!confirm) { onRemove(); return; }
+            const ok = await confirm({
+              title: 'Quitar actividad',
+              body: `¿Quitar "${activity.name}" de la sesión de hoy?`,
+              danger: true,
+              confirmLabel: 'Quitar',
+            });
+            if (ok) { window.hapticTap && window.hapticTap(20); onRemove(); }
+          }}
+        >✕</button>
+      )}
     </div>
   );
 });

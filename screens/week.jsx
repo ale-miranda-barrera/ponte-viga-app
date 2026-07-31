@@ -4,17 +4,18 @@ const WeekScreen = ({ onEditDay, routineVer }) => {
   const today = new Date();
   const todayDow = today.getDay();
   const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Lun → Dom
+  window.useStoreTopic('routine');
 
   // Tab interno: semana | ejercicios
   const [tab, setTab] = React.useState('semana');
 
-  const routineMap = React.useMemo(() => {
+  const routineMap = (() => {
     const map = {};
     for (let d of WEEK_ORDER) {
       map[d] = window.GymStore.getRoutineFor(d);
     }
     return map;
-  }, [routineVer]);
+  })();
 
   return (
     <div className="week-screen">

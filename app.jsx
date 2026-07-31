@@ -82,11 +82,12 @@ const App = ({ onSwitchProfile }) => {
     setEditingRoutine(true);
   }, [dow]);
 
+  // Suscribir el shell a cambios de sesiones/routine para recomputar streak/todaySession sin recargar.
+  // El useStoreTopic ya dispara re-render en cambios; refresh es fallback para cambios locales.
+  window.useStoreTopic && window.useStoreTopic('sessions', 'routine');
   const streak = useMemo(() => window.GymStore.computeStreak(), [refresh]);
   const todayIso = window.GymStore.iso(today);
-  // Sesión activa del día: la última si era array legacy, o el objeto, o null.
-  // getDaySessions sigue disponible para calendar/history que leen arrays históricos.
-  const todaySession = useMemo(() => window.GymStore.getDaySession(todayIso), [refresh]);
+  const todaySession = useMemo(() => window.GymStore.getDaySession(todayIso), [refresh, todayIso]);
 
   const profileInfo = useMemo(() => {
     const name = window.GymStore.getActiveProfile();
@@ -146,6 +147,15 @@ const App = ({ onSwitchProfile }) => {
   const toggleCardio = useCallback((minutes, laps) => {
     setActive(prev => {
       const next = { ...prev, cardioDone: !prev.cardioDone, cardioMinutes: minutes, cardioLaps: laps };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+
+  const changeMood = useCallback((mood) => {
+    setActive(prev => {
+      if (!prev) return prev;
+      const next = { ...prev, mood };
       window.GymStore.setActive(next);
       return next;
     });
@@ -213,6 +223,30 @@ const App = ({ onSwitchProfile }) => {
     });
   }, []);
 
+  // Remueve un ejercicio de la sesión activa (rutina o agregado). No toca la rutina persistida.
+  const removeExerciseFromSession = useCallback((exId) => {
+    setActive(prev => {
+      if (!prev) return prev;
+      const exercises = (prev.exercises || []).filter(e => e.id !== exId);
+      const addedExDefs = (prev.addedExDefs || []).filter(e => e.id !== exId);
+      const next = { ...prev, exercises, addedExDefs, _skippedExIds: [...(prev._skippedExIds || []), exId] };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+
+  const removeActivityFromSession = useCallback((actId) => {
+    setActive(prev => {
+      if (!prev) return prev;
+      const activities = { ...(prev.activities || {}) };
+      delete activities[actId];
+      const addedActDefs = (prev.addedActDefs || []).filter(a => a.id !== actId);
+      const next = { ...prev, activities, addedActDefs, _skippedActIds: [...(prev._skippedActIds || []), actId] };
+      window.GymStore.setActive(next);
+      return next;
+    });
+  }, []);
+
   // Swap solo para esta sesión: no persiste, no toca el horario semanal.
   const swapRoutine = useCallback((srcDow) => {
     setTodaySwapDow(srcDow);
@@ -228,7 +262,12 @@ const App = ({ onSwitchProfile }) => {
   const handleOpenRoutineEditor = useCallback((d) => openRoutineEditor(d), [openRoutineEditor]);
   const handleCloseMoodOpen = useCallback(() => setMoodOpen(false), []);
   const handleCloseExerciseDetail = useCallback(() => setExerciseDetail(null), []);
-  const handleCloseDayDetail = useCallback(() => setDayDetail(null), []);
+  // Al cerrar DayDetail, forzamos refresh porque el usuario pudo haber editado/borrado sesiones.
+  // El store ya emite eventos, pero refresh es la key del <main> que remonta todo.
+  const handleCloseDayDetail = useCallback(() => {
+    setDayDetail(null);
+    setRefresh(r => r + 1);
+  }, []);
   const handleCloseEditingRoutine = useCallback(() => setEditingRoutine(false), []);
   const handleCloseSwapOpen = useCallback(() => setSwapOpen(false), []);
   const handleCloseCompletion = useCallback(() => { setCompletionData(null); setTab('calendar'); }, []);
@@ -236,6 +275,7 @@ const App = ({ onSwitchProfile }) => {
 
   return (
     <div className="app-root">
+      <ConnectionBanner />
       <header className={`app-header${scrolled ? ' scrolled' : ''}`}>
         <div>
           <div className="header-greeting">{greeting}{profileInfo ? `, ${profileInfo.name}` : ''}</div>
@@ -243,15 +283,18 @@ const App = ({ onSwitchProfile }) => {
           <h1>Ponte Viga App</h1>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <div className="header-streak">🔥 {streak}</div>
+          <div className="header-streak" aria-label={`Racha ${streak} días`}>
+            <span aria-hidden="true">🔥</span> {streak}
+          </div>
           {profileInfo && (
             <button
               className="profile-btn"
               style={{ background: profileInfo.color }}
               onClick={onSwitchProfile}
               title={`Perfil: ${profileInfo.name}`}
+              aria-label={`Cambiar de perfil, actualmente ${profileInfo.name}`}
             >
-              {profileInfo.emoji}
+              <span aria-hidden="true">{profileInfo.emoji}</span>
             </button>
           )}
         </div>
@@ -272,6 +315,7 @@ const App = ({ onSwitchProfile }) => {
             swappedFromDow={todaySwapDow != null ? dow : null}
             onClearSwap={clearSwap}
             onStart={() => setMoodOpen(true)}
+            onQuickStart={() => startWorkout('normal')}
             onUpdateExercise={updateExercise}
             onToggleCardio={toggleCardio}
             onFinish={finish}
@@ -283,6 +327,9 @@ const App = ({ onSwitchProfile }) => {
             onFinishDay={finishDay}
             onAddExercise={addExerciseToSession}
             onAddActivity={addActivityToSession}
+            onRemoveExercise={removeExerciseFromSession}
+            onRemoveActivity={removeActivityFromSession}
+            onChangeMood={changeMood}
           />
         )}
         {tab === 'calendar' && (
@@ -292,17 +339,17 @@ const App = ({ onSwitchProfile }) => {
           <WeekScreen onEditDay={handleOpenRoutineEditor} routineVer={routineVer} />
         )}
         {tab === 'history' && (
-          <HistoryScreen onSelectExercise={handleSetExerciseDetail} refresh={refresh} routineVer={routineVer} />
+          <HistoryScreen onSelectExercise={handleSetExerciseDetail} onSelectDay={handleSetDayDetail} refresh={refresh} routineVer={routineVer} />
         )}
         {tab === 'measures' && <MeasuresScreen />}
       </main>
 
       <nav className="tabbar">
-        <TabBtn icon="💪" label="Hoy"        active={tab === 'today'}    onClick={() => handleSetTab('today')} />
-        <TabBtn icon="📅" label="Calendario" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} />
-        <TabBtn icon="🗓️" label="Semana"     active={tab === 'week'}     onClick={() => handleSetTab('week')} />
-        <TabBtn icon="📈" label="Progreso"   active={tab === 'history'}  onClick={() => handleSetTab('history')} />
-        <TabBtn icon="📏" label="Medidas"    active={tab === 'measures'} onClick={() => handleSetTab('measures')} />
+        <TabBtn icon="💪" label="Hoy"      active={tab === 'today'}    onClick={() => handleSetTab('today')} />
+        <TabBtn icon="📅" label="Mes"      active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} />
+        <TabBtn icon="🗓️" label="Semana"   active={tab === 'week'}     onClick={() => handleSetTab('week')} />
+        <TabBtn icon="📈" label="Datos"    active={tab === 'history'}  onClick={() => handleSetTab('history')} />
+        <TabBtn icon="📏" label="Medidas"  active={tab === 'measures'} onClick={() => handleSetTab('measures')} />
       </nav>
 
       <MoodModal open={moodOpen} onClose={handleCloseMoodOpen} onPick={startWorkout} />
@@ -374,16 +421,66 @@ const App = ({ onSwitchProfile }) => {
           </div>
         </div>
       )}
+
+      <GlobalSystemHosts />
     </div>
   );
 };
 
+// Monta ConfirmHost + ToastHost si están disponibles (una sola vez en el árbol).
+const GlobalSystemHosts = () => {
+  const CH = window.ConfirmHost;
+  const TH = window.ToastHost;
+  return (
+    <>
+      {CH && <CH />}
+      {TH && <TH />}
+    </>
+  );
+};
+
 const TabBtn = ({ icon, label, active, onClick }) => (
-  <button className={`tab-btn ${active ? 'is-active' : ''}`} onClick={onClick}>
-    <div className="tab-icon">{icon}</div>
+  <button
+    className={`tab-btn ${active ? 'is-active' : ''}`}
+    onClick={onClick}
+    aria-current={active ? 'page' : undefined}
+    aria-label={label}
+  >
+    <div className="tab-icon" aria-hidden="true">{icon}</div>
     <div className="tab-label">{label}</div>
   </button>
 );
+
+// Banner de conexión: aparece cuando el navegador está offline o hay writes pendientes
+const ConnectionBanner = () => {
+  const [online, setOnline] = useState(() => navigator.onLine);
+  const [pending, setPending] = useState(() => window.GymStore?.getConnectionStatus?.().pending || false);
+
+  useEffect(() => {
+    const onOnline = () => setOnline(true);
+    const onOffline = () => setOnline(false);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    const int = setInterval(() => {
+      setPending(window.GymStore?.getConnectionStatus?.().pending || false);
+    }, 1500);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+      clearInterval(int);
+    };
+  }, []);
+
+  if (online && !pending) return null;
+  return (
+    <div className={`conn-banner ${online ? 'is-pending' : 'is-offline'}`} role="status">
+      {online
+        ? <><span aria-hidden="true">↻</span> Sincronizando cambios…</>
+        : <><span aria-hidden="true">🔌</span> Sin conexión — cambios se guardarán localmente</>
+      }
+    </div>
+  );
+};
 
 // Wrapper con selección de perfil + hidratación
 const GymAppLoader = () => {
@@ -399,29 +496,38 @@ const GymAppLoader = () => {
   const [profilesVer, setProfilesVer] = useState(0);
   const [debugInfo, setDebugInfo] = useState('');
 
-  // Siempre sincronizar perfiles Y grupos del servidor al arrancar
-  // (cada navegador tiene su propio localStorage aislado)
+  // Siempre sincronizar perfiles Y grupos del servidor al arrancar.
+  // También valida el token guardado — si expiró, limpia el perfil activo.
   useEffect(() => {
-    console.log('[DEBUG] Iniciando hydrateProfiles + hydrateGroups');
     setDebugInfo('Cargando perfiles...');
     Promise.all([
       window.GymStore.hydrateProfiles(),
       window.GymStore.hydrateGroups(),
-    ]).finally(() => {
-      console.log('[DEBUG] hydrateProfiles + hydrateGroups completado');
+      // Verifica sesión: si el token expiró/no vale, tratamos como sin perfil
+      (window.S3Store && window.S3Store.checkSession)
+        ? window.S3Store.checkSession()
+        : Promise.resolve({ ok: true }),
+    ]).then(([, , session]) => {
       const saved = window.GymStore.getActiveProfile();
-      console.log('[DEBUG] Perfil guardado:', saved);
       const exists = window.GymStore.getProfiles().find(p => p.name === saved);
-      console.log('[DEBUG] Perfil existe:', !!exists);
+      const sessionValid = !session || session.ok !== false;
+      const sessionMatches = session && session.profileName === saved;
+      const canResume = saved && exists && (sessionValid && (session.ok ? sessionMatches : true));
       if (!profilesReady) {
-        if (saved && exists) {
+        if (canResume) {
           window.GymStore.initProfile(saved);
           setProfileName(saved);
+        } else if (saved) {
+          // Token no valido o perfil borrado: limpiar puntero local
+          window.GymStore.clearActiveProfile();
         }
         setProfilesReady(true);
       } else {
         setProfilesVer(v => v + 1);
       }
+    }).catch(err => {
+      console.error('[DEBUG] hydrate error:', err);
+      setProfilesReady(true);
     });
   }, []);
 
@@ -433,32 +539,49 @@ const GymAppLoader = () => {
     setDebugInfo('Seleccionado: ' + name);
   };
 
-  const switchProfile = () => {
-    console.log('[DEBUG] switchProfile clicked');
-    try { window.GymStore.clearActiveProfile(); } catch (e) { console.warn(e); }
-    try { window.GymStore.clearActive(); } catch (e) {}
+  const switchProfile = async () => {
+    try { await window.GymStore.logout(); } catch (e) { console.warn(e); }
     // Navegación a URL fresca con cache-bust: evita que iOS PWA/SW
     // sirva un HTML viejo desde caché aun después del clear.
     window.location.replace('/?_=' + Date.now());
   };
 
+  // Escuchar auth expired global (401 desde api-store). Vuelve al picker.
+  useEffect(() => {
+    const handler = () => {
+      console.warn('[App] auth expired, volviendo al picker');
+      window.GymStore.clearActiveProfile();
+      window.location.replace('/?_=' + Date.now());
+    };
+    window.addEventListener('ponteviga:auth-expired', handler);
+    return () => window.removeEventListener('ponteviga:auth-expired', handler);
+  }, []);
+
+  const [hydrateError, setHydrateError] = useState(false);
+
   useEffect(() => {
     if (!profileName) return;
     console.log('[DEBUG] Iniciando hydrate para:', profileName);
     setDebugInfo('Hidratando perfil: ' + profileName);
+    setHydrateError(false);
     const startTime = Date.now();
-    window.GymStore.hydrate().then(hasCloud => {
+    window.GymStore.hydrate().then(result => {
       const elapsed = Date.now() - startTime;
-      console.log('[DEBUG] hydrate completado en', elapsed + 'ms, hasCloud:', hasCloud);
-      setDebugInfo('Datos: ' + (hasCloud ? 'Encontrados' : 'Creando nuevos'));
-      if (!hasCloud) window.GymStore.ensureSeed();
+      console.log('[DEBUG] hydrate completado en', elapsed + 'ms, result:', result);
+      if (!result.ok) {
+        // Servidor inalcanzable: NO seedear vacío (sobrescribiría datos reales).
+        setDebugInfo('Sin conexión al servidor');
+        setHydrateError(true);
+        return;
+      }
+      setDebugInfo('Datos: ' + (result.hasData ? 'Encontrados' : 'Creando nuevos'));
+      if (!result.hasData) window.GymStore.ensureSeed();
       setReady(true);
     }).catch(err => {
       const elapsed = Date.now() - startTime;
       console.error('[DEBUG] hydrate error en', elapsed + 'ms:', err);
       setDebugInfo('Error: ' + err.message);
-      window.GymStore.ensureSeed();
-      setReady(true);
+      setHydrateError(true);
     });
   }, [profileName]);
 
@@ -471,6 +594,20 @@ const GymAppLoader = () => {
   );
 
   if (!profileName) return <ProfilePicker key={profilesVer} onSelect={selectProfile} />;
+
+  if (hydrateError) return (
+    <div className="app-loading">
+      <div style={{fontSize:40}}>🔌</div>
+      <div className="loading-text" style={{color:'#ff8a3c'}}>Sin conexión al servidor</div>
+      <div style={{fontSize: 12, color: '#888', textAlign:'center', maxWidth: 280, lineHeight: 1.4}}>
+        No pudimos cargar tus datos. Para evitar perder información, no abriremos la app sin confirmar el servidor.
+      </div>
+      <button
+        style={{marginTop: 12, background:'#ec6032', color:'#fff', border:'none', padding:'10px 18px', borderRadius:8, fontWeight:600}}
+        onClick={() => window.location.reload()}
+      >Reintentar</button>
+    </div>
+  );
 
   if (!ready) return (
     <div className="app-loading">

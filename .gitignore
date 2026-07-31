@@ -1,1 +1,30 @@
 node_modules/
+
+# Backup pre-migración: contiene private keys (viga-key.pem, cert Let's Encrypt)
+# y datos reales de usuarios (DynamoDB scan). No subir a git.
+migration/
+
+# ── Secrets: NUNCA a git ────────────────────────────────────────
+viga-key.pem
+*.pem
+.env
+.env.local
+
+# ── Config local por-entorno (no compartir entre devs) ──────────
+ec2-config.json
+aws-config.json
+
+# ── Datos de usuarios / dev-seed (contienen PIN hashes, medidas) ─
+data-files/
+
+# ── React CDN cache (regenerable) ───────────────────────────────
+.react-cache/
+
+# ── Logs / build outputs temporales ─────────────────────────────
+*.log
+.DS_Store
+
+# ── OS/editor cruft ─────────────────────────────────────────────
+Thumbs.db
+.vscode/
+.idea/

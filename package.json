@@ -1,17 +1,23 @@
 {
   "name": "ponte-viga",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Gym training PWA",
   "main": "server.js",
   "scripts": {
     "build": "node build.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node dev.js",
+    "smoke": "bash scripts/smoke-test.sh",
+    "smoke:self": "PONTE_VIGA_START_SERVER=1 bash scripts/smoke-test.sh",
+    "migrate": "node migrate-to-dynamo.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.665.0",
+    "@aws-sdk/lib-dynamodb": "^3.665.0",
     "cors": "^2.8.6",
     "express": "^4.21.0"
   },

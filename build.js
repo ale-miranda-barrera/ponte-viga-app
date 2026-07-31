@@ -95,7 +95,12 @@ async function main() {
     'data/seed-history.js',
     storeFile,
     'data/store.js',
+    'data/hooks.js',
+    'screens/system.jsx',
     'screens/profile-picker.jsx',
+    'screens/daily-summary.jsx',
+    'screens/charts.jsx',
+    'screens/coach.jsx',
     'screens/today.jsx',
     'screens/calendar.jsx',
     'screens/history.jsx',
@@ -178,6 +183,8 @@ if ('serviceWorker' in navigator) {
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ponte Viga">
 <meta name="theme-color" content="#0A0A0B">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230A0A0B'/><text x='50%25' y='55%25' font-size='112' text-anchor='middle' dominant-baseline='middle'>💪</text></svg>">
 <title>Ponte Viga App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

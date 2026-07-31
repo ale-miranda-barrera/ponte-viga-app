@@ -40,6 +40,53 @@ const ProfileSection = ({ profile, onSave }) => {
               ].map(a => <button key={a.v} className={Math.abs(profile.activity-a.v)<0.01?'on':''} onClick={()=>onSave({activity:a.v})}>{a.l}</button>)}
             </div>
           </label>
+          <label className="seg"><span>Meta</span>
+            <div className="seg-ctrl seg-sm">
+              {[
+                { v: 'deficit', l: 'Bajar peso' },
+                { v: 'maintain', l: 'Mantener' },
+                { v: 'surplus', l: 'Subir masa' },
+              ].map(g => (
+                <button
+                  key={g.v}
+                  className={(profile.goal || 'deficit') === g.v ? 'on' : ''}
+                  onClick={() => onSave({ goal: g.v })}
+                >{g.l}</button>
+              ))}
+            </div>
+          </label>
+          {profile.goal !== 'maintain' && (
+            <label className="seg"><span>Intensidad {profile.goal === 'deficit' ? '(déficit)' : '(superávit)'}</span>
+              <div className="seg-ctrl seg-sm">
+                {[
+                  { v: 250,  l: 'Suave' },
+                  { v: 500,  l: 'Moderado' },
+                  { v: 750,  l: 'Agresivo' },
+                  { v: 1000, l: 'Muy agr.' },
+                ].map(k => (
+                  <button
+                    key={k.v}
+                    className={(profile.deficitKcal || 500) === k.v ? 'on' : ''}
+                    onClick={() => onSave({ deficitKcal: k.v })}
+                    title={(profile.goal === 'deficit' ? '−' : '+') + k.v + ' kcal/día · ' + ((k.v * 7) / 7700).toFixed(2) + ' kg/sem'}
+                  >{k.l}</button>
+                ))}
+              </div>
+            </label>
+          )}
+          <label>
+            <span>Peso objetivo (kg) <em style={{ color: 'var(--text-3)', fontWeight: 400 }}>opcional</em></span>
+            <input
+              inputMode="decimal"
+              value={profile.targetWeightKg ?? ''}
+              placeholder="ej: 72"
+              onFocus={e => e.target.select()}
+              onChange={e => {
+                const v = parseFloat(e.target.value);
+                onSave({ targetWeightKg: (!isNaN(v) && v >= 30 && v <= 200) ? v : null });
+              }}
+            />
+          </label>
           <label className="seg"><span>Días de gym por semana</span>
             <div className="seg-ctrl seg-sm">
               {[1,2,3,4,5,6,7].map(n => (
@@ -68,6 +115,97 @@ const ProfileSection = ({ profile, onSave }) => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// Proyección de tiempo al peso objetivo
+// Cálculo: 7700 kcal ≈ 1 kg de grasa. deficit × 7 días / 7700 = kg/semana.
+// Solo se muestra si hay peso actual + peso objetivo + goal != maintain.
+const ProjectionCard = ({ profile, sorted }) => {
+  const currentPeso = sorted.find(m => m.peso != null)?.peso;
+  const targetKg = profile.targetWeightKg;
+  const goal = profile.goal || 'deficit';
+  const deficit = Math.max(0, Math.min(1500, Number(profile.deficitKcal) || 500));
+
+  if (goal === 'maintain' || !currentPeso || !targetKg || deficit === 0) return null;
+
+  const kgPerWeek = (deficit * 7) / 7700; // kg / semana en teoría
+  const kgToGoal = goal === 'deficit' ? (currentPeso - targetKg) : (targetKg - currentPeso);
+
+  // Si ya llegaste o pasaste la meta, mostrar mensaje motivador
+  if (kgToGoal <= 0) {
+    return (
+      <div className="proj-card proj-done">
+        <div className="proj-head">
+          <div className="proj-num">🎯</div>
+          <div>
+            <div className="proj-title">¡Meta alcanzada!</div>
+            <div className="proj-sub">Peso actual {currentPeso} kg · meta {targetKg} kg</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const weeks = kgPerWeek > 0 ? kgToGoal / kgPerWeek : 0;
+  const weeksInt = Math.ceil(weeks);
+  const etaDate = new Date(Date.now() + weeksInt * 7 * 86400000);
+  const etaStr = etaDate.getDate() + ' ' + window.MONTH_LONG[etaDate.getMonth()].slice(0, 3);
+
+  // Progreso: si hay 2+ mediciones, calcular kg perdidos/ganados desde el inicio
+  const first = [...sorted].reverse().find(m => m.peso != null);
+  const startPeso = first?.peso;
+  const totalTarget = startPeso ? Math.abs(startPeso - targetKg) : Math.abs(currentPeso - targetKg);
+  const done = startPeso ? Math.abs(startPeso - currentPeso) : 0;
+  const pct = totalTarget > 0 ? Math.max(0, Math.min(100, Math.round((done / totalTarget) * 100))) : 0;
+
+  const goalLabel = goal === 'deficit' ? 'perder' : 'ganar';
+  const kgIcon = goal === 'deficit' ? '📉' : '📈';
+
+  return (
+    <div className="proj-card">
+      <div className="proj-head">
+        <div className="proj-icon">🎯</div>
+        <div className="proj-info">
+          <div className="proj-title">Proyección al objetivo</div>
+          <div className="proj-sub">
+            {kgIcon} {goalLabel} <strong>{kgToGoal.toFixed(1)} kg</strong> más para llegar a <strong>{targetKg} kg</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="proj-stats">
+        <div className="proj-stat">
+          <div className="proj-stat-num">{weeksInt}</div>
+          <div className="proj-stat-lbl">semanas</div>
+        </div>
+        <div className="proj-stat">
+          <div className="proj-stat-num">{kgPerWeek.toFixed(2)}<span>kg/sem</span></div>
+          <div className="proj-stat-lbl">al ritmo actual</div>
+        </div>
+        <div className="proj-stat">
+          <div className="proj-stat-num">{etaStr}</div>
+          <div className="proj-stat-lbl">llegada estimada</div>
+        </div>
+      </div>
+
+      {startPeso != null && totalTarget > 0 && (
+        <div className="proj-progress">
+          <div className="proj-progress-track">
+            <div className="proj-progress-fill" style={{ width: pct + '%' }} />
+          </div>
+          <div className="proj-progress-lbl">
+            <span>{startPeso} kg</span>
+            <span>{pct}% recorrido</span>
+            <span>{targetKg} kg</span>
+          </div>
+        </div>
+      )}
+
+      <div className="proj-warn">
+        💡 Aproximado. Basado en −{deficit} kcal/día. Real depende de constancia + entrenamiento.
+      </div>
     </div>
   );
 };
@@ -210,10 +348,18 @@ const MeasureHistorySection = ({ sorted, form, pesoActual, latest, onFormChange,
 
 // Medidas corporales + perfil + IMC + calorías
 const MeasuresScreen = () => {
+  window.useStoreTopic('measures', 'profile');
   const [measures, setMeasures] = React.useState(() => window.GymStore.getMeasures());
   const [profile, setProfile] = React.useState(() => window.GymStore.getProfile());
   const [form, setForm] = React.useState({ barriga: '', brazo: '', peso: '' });
   const [saved, setSaved] = React.useState(false);
+
+  // Sincronizar estado local con store cuando cambia (ej: otro dispositivo)
+  React.useEffect(() => {
+    const u1 = window.GymStore.subscribe('measures', () => setMeasures(window.GymStore.getMeasures()));
+    const u2 = window.GymStore.subscribe('profile', () => setProfile(window.GymStore.getProfile()));
+    return () => { u1(); u2(); };
+  }, []);
 
   React.useEffect(() => {
     if (!saved) return;
@@ -222,11 +368,10 @@ const MeasuresScreen = () => {
   }, [saved]);
 
   const saveProfile = (patch) => {
-    setProfile(prev => {
-      const next = { ...prev, ...patch };
-      window.GymStore.saveProfile(next);
-      return next;
-    });
+    // Solo envía el patch al store — GymStore.saveProfile ahora hace merge atómico
+    // (evita pisar foodLog/dailyTotals que otros callsites mutan concurrente).
+    window.GymStore.saveProfile(patch);
+    setProfile(prev => ({ ...prev, ...patch }));
   };
 
   const sorted = React.useMemo(
@@ -254,9 +399,20 @@ const MeasuresScreen = () => {
   const latestWithPeso = sorted.find(m => m.peso != null);
   const latest = sorted[0];
 
+  const BWChart = window.BodyWeightChart;
+  // Meta prioritaria: el peso objetivo del perfil. Fallback: IMC 22.
+  const targetKg = React.useMemo(() => {
+    if (profile.targetWeightKg && profile.targetWeightKg > 0) return profile.targetWeightKg;
+    if (!profile.height) return null;
+    const m = profile.height / 100;
+    return Math.round(22 * m * m);
+  }, [profile.height, profile.targetWeightKg]);
+
   return (
     <div className="meas-screen">
       <ProfileSection profile={profile} onSave={saveProfile} />
+      {BWChart && <BWChart measures={measures} heightCm={profile.height} targetKg={targetKg} />}
+      <ProjectionCard profile={profile} sorted={sorted} />
       <BodyMetricsSection profile={profile} sorted={sorted} />
       <MeasureHistorySection
         sorted={sorted}

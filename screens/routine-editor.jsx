@@ -27,12 +27,23 @@ const NumInput = ({ value, min = 0, step = 1, onChange, className }) => {
 const RoutineEditor = ({ dow, routine, onClose, onSave, onReset }) => {
   const [draft, setDraft] = React.useState(() => ({
     ...routine,
+    muscles: [...(routine.muscles || [])],
     exercises: (routine.exercises || []).map(e => ({ ...e })),
     activities: (routine.activities || []).map(a => ({ ...a })),
   }));
   const [showActivityPicker, setShowActivityPicker] = React.useState(false);
   // null = cerrado, 'pool' = picker de pool, 'new' = crear nuevo inline
   const [addExMode, setAddExMode] = React.useState(null);
+  const [muscleInput, setMuscleInput] = React.useState('');
+
+  const addMuscle = () => {
+    const m = muscleInput.trim();
+    if (!m) return;
+    setDraft(d => (d.muscles || []).includes(m) ? d : { ...d, muscles: [...(d.muscles || []), m] });
+    setMuscleInput('');
+  };
+  const removeMuscle = (m) => setDraft(d => ({ ...d, muscles: (d.muscles || []).filter(x => x !== m) }));
+  const removeCardio = () => setDraft(d => ({ ...d, cardio: null }));
 
   const updateEx = (idx, patch) => {
     setDraft(d => ({
@@ -100,6 +111,7 @@ const RoutineEditor = ({ dow, routine, onClose, onSave, onReset }) => {
   const save = () => {
     onSave({
       ...draft,
+      muscles: draft.muscles || [],
       exercises: draft.exercises.map(e => ({
         ...e,
         target: `${e.sets}×${e.reps} @ ${e.weight > 0 ? e.weight + ' ' + e.unit : 'Peso corporal'}`,
@@ -133,7 +145,41 @@ const RoutineEditor = ({ dow, routine, onClose, onSave, onReset }) => {
           </div>
         </div>
 
-        <div className="detail-section-title">Ejercicios ({draft.exercises.length})</div>
+        <div className="detail-section-title">Músculos ({(draft.muscles || []).length})</div>
+        <div className="editor-muscles-row">
+          {(draft.muscles || []).map(m => (
+            <span key={m} className="muscle-chip editor-muscle-chip">
+              {m}
+              <button type="button" className="muscle-chip-rm" onClick={() => removeMuscle(m)}>×</button>
+            </span>
+          ))}
+        </div>
+        <div className="editor-muscle-add">
+          <input
+            className="editor-ex-name"
+            placeholder="Agregar músculo (ej: Pecho, Tríceps)"
+            value={muscleInput}
+            onFocus={e => e.target.select()}
+            onChange={e => setMuscleInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addMuscle())}
+          />
+          <button type="button" className="btn-secondary" onClick={addMuscle} disabled={!muscleInput.trim()}>+</button>
+        </div>
+
+        {draft.cardio && (
+          <>
+            <div className="detail-section-title" style={{marginTop: 20}}>Cardio</div>
+            <div className="editor-row">
+              <div className="editor-row-top">
+                <span className="editor-act-icon">🏃</span>
+                <span className="editor-act-name">{draft.cardio.name} · {draft.cardio.minutes} min</span>
+                <button type="button" className="editor-rm" onClick={removeCardio}>✕</button>
+              </div>
+            </div>
+          </>
+        )}
+
+        <div className="detail-section-title" style={{marginTop: 20}}>Ejercicios ({draft.exercises.length})</div>
         <div className="editor-list">
           {draft.exercises.map((ex, i) => (
             <ExerciseEditorRow

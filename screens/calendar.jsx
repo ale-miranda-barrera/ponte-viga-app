@@ -4,7 +4,8 @@ const CalendarScreen = ({ onPickDate, streak, refresh, routineVer }) => {
     const d = new Date();
     return { y: d.getFullYear(), m: d.getMonth() };
   });
-  const sessions = React.useMemo(() => window.GymStore.getAllSessions(), [refresh]);
+  window.useStoreTopic('sessions', 'routine');
+  const sessions = window.GymStore.getAllSessions();
   const today = new Date();
   const todayIso = window.GymStore.iso(today);
 

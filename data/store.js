@@ -26,17 +26,53 @@ window.GymStore = (function() {
     return v !== undefined ? v : def;
   }
 
-  // Escribe a memoria + EC2
+  // Escribe a memoria + EC2 + emite notificación pubsub
   function _save(k, v) {
     _mem[k] = v;
     const s3key = S3_MAP[k];
     if (s3key && window.S3Store) window.S3Store.set(s3key, v).catch(() => {});
+    _emit(k);
   }
 
   // Escribe global (perfiles, grupos) a memoria + EC2
   function _saveGlobal(memKey, s3key, v) {
     _mem[memKey] = v;
     if (window.S3Store) window.S3Store.set(s3key, v).catch(() => {});
+    _emit(memKey);
+  }
+
+  // ── Pubsub simple: componentes se suscriben a cambios por "topic" ─────
+  // Topics conocidos: 'sessions', 'measures', 'profile', 'routine', 'activities', 'foodLog', 'all'
+  const _subs = {};
+  function _subscribe(topic, fn) {
+    if (!_subs[topic]) _subs[topic] = new Set();
+    _subs[topic].add(fn);
+    return () => _subs[topic].delete(fn);
+  }
+  // Emitir usando la KEY de mem: los subscribers reciben notificación por topic derivado
+  function _emit(memKey) {
+    let topic = null;
+    if (memKey === KEY_SESSIONS)      topic = 'sessions';
+    else if (memKey === KEY_MEASURES) topic = 'measures';
+    else if (memKey === KEY_STATS)    topic = 'profile';
+    else if (memKey === KEY_ROUTINE)  topic = 'routine';
+    else if (memKey === KEY_ACTS)     topic = 'activities';
+    else if (memKey === KEY_PROFILES_LIST) topic = 'profiles';
+    else if (memKey === KEY_GROUPS)   topic = 'groups';
+    // Notifica al topic + 'all'
+    if (topic && _subs[topic]) _subs[topic].forEach(fn => { try { fn(); } catch (e) { console.error('[store sub]', e); } });
+    if (_subs.all) _subs.all.forEach(fn => { try { fn(); } catch (e) { console.error('[store sub all]', e); } });
+  }
+
+  // Mutación atómica read-modify-write. Evita que dos updates concurrentes
+  // pisen la misma clave (típico bug con saveProfile + saveSession que ambos
+  // tocan KEY_STATS). Fn recibe el valor actual y devuelve el nuevo.
+  function _mutate(k, def, fn) {
+    const prev = _load(k, def);
+    const next = fn(prev);
+    if (next === undefined) return prev;
+    _save(k, next);
+    return next;
   }
 
   // Lee localStorage de forma segura (solo para migración y activos ephemeral)
@@ -49,13 +85,55 @@ window.GymStore = (function() {
     return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
   }
 
+  // ── Cálculo canónico de kcal (única fuente de verdad) ─────────────────
+  // Convención:
+  //   - Ejercicio done: sets_completados × (5 si tiene peso, 3 si es corporal)
+  //   - Actividad done con value: value × kcalPerMin (o fallback cal10/10 ó 4)
+  //   - Cardio done con minutes: minutes × 5
+  // Ejercicios NO done pero con sets>0 (parciales) cuentan proporcional a sets completados.
+  function calcSessionKcalPure(s) {
+    if (!s) return 0;
+    let kcal = 0;
+    (s.exercises || []).forEach(ex => {
+      const done = ex.done || (ex.sets > 0);
+      if (!done) return;
+      const setsCount = ex.done ? ex.sets : Math.min(ex.sets, ex.targetSets || ex.sets);
+      kcal += setsCount * (ex.weight > 0 ? 5 : 3);
+    });
+    Object.values(s.activities || {}).forEach(a => {
+      if (!a.done || !a.value) return;
+      const def = (window.DEFAULT_ACTIVITIES || []).find(x => x.id === a.id);
+      const kpm = def?.kcalPerMin ?? (def?.cal10 ? def.cal10 / 10 : 4);
+      kcal += Math.round(a.value * kpm);
+    });
+    if (s.cardioDone && s.cardioMinutes) kcal += Math.round(s.cardioMinutes * 5);
+    return kcal;
+  }
+
   return {
     iso,
+
+    // ─── API de reactividad ──────────────────────────────────────────────
+    // Ejemplo: useEffect(() => GymStore.subscribe('sessions', bump), [])
+    // Topics: 'sessions', 'measures', 'profile', 'routine', 'activities', 'profiles', 'groups', 'all'
+    subscribe: _subscribe,
+
+    // Cálculo canónico de kcal por sesión — usar en TODOS los consumidores
+    calcSessionKcal: calcSessionKcalPure,
+
+    // Suma kcal quemadas de todas las sesiones del día
+    calcDayBurnedKcal(dateIso) {
+      return this.getDaySessions(dateIso).reduce((s, sess) => s + calcSessionKcalPure(sess), 0);
+    },
 
     // ─── Perfiles ────────────────────────────────────────────────────────
     getProfiles() { return _load(KEY_PROFILES_LIST, []); },
 
+    // DEPRECATED: Usar `window.S3Store.register()` que crea via /api/auth/register.
+    // Este método hace PUT directo sin auth; con las nuevas reglas de guard el
+    // servidor rechaza (excepto para admin). Se mantiene por compat.
     createProfile(p) {
+      console.warn('[store] GymStore.createProfile deprecated — usar S3Store.register()');
       const list = this.getProfiles();
       if (list.find(x => x.name === p.name)) return list;
       list.push(p);
@@ -66,7 +144,7 @@ window.GymStore = (function() {
     // Siempre trae perfiles del servidor (source of truth)
     async hydrateProfiles() {
       if (!window.S3Store) return;
-      const timed = (p) => Promise.race([p, new Promise(r => setTimeout(() => r(null), 4000))]).catch(() => null);
+      const timed = (p) => Promise.race([p, new Promise(r => setTimeout(() => r(null), 10000))]).catch(() => null);
       const serverProfiles = await timed(window.S3Store.get('profiles'));
       if (serverProfiles && serverProfiles.length > 0) {
         // Server es autoritativo; preservar perfiles locales nuevos no sincronizados aún
@@ -80,7 +158,7 @@ window.GymStore = (function() {
     // Siempre trae grupos del servidor
     async hydrateGroups() {
       if (!window.S3Store) return;
-      const timed = (p) => Promise.race([p, new Promise(r => setTimeout(() => r(null), 4000))]).catch(() => null);
+      const timed = (p) => Promise.race([p, new Promise(r => setTimeout(() => r(null), 10000))]).catch(() => null);
       const serverGroups = await timed(window.S3Store.get('groups'));
       if (serverGroups) _mem[KEY_GROUPS] = serverGroups;
     },
@@ -108,6 +186,17 @@ window.GymStore = (function() {
     getActiveProfile() { return localStorage.getItem(KEY_ACTIVE_PROFILE) || ''; },
     clearActiveProfile() { localStorage.removeItem(KEY_ACTIVE_PROFILE); },
 
+    // ─── Auth: proxy a S3Store para tokens (una sola fuente en cliente) ──
+    setToken(token) { if (window.S3Store && window.S3Store.setToken) window.S3Store.setToken(token); },
+    getToken() { return window.S3Store && window.S3Store.getToken ? window.S3Store.getToken() : null; },
+    hasToken() { return !!this.getToken(); },
+
+    async logout() {
+      try { if (window.S3Store && window.S3Store.logout) await window.S3Store.logout(); } catch (e) {}
+      this.clearActiveProfile();
+      try { localStorage.removeItem(KEY_ACTIVE); } catch (e) {}
+    },
+
     initProfile(name) {
       localStorage.setItem(KEY_ACTIVE_PROFILE, name);
       KEY_SESSIONS = `gym_sessions_v2_${name}`;
@@ -128,12 +217,20 @@ window.GymStore = (function() {
     migrateV1() { /* no-op: datos ya en EC2 */ },
 
     // ─── Hidratación desde servidor (siempre, sin caché localStorage) ────
+    //   - Timeout de 10s por petición (suficiente para Dynamo cold start).
+    //   - Distingue "404/empty" (data === null) de "timeout/error" (data === undefined).
+    //   - Si TODAS las claves dan timeout, devolvemos { ok: false } para que la
+    //     app pueda alertar en vez de seedear vacío y sobreescribir el servidor.
     async hydrate() {
-      if (!window.S3Store) return false;
+      if (!window.S3Store) return { ok: false, hasData: false };
 
       try {
-        // Timeout agresivo: si tarda más de 2s, timeout
-        const timed = (p) => Promise.race([p, new Promise(r => setTimeout(() => r(null), 2000))]).catch(() => null);
+        // Marcador único: undefined = error/timeout, null = 404 confirmado, dato = ok
+        const ERR = Symbol('ERR');
+        const timed = (p) => Promise.race([
+          p,
+          new Promise(r => setTimeout(() => r(ERR), 10000)),
+        ]).catch(() => ERR);
 
         const [sessions, measures, profile, routines, activities] = await Promise.all([
           timed(window.S3Store.get(S3_MAP[KEY_SESSIONS])),
@@ -143,14 +240,17 @@ window.GymStore = (function() {
           timed(window.S3Store.get(S3_MAP[KEY_ACTS])),
         ]);
 
-        if (sessions)   _mem[KEY_SESSIONS] = sessions;
-        if (measures)   _mem[KEY_MEASURES] = measures;
-        if (profile)    _mem[KEY_STATS]    = profile;
-        if (routines)   _mem[KEY_ROUTINE]  = routines;
-        if (activities) _mem[KEY_ACTS]     = activities;
+        const allFailed = [sessions, measures, profile, routines, activities].every(v => v === ERR);
+        if (allFailed) return { ok: false, hasData: false };
+
+        if (sessions && sessions !== ERR)     _mem[KEY_SESSIONS] = sessions;
+        if (measures && measures !== ERR)     _mem[KEY_MEASURES] = measures;
+        if (profile && profile !== ERR)       _mem[KEY_STATS]    = profile;
+        if (routines && routines !== ERR)     _mem[KEY_ROUTINE]  = routines;
+        if (activities && activities !== ERR) _mem[KEY_ACTS]     = activities;
 
         // Migración única: actividades custom que solo estaban en localStorage
-        if (!activities) {
+        if (activities === null) {
           const legacyActs = _lsGet('gym_activity_catalog_v1');
           if (legacyActs && legacyActs.length > 0) {
             _mem[KEY_ACTS] = legacyActs;
@@ -158,16 +258,27 @@ window.GymStore = (function() {
           }
         }
 
-        return !!(sessions || measures || profile || routines || activities);
+        const hasData = !!(
+          (sessions && sessions !== ERR) ||
+          (measures && measures !== ERR) ||
+          (profile && profile !== ERR) ||
+          (routines && routines !== ERR) ||
+          (activities && activities !== ERR)
+        );
+        return { ok: true, hasData };
       } catch (e) {
         console.error('[Store] hydrate error:', e);
-        return false;
+        return { ok: false, hasData: false };
       }
     },
 
+    // Seed solo en memoria — NO escribe vacío al servidor. Esto evita el bug
+    // donde un timeout de hydrate hacía que la app sobreescribiera datos
+    // existentes con valores por defecto. La primera escritura real (saveSession,
+    // saveMeasure, etc.) sí persiste, partiendo de la estructura correcta.
     ensureSeed() {
-      if (!_load(KEY_SESSIONS, null)) _save(KEY_SESSIONS, {});
-      if (!_load(KEY_MEASURES, null)) _save(KEY_MEASURES, []);
+      if (_load(KEY_SESSIONS, null) == null) _mem[KEY_SESSIONS] = {};
+      if (_load(KEY_MEASURES, null) == null) _mem[KEY_MEASURES] = [];
     },
 
     seedWithDemo() {
@@ -185,10 +296,20 @@ window.GymStore = (function() {
     // Migración defensiva: una entrada puede ser un objeto legacy (una sola
     // sesión) o un array (múltiples sesiones por día). Siempre normalizar a
     // array internamente para simplificar el resto del código.
+    // Copia defensiva: retorna array nuevo para que llamadores no muten _mem.
     _normDay(entry) {
       if (!entry) return [];
-      if (Array.isArray(entry)) return entry;
+      if (Array.isArray(entry)) return entry.slice();
       return [entry]; // objeto legacy → array de 1
+    },
+
+    // ─── Estado de sincronización ─────────────────────────────────────────
+    // Retorna { pending: bool, hasToken: bool } para que UI muestre indicador.
+    getConnectionStatus() {
+      return {
+        pending: !!(window.S3Store && window.S3Store.hasPendingWrites && window.S3Store.hasPendingWrites()),
+        hasToken: !!(window.S3Store && window.S3Store.getToken && window.S3Store.getToken()),
+      };
     },
 
     getAllSessions() { return _load(KEY_SESSIONS, {}); },
@@ -224,79 +345,122 @@ window.GymStore = (function() {
     },
 
     // Guarda/actualiza una sesión. Si tiene sessionId la actualiza en su
-    // posición; si no, la añade al array del día.
-    // También persiste dailyTotals[date] para uso futuro (retro-compatible: campo opcional).
+    // posición; si no, la añade al array del día. Atomic vs otros writers de KEY_SESSIONS.
     saveSession(s) {
-      const all = this.getAllSessions();
-      const arr = this._normDay(all[s.date]);
-      const idx = s.sessionId ? arr.findIndex(x => x.sessionId === s.sessionId) : -1;
-      if (idx >= 0) {
-        arr[idx] = s;
-      } else {
-        arr.push(s);
-      }
-      all[s.date] = arr;
-      _save(KEY_SESSIONS, all);
-
-      // Actualizar totales diarios (estimación: 5 kcal/set con peso, 3 sin peso, actividades x kcalPerMin)
-      this._updateDailyTotals(s.date, arr);
+      let updatedDayArr = null;
+      _mutate(KEY_SESSIONS, {}, (all) => {
+        const arr = Array.isArray(all[s.date]) ? [...all[s.date]] : (all[s.date] ? [all[s.date]] : []);
+        const idx = s.sessionId ? arr.findIndex(x => x && x.sessionId === s.sessionId) : -1;
+        if (idx >= 0) arr[idx] = s;
+        else arr.push(s);
+        updatedDayArr = arr;
+        return { ...all, [s.date]: arr };
+      });
+      if (updatedDayArr) this._updateDailyTotals(s.date, updatedDayArr);
     },
 
     // Recalcula y persiste dailyTotals para un día dado. Retro-compatible: si no existe
     // el campo en cargas antiguas, se calcula al vuelo cuando se llama saveSession.
+    // Usa _mutate para evitar pisar foodLog / otros campos que pueden estar cambiando concurrente.
     _updateDailyTotals(dateIso, daySessions) {
-      const profile = _load(KEY_STATS, {});
-      if (!profile.dailyTotals) profile.dailyTotals = {};
-
       let totalKcal = 0, totalExercises = 0;
-      daySessions.forEach(s => {
-        const exDone = (s.exercises || []).filter(e => e.done);
-        totalExercises += exDone.length;
-        exDone.forEach(ex => { totalKcal += ex.sets * (ex.weight > 0 ? 5 : 3); });
-        if (s.cardioDone && s.cardioMinutes) totalKcal += Math.round(s.cardioMinutes * 5);
-        Object.values(s.activities || {}).forEach(a => {
-          if (!a.done || !a.value) return;
-          const def = (window.DEFAULT_ACTIVITIES || []).find(x => x.id === a.id);
-          const kpm = def?.kcalPerMin ?? (def?.cal10 ? def.cal10 / 10 : 4);
-          totalKcal += Math.round(a.value * kpm);
-        });
-      });
-
-      profile.dailyTotals[dateIso] = {
-        kcal: totalKcal,
-        exercises: totalExercises,
-        sessionsCount: daySessions.length,
-      };
-      _save(KEY_STATS, profile);
+      daySessions.forEach(s => { totalKcal += calcSessionKcalPure(s); totalExercises += (s.exercises || []).filter(e => e.done).length; });
+      _mutate(KEY_STATS, {}, (p) => ({
+        ...p,
+        dailyTotals: {
+          ...(p.dailyTotals || {}),
+          [dateIso]: { kcal: totalKcal, exercises: totalExercises, sessionsCount: daySessions.length },
+        },
+      }));
     },
 
     deleteSession(dateIso) {
-      const all = this.getAllSessions();
-      delete all[dateIso];
-      _save(KEY_SESSIONS, all);
+      _mutate(KEY_SESSIONS, {}, (all) => {
+        const next = { ...all };
+        delete next[dateIso];
+        return next;
+      });
     },
 
     // Elimina una sesión específica del día por sessionId
     deleteDaySession(dateIso, sessionId) {
-      const all = this.getAllSessions();
-      const arr = this._normDay(all[dateIso]).filter(s => s.sessionId !== sessionId);
-      if (arr.length === 0) delete all[dateIso];
-      else all[dateIso] = arr;
-      _save(KEY_SESSIONS, all);
+      _mutate(KEY_SESSIONS, {}, (all) => {
+        const arr = (Array.isArray(all[dateIso]) ? all[dateIso] : (all[dateIso] ? [all[dateIso]] : []))
+          .filter(s => s && s.sessionId !== sessionId);
+        const next = { ...all };
+        if (arr.length === 0) delete next[dateIso];
+        else next[dateIso] = arr;
+        return next;
+      });
     },
 
     // ─── Medidas ─────────────────────────────────────────────────────────
     getMeasures()  { return _load(KEY_MEASURES, []); },
     saveMeasure(m) {
-      const arr = this.getMeasures();
-      arr.push(m);
-      arr.sort((a,b) => a.date.localeCompare(b.date));
-      _save(KEY_MEASURES, arr);
+      // Sanitiza: peso/barriga/brazo dentro de rangos plausibles
+      const clean = {
+        date: m.date,
+        peso:    m.peso    != null ? Math.max(20, Math.min(300, Number(m.peso)))    : null,
+        barriga: m.barriga != null ? Math.max(30, Math.min(200, Number(m.barriga))) : null,
+        brazo:   m.brazo   != null ? Math.max(15, Math.min(80,  Number(m.brazo)))   : null,
+      };
+      _mutate(KEY_MEASURES, [], (arr) => {
+        const next = [...arr, clean];
+        next.sort((a, b) => a.date.localeCompare(b.date));
+        return next;
+      });
     },
 
     // ─── Perfil físico ───────────────────────────────────────────────────
-    getProfile()   { return _load(KEY_STATS, { height: 175, age: 28, sex: 'm', activity: 1.45, goal: 'deficit', daysPerWeek: 5, extraActivities: [] }); },
-    saveProfile(p) { _save(KEY_STATS, p); },
+    // deficitKcal: magnitud del ajuste (positivo). Se resta si goal='deficit', se suma si 'surplus'.
+    //   Rango razonable: 250 (suave) a 1000 (muy agresivo). Default 500 (moderado).
+    // targetWeightKg: peso meta en kg. null = usa IMC 22 automático.
+    getProfile()   { return _load(KEY_STATS, { height: 175, age: 28, sex: 'm', activity: 1.45, goal: 'deficit', deficitKcal: 500, targetWeightKg: null, daysPerWeek: 5, extraActivities: [] }); },
+    // Merge de patch en vez de reemplazo total. Preserva foodLog/dailyTotals que otros callsites tocan.
+    saveProfile(patch) { _mutate(KEY_STATS, {}, (p) => ({ ...p, ...patch })); },
+
+    // ─── Registro de comidas (kcal consumidas por día) ────────────────────
+    // Guardado dentro de KEY_STATS.foodLog[dateIso] = [{ id, name, kcal, ts }]
+    // Todas las mutaciones usan _mutate para atomicidad vs saveSession / saveProfile.
+    getFoodLog(dateIso) {
+      const p = _load(KEY_STATS, {});
+      return (p.foodLog || {})[dateIso] || [];
+    },
+
+    addFoodEntry(dateIso, entry) {
+      // Sanitización: kcal debe ser positivo, name no vacío, cap razonable
+      const kcal = Math.max(0, Math.min(9999, Math.round(Number(entry.kcal) || 0)));
+      const name = String(entry.name || '').trim().slice(0, 60);
+      if (!name || kcal <= 0) return null;
+      const item = { id: 'food_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), ts: Date.now(), name, kcal };
+      _mutate(KEY_STATS, {}, (p) => ({
+        ...p,
+        foodLog: { ...(p.foodLog || {}), [dateIso]: [...((p.foodLog || {})[dateIso] || []), item] },
+      }));
+      return item;
+    },
+
+    removeFoodEntry(dateIso, id) {
+      _mutate(KEY_STATS, {}, (p) => ({
+        ...p,
+        foodLog: { ...(p.foodLog || {}), [dateIso]: ((p.foodLog || {})[dateIso] || []).filter(e => e.id !== id) },
+      }));
+    },
+
+    // Restaura una entrada específica (para undo). Devuelve true si se aplicó.
+    restoreFoodEntry(dateIso, item) {
+      if (!item || !item.id) return false;
+      _mutate(KEY_STATS, {}, (p) => ({
+        ...p,
+        foodLog: { ...(p.foodLog || {}), [dateIso]: [...((p.foodLog || {})[dateIso] || []), item].sort((a, b) => a.ts - b.ts) },
+      }));
+      return true;
+    },
+
+    // Suma total de kcal consumidas por día (para el resumen)
+    getDayFoodKcal(dateIso) {
+      return this.getFoodLog(dateIso).reduce((s, e) => s + (Number(e.kcal) || 0), 0);
+    },
 
     // ─── Rutina ──────────────────────────────────────────────────────────
     getRoutineFor(dow) {
@@ -408,6 +572,25 @@ window.GymStore = (function() {
     getActivities() {
       const custom = _load(KEY_ACTS, []);
       return [...(window.DEFAULT_ACTIVITIES || []), ...custom];
+    },
+
+    // Mapa id→ejercicio actualizado con overrides del perfil actual.
+    // Útil para renderizar nombres de ejercicios en sesiones históricas
+    // aunque el usuario haya renombrado o creado ejercicios custom.
+    getAllExMeta() {
+      const meta = { ...(window._allExMeta || {}) };
+      const overrides = _load(KEY_ROUTINE, {});
+      Object.values(overrides).forEach(r => {
+        (r.exercises || []).forEach(e => { if (e.id) meta[e.id] = e; });
+      });
+      // También el nombre puede haber cambiado en sesiones históricas: recorrer sesiones flat
+      const sessions = this.getAllSessionsFlat();
+      sessions.forEach(s => {
+        (s.exercises || []).forEach(e => {
+          if (!meta[e.id] && e.id) meta[e.id] = { id: e.id, name: e.name || e.id, sub: e.sub || '' };
+        });
+      });
+      return meta;
     },
 
     saveCustomActivity(a) {

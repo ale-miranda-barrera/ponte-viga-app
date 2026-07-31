@@ -92,14 +92,12 @@ const LineChart = ({ id, points }) => {
 
 window.LineChart = LineChart;
 
-const HistoryScreen = ({ onSelectExercise, refresh, routineVer }) => {
+const HistoryScreen = ({ onSelectExercise, onSelectDay, refresh, routineVer }) => {
   const [tab, setTab] = React.useState('sessions');
+  window.useStoreTopic('sessions', 'routine');
   // getAllSessionsFlat: aplana arrays de múltiples sesiones por día + migra legacy
-  const sessions = React.useMemo(
-    () => window.GymStore.getAllSessionsFlat().sort((a, b) =>
-      b.date !== a.date ? b.date.localeCompare(a.date) : ((b.startTime||0) - (a.startTime||0))
-    ),
-    [refresh]
+  const sessions = window.GymStore.getAllSessionsFlat().sort((a, b) =>
+    b.date !== a.date ? b.date.localeCompare(a.date) : ((b.startTime||0) - (a.startTime||0))
   );
   const exMap = React.useMemo(() => {
     const m = {};
@@ -131,7 +129,13 @@ const HistoryScreen = ({ onSelectExercise, refresh, routineVer }) => {
 
       {tab === 'sessions' && (
         <div className="hist-sessions">
-          {sessions.length === 0 && <div className="empty">Aún sin sesiones registradas.</div>}
+          {sessions.length === 0 && window.EmptyState && (
+            <window.EmptyState
+              icon="📓"
+              title="Sin sesiones aún"
+              text="Al completar tu primer entrenamiento aparecerá aquí, con métricas de progreso."
+            />
+          )}
           {sessions.map((s, idx) => {
             const [, mo, day] = s.date.split('-');
             const allExs = s.exercises || [];
@@ -143,7 +147,7 @@ const HistoryScreen = ({ onSelectExercise, refresh, routineVer }) => {
             // Clave única: sessionId o fecha+índice
             const key = s.sessionId || (s.date + '_' + idx);
             return (
-              <div key={key} className="hist-item">
+              <button type="button" key={key} className="hist-item hist-item-btn" onClick={() => onSelectDay && onSelectDay(s.date)}>
                 <div className="hist-date">
                   <div className="hist-day">{day}</div>
                   <div className="hist-mo">{window.MONTH_LONG[parseInt(mo) - 1].slice(0, 3).toUpperCase()}</div>
@@ -159,14 +163,20 @@ const HistoryScreen = ({ onSelectExercise, refresh, routineVer }) => {
                     <span>{HIST_MOOD[s.mood] || '🙂'}</span>
                   </div>
                 </div>
-              </div>
+                <div className="hist-chev">›</div>
+              </button>
             );
           })}
         </div>
       )}
 
-      {tab === 'progress' && (
+      {tab === 'progress' && (() => {
+        const WkChart = window.WeeklyKcalChart;
+        const StreakG = window.StreakGrid;
+        return (
         <div className="hist-progress">
+          {WkChart && <WkChart days={14} />}
+          {StreakG && <StreakG days={30} />}
           {Object.keys(exMap).length === 0 && (
             <>
               <div className="progress-demo-banner">
@@ -231,7 +241,8 @@ const HistoryScreen = ({ onSelectExercise, refresh, routineVer }) => {
             );
           })}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

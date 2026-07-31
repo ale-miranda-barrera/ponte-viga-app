@@ -1,0 +1,52 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "script",
+    "ecmaFeatures": { "jsx": true }
+  },
+  "globals": {
+    "React": "readonly",
+    "ReactDOM": "readonly",
+    "GymStore": "readonly",
+    "S3Store": "writable",
+    "useStoreTopic": "readonly",
+    "useStoreSelector": "readonly",
+    "useConfirm": "readonly",
+    "showToast": "readonly",
+    "hapticTap": "readonly",
+    "SafeBoundary": "readonly",
+    "EmptyState": "readonly",
+    "SkeletonCard": "readonly",
+    "SkeletonList": "readonly",
+    "SkeletonLine": "readonly",
+    "ConfirmHost": "readonly",
+    "ToastHost": "readonly",
+    "WEEK_ROUTINE": "readonly",
+    "DEFAULT_ACTIVITIES": "readonly",
+    "SEED_HISTORY": "readonly",
+    "DAY_LONG": "readonly",
+    "MONTH_LONG": "readonly",
+    "MOOD_LABEL": "readonly"
+  },
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-empty": ["error", { "allowEmptyCatch": true }],
+    "no-console": "off",
+    "eqeqeq": ["warn", "smart"],
+    "curly": ["off"],
+    "no-var": "error",
+    "prefer-const": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["server/**/*.js", "server.js", "build.js", "dev.js"],
+      "env": { "browser": false, "node": true }
+    }
+  ]
+}

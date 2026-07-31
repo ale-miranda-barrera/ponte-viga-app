@@ -1,0 +1,36 @@
+{
+  "name": "Ponte Viga",
+  "short_name": "Ponte Viga",
+  "description": "App de entrenamiento personal — gym log, medidas, coach IA.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0A0B",
+  "theme_color": "#0A0A0B",
+  "categories": ["fitness", "health", "lifestyle"],
+  "lang": "es",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='42' fill='%230A0A0B'/><text x='50%25' y='55%25' font-size='120' text-anchor='middle' dominant-baseline='middle'>💪</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%230A0A0B'/><text x='50%25' y='55%25' font-size='320' text-anchor='middle' dominant-baseline='middle'>💪</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Empezar entrenamiento",
+      "short_name": "Empezar",
+      "url": "/?tab=today",
+      "icons": [{"src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' rx='20' fill='%23ec6032'/><text x='50%25' y='55%25' font-size='56' text-anchor='middle' dominant-baseline='middle'>🏋️</text></svg>","sizes":"96x96","type":"image/svg+xml"}]
+    }
+  ]
+}

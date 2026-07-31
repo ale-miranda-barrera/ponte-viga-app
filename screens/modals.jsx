@@ -37,14 +37,12 @@ const DETAIL_MOOD_META = { sick: '🤧', normal: '🙂', strong: '💪' };
 
 const ExerciseDetail = ({ ex, onClose }) => {
   if (!ex) return null;
+  window.useStoreTopic('sessions');
 
   // Todos los registros: orden cronológico para el gráfico (aplana arrays multi-sesión)
-  const allSessions = React.useMemo(() =>
-    window.GymStore.getAllSessionsFlat()
-      .filter(s => (s.exercises || []).some(e => e.id === ex.id))
-      .sort((a, b) => a.date.localeCompare(b.date)),
-    [ex.id]
-  );
+  const allSessions = window.GymStore.getAllSessionsFlat()
+    .filter(s => (s.exercises || []).some(e => e.id === ex.id))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   const chartPoints = allSessions.map(s => ({
     date: s.date,
@@ -196,13 +194,61 @@ const DaySessionBlock = ({ s, exMeta, showTitle }) => {
 };
 
 // Detalle de día (desde calendario) — soporta múltiples sesiones por día
+// Y permite editar sesiones pasadas (ejercicios, peso, ✓, borrar sesión completa).
 const DayDetail = ({ dateIso, onClose }) => {
+  const [editMode, setEditMode] = React.useState(false);
+  const [tick, setTick] = React.useState(0); // fuerza re-render tras modificar store
   if (!dateIso) return null;
   const daySessions = window.GymStore.getDaySessions(dateIso);
   if (daySessions.length === 0) return null;
   const d = new Date(dateIso + 'T00:00:00');
-  const exMeta = window._allExMeta;
+  const exMeta = (window.GymStore.getAllExMeta ? window.GymStore.getAllExMeta() : window._allExMeta) || {};
   const multi = daySessions.length > 1;
+
+  const bump = () => setTick(t => t + 1);
+
+  const deleteThisDay = async () => {
+    const confirm = window.useConfirm ? window.useConfirm() : null;
+    const ok = confirm ? await confirm({
+      title: 'Borrar día entero',
+      body: '¿Borrar todas las sesiones de este día? Se pueden recuperar con Deshacer.',
+      danger: true,
+      confirmLabel: 'Borrar',
+    }) : true;
+    if (!ok) return;
+    const snapshot = window.GymStore.getDaySessions(dateIso).map(s => ({ ...s }));
+    window.GymStore.deleteSession(dateIso);
+    window.hapticTap && window.hapticTap(30);
+    if (window.showToast) window.showToast({
+      text: 'Día borrado',
+      actionLabel: 'Deshacer',
+      action: () => snapshot.forEach(s => window.GymStore.saveSession(s)),
+      duration: 5000,
+    });
+    onClose();
+  };
+
+  const deleteOneSession = async (sid) => {
+    const confirm = window.useConfirm ? window.useConfirm() : null;
+    const ok = confirm ? await confirm({
+      title: 'Borrar sesión',
+      body: '¿Borrar esta sesión?',
+      danger: true,
+      confirmLabel: 'Borrar',
+    }) : true;
+    if (!ok) return;
+    const snapshot = window.GymStore.getDaySessions(dateIso).find(s => s.sessionId === sid);
+    window.GymStore.deleteDaySession(dateIso, sid);
+    window.hapticTap && window.hapticTap(20);
+    if (window.showToast && snapshot) window.showToast({
+      text: 'Sesión borrada',
+      actionLabel: 'Deshacer',
+      action: () => window.GymStore.saveSession(snapshot),
+      duration: 5000,
+    });
+    if (window.GymStore.getDaySessions(dateIso).length === 0) onClose();
+    else bump();
+  };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -214,13 +260,33 @@ const DayDetail = ({ dateIso, onClose }) => {
           {!multi && <div className="detail-name">{daySessions[0].label || daySessions[0].title}</div>}
           {multi && <div className="detail-name">{daySessions.length} sesiones</div>}
         </div>
-        {!multi && <DaySessionBlock s={daySessions[0]} exMeta={exMeta} showTitle={false} />}
+
+        <div className="day-detail-actions">
+          <button
+            type="button"
+            className={`day-detail-btn ${editMode ? 'is-on' : ''}`}
+            onClick={() => setEditMode(!editMode)}
+          >{editMode ? '✓ Terminar edición' : '✎ Editar sesión'}</button>
+          {editMode && (
+            <button type="button" className="day-detail-btn day-detail-danger" onClick={deleteThisDay}>
+              🗑 Borrar día
+            </button>
+          )}
+        </div>
+
+        {!multi && (
+          editMode
+            ? <DaySessionEditor s={daySessions[0]} exMeta={exMeta} onChange={bump} onDelete={() => deleteOneSession(daySessions[0].sessionId)} />
+            : <DaySessionBlock s={daySessions[0]} exMeta={exMeta} showTitle={false} />
+        )}
         {multi && (
           <>
             <div className="detail-section-title">Sesiones del día</div>
             {daySessions.map((s, idx) => (
               <div key={s.sessionId || idx} className="day-session-block">
-                <DaySessionBlock s={s} exMeta={exMeta} showTitle={true} />
+                {editMode
+                  ? <DaySessionEditor s={s} exMeta={exMeta} onChange={bump} onDelete={() => deleteOneSession(s.sessionId)} />
+                  : <DaySessionBlock s={s} exMeta={exMeta} showTitle={true} />}
               </div>
             ))}
           </>
@@ -230,26 +296,148 @@ const DayDetail = ({ dateIso, onClose }) => {
   );
 };
 
-// Calcula kcal de una sesión:
-// - Ejercicios con peso: 5 kcal/set (estimación basada en esfuerzo por set de fuerza ~70kg).
-// - Ejercicios sin peso (bodyweight): 3 kcal/set.
-// - Actividades: val * kcalPerMin (minutos por tasa metabólica). Fallback cal10/10 para registros viejos.
-// - Cardio: minutos * 5 kcal/min (estimación caminadora/trote ligero, ~70kg).
-const calcSessionKcal = (s) => {
-  let kcal = 0;
-  (s.exercises || []).forEach(ex => {
-    if (ex.done) kcal += ex.sets * (ex.weight > 0 ? 5 : 3);
-  });
-  Object.values(s.activities || {}).forEach(a => {
-    if (!a.done || !a.value) return;
-    // Busca la definición en catálogo para obtener kcalPerMin
-    const def = (window.DEFAULT_ACTIVITIES || []).find(x => x.id === a.id);
-    const kpm = def?.kcalPerMin ?? (def?.cal10 ? def.cal10 / 10 : 4);
-    kcal += Math.round(a.value * kpm);
-  });
-  if (s.cardioDone && s.cardioMinutes) kcal += Math.round(s.cardioMinutes * 5);
-  return kcal;
+// Editor inline de una sesión pasada. Cada operación lee la sesión más reciente
+// del store por sessionId, evitando closure stale cuando el usuario hace clicks rápidos.
+// La confirmación de borrar ejercicio usa el confirm modal in-app.
+const DaySessionEditor = ({ s: sInitial, exMeta, onChange, onDelete }) => {
+  window.useStoreTopic('sessions');
+  // Fuente fresca en cada render (subscripción arriba la refresca)
+  const current = window.GymStore.getDaySessions(sInitial.date).find(x => x.sessionId === sInitial.sessionId) || sInitial;
+  const [labelDraft, setLabelDraft] = React.useState(current.label || current.title || '');
+
+  // Persiste guardando en el store atómicamente. NO usa closure de current;
+  // en cambio, lee del store el estado más reciente antes de aplicar el patch.
+  const persist = (patch) => {
+    const fresh = window.GymStore.getDaySessions(sInitial.date).find(x => x.sessionId === sInitial.sessionId) || sInitial;
+    window.GymStore.saveSession({ ...fresh, ...patch });
+    onChange && onChange();
+  };
+
+  const patchEx = (id, exPatch) => {
+    const fresh = window.GymStore.getDaySessions(sInitial.date).find(x => x.sessionId === sInitial.sessionId) || sInitial;
+    const exercises = (fresh.exercises || []).map(e => e.id === id ? { ...e, ...exPatch } : e);
+    window.GymStore.saveSession({ ...fresh, exercises });
+    onChange && onChange();
+  };
+
+  const removeEx = async (id, name) => {
+    const confirm = window.useConfirm ? window.useConfirm() : null;
+    const ok = confirm ? await confirm({
+      title: 'Quitar ejercicio',
+      body: `¿Quitar "${name}" de esta sesión guardada?`,
+      danger: true,
+      confirmLabel: 'Quitar',
+    }) : true;
+    if (!ok) return;
+    const fresh = window.GymStore.getDaySessions(sInitial.date).find(x => x.sessionId === sInitial.sessionId) || sInitial;
+    const removed = (fresh.exercises || []).find(e => e.id === id);
+    const exercises = (fresh.exercises || []).filter(e => e.id !== id);
+    window.GymStore.saveSession({ ...fresh, exercises });
+    if (window.showToast && removed) window.showToast({
+      text: `Quitado: ${name}`,
+      actionLabel: 'Deshacer',
+      action: () => {
+        const now = window.GymStore.getDaySessions(sInitial.date).find(x => x.sessionId === sInitial.sessionId) || sInitial;
+        window.GymStore.saveSession({ ...now, exercises: [...(now.exercises || []), removed] });
+      },
+      duration: 4000,
+    });
+    onChange && onChange();
+  };
+
+  // Al hacer blur o al cerrar (si el label cambió y no se persistió).
+  const commitLabel = () => {
+    const l = labelDraft.trim();
+    if (l && l !== current.label) persist({ label: l });
+  };
+
+  // Persistir label al desmontar si quedó pendiente (evita perder rename si el usuario cierra el modal directo)
+  React.useEffect(() => {
+    return () => {
+      const l = labelDraft.trim();
+      const now = window.GymStore.getDaySessions(sInitial.date).find(x => x.sessionId === sInitial.sessionId);
+      if (l && now && l !== now.label) {
+        window.GymStore.saveSession({ ...now, label: l });
+      }
+    };
+  }, [labelDraft, sInitial.date, sInitial.sessionId]);
+
+  return (
+    <div className="session-editor">
+      <input
+        className="session-label-input"
+        value={labelDraft}
+        maxLength={80}
+        onFocus={e => e.target.select()}
+        onChange={e => setLabelDraft(e.target.value)}
+        onBlur={commitLabel}
+        placeholder="Nombre de la sesión"
+      />
+
+      <div className="session-editor-toggle">
+        <span>Marcar como completa</span>
+        <button
+          type="button"
+          className={`toggle-pill ${current.completed ? 'on' : ''}`}
+          onClick={() => { window.hapticTap && window.hapticTap(10); persist({ completed: !current.completed }); }}
+        >{current.completed ? '✓ Completa' : 'Parcial'}</button>
+      </div>
+
+      {(current.exercises || []).length > 0 && (
+        <>
+          <div className="detail-section-title">Ejercicios</div>
+          <div className="session-editor-list">
+            {(current.exercises || []).map(e => {
+              const meta = exMeta[e.id];
+              const name = meta?.name || e.name || e.id;
+              const isBw = e.weight === 0 && (meta?.unit || 'lb') === 'lb';
+              const targetSets = e.targetSets || meta?.sets || e.sets || 3;
+              return (
+                <div key={e.id} className="session-editor-row">
+                  <div className="session-editor-name">{name}</div>
+                  <div className="session-editor-controls">
+                    {!isBw && (
+                      <>
+                        <button type="button" className="mini-step" aria-label="restar peso" onClick={() => patchEx(e.id, { weight: Math.max(0, Math.round(((e.weight || 0) - 2.5) * 10) / 10) })}>−</button>
+                        <span className="mini-val">{e.weight || 0}<small>lb</small></span>
+                        <button type="button" className="mini-step" aria-label="sumar peso" onClick={() => patchEx(e.id, { weight: Math.round(((e.weight || 0) + 2.5) * 10) / 10 })}>+</button>
+                      </>
+                    )}
+                    <button type="button" className="mini-step" aria-label="restar set" onClick={() => patchEx(e.id, { sets: Math.max(0, (e.sets || 0) - 1), done: false })}>−</button>
+                    <span className="mini-val">{e.sets || 0}/{targetSets}</span>
+                    <button
+                      type="button"
+                      className="mini-step"
+                      aria-label="sumar set"
+                      onClick={() => {
+                        const newSets = Math.min(targetSets, (e.sets || 0) + 1);
+                        patchEx(e.id, { sets: newSets, done: newSets >= targetSets });
+                      }}
+                    >+</button>
+                    <button
+                      type="button"
+                      className={`mini-check ${e.done ? 'on' : ''}`}
+                      aria-label={e.done ? 'marcado' : 'marcar completo'}
+                      onClick={() => { window.hapticTap && window.hapticTap(8); patchEx(e.id, { done: !e.done, sets: !e.done ? targetSets : e.sets }); }}
+                    >{e.done ? '✓' : '·'}</button>
+                    <button type="button" className="mini-x" aria-label="quitar ejercicio" onClick={() => removeEx(e.id, name)}>✕</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      <button type="button" className="btn-link" style={{ color: 'var(--bad, #ff6060)', marginTop: 12 }} onClick={onDelete}>
+        🗑 Borrar esta sesión
+      </button>
+    </div>
+  );
 };
+
+// Delegar al store canonical (GymStore.calcSessionKcal). Wrapper para no romper callsites.
+const calcSessionKcal = (s) => window.GymStore.calcSessionKcal(s);
 
 const CompletionModal = ({ session, onClose }) => {
   const doneCount = (session.exercises || []).filter(e => e.done).length;

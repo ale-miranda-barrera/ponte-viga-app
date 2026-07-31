@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Ponte Viga — Infraestructura EC2
-  Crea todo lo necesario: EC2 (Ubuntu 24.04) + Nginx + Node.js + PM2
-  + Bucket S3 para deployments + SSM Document para actualizaciones.
-  Los archivos de la app se suben al bucket S3 y el SSM Document
-  los jala al servidor sin necesidad de SSH manual.
+  Ponte Viga — Infraestructura EC2 + DynamoDB
+  EC2 (Ubuntu 24.04) sirve la app (Nginx + Node + PM2).
+  DynamoDB persiste todos los datos (perfiles, sesiones, rutinas, medidas, grupos).
+  S3 Bucket solo se usa para subir los artefactos del deploy.
+  SSM Document despliega y reinicia sin SSH manual.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PARAMETERS
@@ -18,7 +18,7 @@ Parameters:
 
   Environment:
     Type: String
-    Default: dev
+    Default: prod
     AllowedValues: [dev, prod]
     Description: Ambiente de despliegue
 
@@ -40,8 +40,36 @@ Parameters:
 Resources:
 
   # ──────────────────────────────────────────────────────────────
-  # 1. S3 BUCKET — almacena los archivos de la app para despliegue
-  #    La instancia EC2 los descarga desde aquí (sin SSH)
+  # 1. DYNAMODB — persistencia durable de todos los datos del app
+  #    Una sola tabla. Cada item es una "clave" del store del cliente
+  #    (profiles, groups, alejo_sessions, alejo_routines, ...).
+  #    PAY_PER_REQUEST: a tu escala, dentro del free tier siempre (~$0/mes).
+  #    PITR: backup continuo de los últimos 35 días.
+  # ──────────────────────────────────────────────────────────────
+  DataTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${AppName}-data-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Project
+          Value: !Ref AppName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ──────────────────────────────────────────────────────────────
+  # 2. S3 BUCKET — almacena artefactos del deploy
+  #    Ya NO se usa para persistir datos del usuario.
   # ──────────────────────────────────────────────────────────────
   DeploymentBucket:
     Type: AWS::S3::Bucket
@@ -61,9 +89,10 @@ Resources:
           Value: !Ref Environment
 
   # ──────────────────────────────────────────────────────────────
-  # 2. IAM ROLE — permisos que tiene la instancia EC2
+  # 3. IAM ROLE — permisos de la instancia EC2
   #    - Leer del bucket S3 de deploy
-  #    - Usar SSM (para que funcione el SSM Send Command)
+  #    - SSM (para Send Command sin SSH)
+  #    - DynamoDB CRUD sobre la tabla de datos
   # ──────────────────────────────────────────────────────────────
   EC2InstanceRole:
     Type: AWS::IAM::Role
@@ -77,7 +106,6 @@ Resources:
               Service: ec2.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        # Permite que SSM Agent se conecte a la instancia (necesario para SSM Run Command)
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       Policies:
         - PolicyName: !Sub "${AppName}-s3-deploy-read-${Environment}"
@@ -91,6 +119,21 @@ Resources:
                 Resource:
                   - !GetAtt DeploymentBucket.Arn
                   - !Sub "${DeploymentBucket.Arn}/*"
+        - PolicyName: !Sub "${AppName}-dynamodb-${Environment}"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                Resource: !GetAtt DataTable.Arn
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -100,7 +143,7 @@ Resources:
         - !Ref EC2InstanceRole
 
   # ──────────────────────────────────────────────────────────────
-  # 3. SECURITY GROUP — puertos abiertos en el firewall
+  # 4. SECURITY GROUP — puertos abiertos en el firewall
   # ──────────────────────────────────────────────────────────────
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -130,7 +173,7 @@ Resources:
           Value: !Sub "${AppName}-sg-${Environment}"
 
   # ──────────────────────────────────────────────────────────────
-  # 4. ELASTIC IP — IP fija que no cambia aunque reinicies el EC2
+  # 5. ELASTIC IP — IP fija que no cambia aunque reinicies el EC2
   # ──────────────────────────────────────────────────────────────
   ElasticIP:
     Type: AWS::EC2::EIP
@@ -143,17 +186,11 @@ Resources:
           Value: !Sub "${AppName}-eip-${Environment}"
 
   # ──────────────────────────────────────────────────────────────
-  # 5. EC2 INSTANCE — Ubuntu 24.04 LTS
-  #
-  #    UserData: corre UNA VEZ al primer arranque.
-  #    Instala Node.js, PM2, Nginx y los configura.
-  #    Los archivos de la app se despliegan DESPUÉS con el SSM Document.
+  # 6. EC2 INSTANCE — Ubuntu 24.04 LTS
   # ──────────────────────────────────────────────────────────────
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      # AMI de Ubuntu 24.04 LTS — AWS SSM mantiene este parámetro actualizado
-      # por región. No necesitas buscar el AMI ID manualmente.
       ImageId: "{{resolve:ssm:/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id}}"
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyPairName
@@ -163,7 +200,7 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: 10    # GB — suficiente para la app + logs
+            VolumeSize: 10
             VolumeType: gp3
             DeleteOnTermination: true
       Tags:
@@ -174,41 +211,29 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          # ================================================================
-          # Ponte Viga — Bootstrap de infraestructura
-          # Este script corre SOLO EN EL PRIMER ARRANQUE de la instancia.
-          # Instala Node.js 20, PM2, Nginx y los configura.
-          # Los archivos de la app se despliegan con el SSM Document.
-          # ================================================================
           set -euxo pipefail
           LOG=/var/log/ponte-viga-setup.log
           exec > >(tee -a "$LOG") 2>&1
           echo "=== Bootstrap inicio $(date) ==="
 
-          # ── 1. Actualizar el sistema ───────────────────────────────────
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
           apt-get upgrade -y
 
-          # ── 2. Instalar Node.js 20 LTS ────────────────────────────────
           curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
           apt-get install -y nodejs
           node --version
           npm --version
 
-          # ── 3. Instalar PM2 (gestor de procesos) ─────────────────────
           npm install -g pm2
           pm2 --version
 
-          # ── 4. Instalar Nginx ─────────────────────────────────────────
           apt-get install -y nginx
           systemctl enable nginx
 
-          # ── 5. Crear directorio de la app ─────────────────────────────
-          mkdir -p /home/ubuntu/ponte-viga/data
+          mkdir -p /home/ubuntu/ponte-viga
           chown -R ubuntu:ubuntu /home/ubuntu/ponte-viga
 
-          # ── 6. Configurar Nginx como proxy inverso ────────────────────
           cat > /etc/nginx/sites-available/ponte-viga << 'NGINX_CONF'
           server {
               listen 80 default_server;
@@ -234,13 +259,9 @@ Resources:
           nginx -t
           systemctl restart nginx
 
-          # ── 7. Configurar PM2 para arrancar al reiniciar ───────────────
-          # Esto crea el servicio systemd para que PM2 (y la app) sobrevivan
-          # reinicios de la instancia sin necesidad de entrar por SSH.
           env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
           systemctl enable pm2-ubuntu
 
-          # ── 8. Instalar SSM Agent (ya viene en Ubuntu 24.04 pero por si acaso) ──
           snap install amazon-ssm-agent --classic 2>/dev/null || true
           systemctl enable amazon-ssm-agent
           systemctl start amazon-ssm-agent
@@ -248,9 +269,7 @@ Resources:
           echo "=== Bootstrap completo $(date) ==="
           PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || echo "desconocida")
           echo "=== IP pública: $PUBLIC_IP ==="
-          echo "=== SIGUIENTE PASO: sube los archivos al bucket S3 y ejecuta el SSM Document ==="
 
-  # Asociar la IP fija a la instancia
   EIPAssociation:
     Type: AWS::EC2::EIPAssociation
     Properties:
@@ -258,11 +277,13 @@ Resources:
       InstanceId: !Ref EC2Instance
 
   # ──────────────────────────────────────────────────────────────
-  # 6. SSM DOCUMENT — despliega o actualiza la app
-  #
-  #    Se ejecuta con: aws ssm send-command ...
-  #    No requiere SSH. Funciona mientras la instancia esté corriendo.
-  #    Úsalo para: primer deploy y cada actualización de la app.
+  # 7. SSM DOCUMENT — despliega/actualiza la app
+  #    Pasos:
+  #      1) Descarga archivos del bucket S3
+  #      2) npm install (incluye AWS SDK para DynamoDB)
+  #      3) Genera ecosystem.config.js con env vars (PONTE_VIGA_TABLE, AWS_REGION)
+  #      4) Migra JSON files legados a DynamoDB (idempotente, una vez por archivo)
+  #      5) PM2 reload con env actualizado
   # ──────────────────────────────────────────────────────────────
   DeploySSMDocument:
     Type: AWS::SSM::Document
@@ -270,9 +291,10 @@ Resources:
       Name: !Sub "${AppName}-deploy-${Environment}"
       DocumentType: Command
       DocumentFormat: YAML
+      UpdateMethod: NewVersion
       Content:
         schemaVersion: "2.2"
-        description: "Descarga archivos de la app desde S3 y reinicia PM2"
+        description: "Descarga artefactos de S3, instala deps, migra a DynamoDB y reinicia PM2"
         parameters:
           BucketName:
             type: String
@@ -282,25 +304,65 @@ Resources:
             type: String
             default: !Ref AWS::Region
             description: "Región de AWS"
+          TableName:
+            type: String
+            default: !Sub "${AppName}-data-${Environment}"
+            description: "Nombre de la tabla DynamoDB"
         mainSteps:
           - action: aws:runShellScript
             name: deployPonteViga
             inputs:
               workingDirectory: /home/ubuntu/ponte-viga
               runCommand:
-                - export PATH=$PATH:/usr/local/bin:/usr/bin
+                - export PATH=$PATH:/usr/local/bin:/usr/bin:/snap/bin
                 - echo "=== Deploy inicio $(date) ==="
-                - "aws s3 cp s3://{{ BucketName }}/app/index.html     /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
-                - "aws s3 cp s3://{{ BucketName }}/app/server.js      /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
-                - "aws s3 cp s3://{{ BucketName }}/app/sw.js          /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
-                - "aws s3 cp s3://{{ BucketName }}/app/package.json   /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
-                - "aws s3 cp s3://{{ BucketName }}/app/ec2-config.json /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - mkdir -p /home/ubuntu/ponte-viga
+                - |
+                  if ! command -v aws > /dev/null 2>&1; then
+                    echo "→ Instalando AWS CLI..."
+                    apt-get update -y && apt-get install -y unzip
+                    curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+                    unzip -q -o /tmp/awscliv2.zip -d /tmp
+                    /tmp/aws/install --update
+                    rm -rf /tmp/awscliv2.zip /tmp/aws
+                  fi
+                - "aws s3 cp s3://{{ BucketName }}/app/index.html         /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/server.js          /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/sw.js              /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/package.json       /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/ec2-config.json    /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
+                - "aws s3 cp s3://{{ BucketName }}/app/migrate-to-dynamo.js /home/ubuntu/ponte-viga/ --region {{ AwsRegion }}"
                 - chown -R ubuntu:ubuntu /home/ubuntu/ponte-viga
                 - cd /home/ubuntu/ponte-viga && sudo -u ubuntu npm install --omit=dev
-                - >-
-                  sudo -u ubuntu pm2 describe ponte-viga > /dev/null 2>&1
-                  && sudo -u ubuntu pm2 restart ponte-viga
-                  || sudo -u ubuntu pm2 start server.js --name ponte-viga
+                - |
+                  cat > /home/ubuntu/ponte-viga/ecosystem.config.js << 'ECOSYSTEM'
+                  module.exports = {
+                    apps: [{
+                      name: 'ponte-viga',
+                      script: 'server.js',
+                      env: {
+                        NODE_ENV: 'production',
+                        PORT: '3000',
+                        AWS_REGION: '{{ AwsRegion }}',
+                        PONTE_VIGA_TABLE: '{{ TableName }}'
+                      }
+                    }]
+                  };
+                  ECOSYSTEM
+                - chown ubuntu:ubuntu /home/ubuntu/ponte-viga/ecosystem.config.js
+                - |
+                  if [ -d /home/ubuntu/ponte-viga/data ] && [ -n "$(ls -A /home/ubuntu/ponte-viga/data 2>/dev/null)" ]; then
+                    echo "→ Migrando JSON files existentes a DynamoDB (idempotente)..."
+                    cd /home/ubuntu/ponte-viga && AWS_REGION='{{ AwsRegion }}' PONTE_VIGA_TABLE='{{ TableName }}' sudo -u ubuntu --preserve-env=AWS_REGION,PONTE_VIGA_TABLE node migrate-to-dynamo.js || echo "Migración: con errores (continuando)"
+                  else
+                    echo "→ Sin JSON files que migrar"
+                  fi
+                - |
+                  if sudo -u ubuntu pm2 describe ponte-viga > /dev/null 2>&1; then
+                    sudo -u ubuntu pm2 reload ecosystem.config.js --update-env
+                  else
+                    sudo -u ubuntu pm2 start ecosystem.config.js
+                  fi
                 - sudo -u ubuntu pm2 save
                 - echo "=== Deploy completo $(date) ==="
                 - "echo App disponible en http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
@@ -311,7 +373,7 @@ Resources:
 Outputs:
 
   PublicIP:
-    Description: IP pública fija de la instancia (no cambia)
+    Description: IP pública fija de la instancia
     Value: !Ref ElasticIP
     Export:
       Name: !Sub "${AppName}-ec2-ip-${Environment}"
@@ -321,28 +383,32 @@ Outputs:
     Value: !Sub "http://${ElasticIP}"
 
   InstanceId:
-    Description: ID de la instancia EC2 (necesario para SSM Send Command)
+    Description: ID de la instancia EC2
     Value: !Ref EC2Instance
     Export:
       Name: !Sub "${AppName}-ec2-id-${Environment}"
 
   DeploymentBucketName:
-    Description: Nombre del bucket S3 — sube los archivos aquí
+    Description: Nombre del bucket S3 (artefactos de deploy)
     Value: !Ref DeploymentBucket
     Export:
       Name: !Sub "${AppName}-deploy-bucket-${Environment}"
 
+  DataTableName:
+    Description: Nombre de la tabla DynamoDB (persistencia)
+    Value: !Ref DataTable
+    Export:
+      Name: !Sub "${AppName}-data-table-${Environment}"
+
   SSHCommand:
-    Description: Comando para conectarte por SSH (solo para diagnóstico)
+    Description: Comando SSH (solo diagnóstico)
     Value: !Sub "ssh -i ${KeyPairName}.pem ubuntu@${ElasticIP}"
 
   SSMDocumentName:
-    Description: Nombre del SSM Document para desplegar la app
+    Description: SSM Document para desplegar
     Value: !Sub "${AppName}-deploy-${Environment}"
 
   DeployInstructions:
-    Description: Pasos para desplegar la app después de crear el stack
+    Description: Pasos para desplegar después de actualizar el stack
     Value: !Sub >-
-      1) node build.js
-      2) aws s3 sync . s3://${DeploymentBucket}/app/ --exclude "node_modules/*" --exclude "data/*" --exclude ".react-cache/*" --include "index.html" --include "server.js" --include "sw.js" --include "package.json" --include "ec2-config.json"
-      3) aws ssm send-command --instance-ids ${EC2Instance} --document-name ${AppName}-deploy-${Environment} --comment "Deploy" --region ${AWS::Region}
+      1) make build  2) make deploy

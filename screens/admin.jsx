@@ -1,22 +1,43 @@
-const ADMIN_PIN = '1236';
-
-// ── PIN screen ──────────────────────────────────────────────────────────────
+// ── PIN screen — auth real vs backend ─────────────────────────────────────
 const AdminPin = ({ onUnlock }) => {
   const [digits, setDigits] = React.useState('');
   const [shake, setShake] = React.useState(false);
+  const [locked, setLocked] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
-  const addDigit = (d) => {
-    if (digits.length >= 4) return;
-    const next = digits + d;
-    setDigits(next);
-    if (next.length === 4) {
-      if (next === ADMIN_PIN) {
+  const tryLogin = React.useCallback(async (pin) => {
+    if (loading || locked) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await window.S3Store.adminLogin(pin);
+      if (res.ok) {
+        window.hapticTap && window.hapticTap(15);
         setTimeout(() => onUnlock(), 150);
+      } else if (res.status === 429) {
+        setLocked(true);
+        setError(`Demasiados intentos. Espera ${Math.ceil((res.retryAfterMs || 60000)/60000)} min.`);
+        setDigits('');
       } else {
         setShake(true);
-        setTimeout(() => { setDigits(''); setShake(false); }, 620);
+        setError('PIN incorrecto');
+        window.hapticTap && window.hapticTap([40,40,40]);
+        setTimeout(() => { setDigits(''); setShake(false); setError(''); }, 700);
       }
+    } catch (e) {
+      setError('Error de conexión');
+      setDigits('');
+    } finally {
+      setLoading(false);
     }
+  }, [loading, locked, onUnlock]);
+
+  const addDigit = (d) => {
+    if (digits.length >= 4 || locked || loading) return;
+    const next = digits + d;
+    setDigits(next);
+    if (next.length === 4) tryLogin(next);
   };
 
   const KEYS = [1,2,3,4,5,6,7,8,9,'',0,'⌫'];
@@ -27,20 +48,25 @@ const AdminPin = ({ onUnlock }) => {
         <a href="/" className="admin-back-link">← Volver al app</a>
       </div>
       <div className="admin-pin-body">
-        <div className="admin-pin-logo">🏋️</div>
+        <div className="admin-pin-logo" aria-hidden="true">🏋️</div>
         <div className="admin-pin-title">Ponte Viga</div>
         <div className="admin-pin-sub">Panel de administración</div>
         <div className={`admin-pin-dots${shake ? ' shake' : ''}`}>
           {[0,1,2,3].map(i => (
-            <div key={i} className={`admin-dot${i < digits.length ? ' on' : ''}`} />
+            <div key={i} className={`admin-dot${i < digits.length ? ' on' : ''}${loading && i === 3 ? ' loading' : ''}`} />
           ))}
         </div>
-        <div className="admin-numpad">
+        {error && <div className="admin-pin-error" role="alert">{error}</div>}
+        <div className="admin-numpad" role="group" aria-label="Teclado numérico">
           {KEYS.map((k, i) => (
-            <button key={i}
+            <button
+              key={i}
+              type="button"
               className={`numpad-key${k === '' ? ' invisible' : ''}`}
+              disabled={locked || loading || k === ''}
+              aria-label={k === '⌫' ? 'Borrar' : k === '' ? undefined : String(k)}
               onClick={() => {
-                if (k === '⌫') setDigits(p => p.slice(0, -1));
+                if (k === '⌫') { setDigits(p => p.slice(0, -1)); setError(''); }
                 else if (k !== '') addDigit(String(k));
               }}
             >{k}</button>
@@ -105,7 +131,9 @@ const AdminPanel = () => {
     if (!editingProfile) return;
     const list = profiles.map(p =>
       p.name === editingProfile.original
-        ? { ...p, name: editingProfile.name, emoji: editingProfile.emoji }
+        ? (editingProfile.original !== editingProfile.name
+            ? { ...p, name: editingProfile.name, emoji: editingProfile.emoji, _originalName: editingProfile.original }
+            : { ...p, name: editingProfile.name, emoji: editingProfile.emoji })
         : p
     );
     // If name changed, update group memberships too
