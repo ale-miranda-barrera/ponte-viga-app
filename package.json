@@ -8,7 +8,7 @@
     "start": "node server.js",
     "dev": "node dev.js",
     "smoke": "bash scripts/smoke-test.sh",
-    "smoke:self": "PONTE_VIGA_START_SERVER=1 bash scripts/smoke-test.sh",
+    "smoke:self": "bash scripts/smoke-test.sh --start-server",
     "migrate": "node migrate-to-dynamo.js"
   },
   "keywords": [],

@@ -2,13 +2,23 @@
 # scripts/smoke-test.sh — Smoke test end-to-end del server.
 #
 # Uso:
-#   bash scripts/smoke-test.sh                    # asume server ya corriendo en :3000
-#   PONTE_VIGA_START_SERVER=1 bash scripts/smoke-test.sh   # arranca el server él mismo
+#   bash scripts/smoke-test.sh                       # server ya corriendo en :3000
+#   bash scripts/smoke-test.sh --start-server        # arranca el server él mismo
+#   PONTE_VIGA_START_SERVER=1 bash scripts/smoke-test.sh   # equivalente (Linux/Mac)
 #
 # Cubre: auth (register/login/session/set-pin/remove-pin/logout/admin),
 # ownership guards, payload validation, rate limits, security headers,
 # migración PIN legacy, y aislamiento entre perfiles.
 set -u
+
+# Parse args para compat cross-platform (npm scripts en Windows no soportan
+# `VAR=val cmd`, así que exponemos también un flag `--start-server`).
+START_SERVER="${PONTE_VIGA_START_SERVER:-0}"
+for arg in "$@"; do
+  if [ "$arg" = "--start-server" ]; then
+    START_SERVER=1
+  fi
+done
 
 BASE="${PONTE_VIGA_URL:-http://localhost:3000}"
 PASS=0
@@ -52,7 +62,7 @@ extract_token() {
 
 # ── Setup opcional: arrancar server ───────────────────────────────
 SERVER_PID=""
-if [[ "${PONTE_VIGA_START_SERVER:-0}" == "1" ]]; then
+if [[ "$START_SERVER" == "1" ]]; then
   echo "→ Arrancando server..."
   rm -f "$(dirname "$0")/../data-files"/*.json 2>/dev/null
   (cd "$(dirname "$0")/.." && node server.js > /tmp/pv-smoke.log 2>&1) &
